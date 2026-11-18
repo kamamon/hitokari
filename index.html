@@ -1601,7 +1601,7 @@ function drawTown(c, w, h) {
    3D描画 (three.js) — ハンターの背後から見る視点
    ゲームの座標 (x, y) は 3D では (x, 高さ0, z=y) に置く。
    ===================================================================== */
-const R3 = { ok: false, fail: false, rnd: null, cam: null, scene: null, tx: 0, ty: 0, frame: 0, mon: new Map(), small: new Map(), dec: null, pj: [], ar: [], sec: {}, pv: null, pl: null, dist: 300, hgt: 200 };
+const R3 = { ok: false, fail: false, rnd: null, cam: null, scene: null, tx: 0, ty: 0, frame: 0, mon: new Map(), small: new Map(), dec: null, pj: [], ar: [], sec: {}, tex: {}, pl: null, dist: 300, hgt: 200, lastEl: 0 };
 let BASE = null, MATV = null, MATO = null, MATC = null, _M4, _Q, _EU, _V3, _S3, _UP, _P3;
 const _cc = {};
 function colRGB(s) {
@@ -1687,12 +1687,12 @@ function nodeMesh(n, L) {
 }
 function r3Clear() {
   if (!R3.scene) return;
-  R3.scene.traverse(o => { if (o.geometry && !o.geometry._sh) o.geometry.dispose(); const m = o.material; if (m && !m._sh) { if (m.map) m.map.dispose(); m.dispose(); } });
-  R3.scene = null; R3.mon.clear(); R3.small.clear(); R3.pj = []; R3.ar = []; R3.dec = null; R3.pl = null; R3.pv = null; R3.rnd.renderLists.dispose();
+  R3.scene.traverse(o => { if (o.geometry && !o.geometry._sh) o.geometry.dispose(); const m = o.material; if (m && !m._sh) { for (const k of ['map', 'normalMap', 'emissiveMap']) if (m[k]) m[k].dispose(); m.dispose(); } });
+  R3.scene = null; R3.mon.clear(); R3.small.clear(); R3.pj = []; R3.ar = []; R3.dec = null; R3.pl = null; R3.tex = {}; R3.rnd.renderLists.dispose();
 }
 function r3Build() {
   if (!r3Init()) return; r3Clear();
-  const f = G.f, L = f.L, sc = new THREE.Scene(); R3.scene = sc; R3.frame = 0;
+  const f = G.f, L = f.L, sc = new THREE.Scene(); R3.scene = sc; R3.frame = 0; R3.lastEl = 0; R3.tex = {};
   sc.background = new THREE.Color(L.sky); sc.fog = new THREE.Fog(L.sky, 760, 3100);
   sc.add(new THREE.HemisphereLight(0xffffff, L.g, L.dark ? 1.0 : .82)); const dl = new THREE.DirectionalLight(0xffffff, L.dark ? .7 : .72); dl.position.set(.5, 1, .35); sc.add(dl);
   // 地面
@@ -1727,9 +1727,11 @@ function r3Build() {
   b = mb(); mbAdd(b, BASE.cone, '#d9c9a3', 0, 34, 0, 62, 68, 62, 0, .5, 0); tri(b, '#3a2a1a', 44, 2, 6, 30, 2, 30, 30, 40, 14);
   R3.tent = mbMesh(b); R3.tent.position.set(cx - 120, 0, cz - 110); sc.add(R3.tent);
   R3.fire = new THREE.Mesh(BASE.cone, new THREE.MeshBasicMaterial({ color: 0xff9a3a })); R3.fire.position.set(cx + 40, 12, cz - 70); R3.fire.scale.set(8, 24, 8); sc.add(R3.fire);
+  // 皮膚の絵は出発時にまとめて描いておく (狩りの途中で止まらないように)
+  if (G.q.k === 'hunt') for (const id of G.q.t) { const lk = MON[id].look; R3.tex[lk.kind + lk.bl] = R3.tex[lk.kind + lk.bl] || skinTex(lk); }
   // 使い回す部品
   R3.dec = { circ: [], ring: [], rect: [], sect: [], n: { circ: 0, ring: 0, rect: 0, sect: 0 } };
-  R3.pl = buildHunter(); sc.add(R3.pl.root); sc.add(R3.pl.shadow);
+  R3.pl = buildHunter(); sc.add(R3.pl.root); sc.add(R3.pl.shadow); sc.add(R3.pl.cape);
   // 粒子
   const N = 460, pgeo = new THREE.BufferGeometry(); pgeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 3), 3)); pgeo.setAttribute('col', new THREE.BufferAttribute(new Float32Array(N * 4), 4)); pgeo.setAttribute('size', new THREE.BufferAttribute(new Float32Array(N), 1));
   const pm = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { sc: { value: 600 } }, vertexShader: 'attribute float size;attribute vec4 col;varying vec4 vC;uniform float sc;void main(){vC=col;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=max(1.0,size*sc/-mv.z);gl_Position=projectionMatrix*mv;}', fragmentShader: 'varying vec4 vC;void main(){vec2 d=gl_PointCoord-0.5;float r=dot(d,d);if(r>0.25)discard;gl_FragColor=vec4(vC.rgb,vC.a*(1.0-r*2.4));}' });
@@ -1741,187 +1743,17 @@ function obsMatrix(o, ys) { _EU.set(0, o.s[0] * TAU, 0); _Q.setFromEuler(_EU); _
 /* ---------- ハンター ---------- */
 function weaponMesh(wt, w, side) {
   const b = mb(), bc = shade(w.col, .35), ec = w.el ? EL[w.el].c : w.col2, dk = '#2a2f36', wood = '#5a3b22', skin = '#f0c9a0', z = side * 5;
-  cylTo(b, skin, 1, 3, side * 8, 10, 0, z, 2.1); sph(b, skin, 10, 0, z, 2.6);
   if (wt === 'hm') { cylTo(b, wood, 7, 0, z, 40, 0, z, 1.7); box(b, bc, 44, 0, z, 13, 14, 19); box(b, ec, 44, 0, z, 5, 15, 20); }
   else if (wt === 'gs') { box(b, wood, 9, 0, z, 8, 2.4, 2.4); box(b, dk, 14, 0, z, 2.6, 4, 14); box(b, bc, 40, 0, z, 50, 3, 10); box(b, ec, 40, 0, z, 48, 3.6, 3); mbAdd(b, BASE.cone, bc, 69.5, 0, z, 1.5, 9, 5, 0, 0, -Math.PI / 2); }
   else if (wt === 'bow') { for (let i = 0; i < 6; i++) { const a0 = -1.15 + i * 2.3 / 6, a1 = a0 + 2.3 / 6; cylTo(b, bc, 6 + 10 * Math.cos(a0), 18 * Math.sin(a0), z, 6 + 10 * Math.cos(a1), 18 * Math.sin(a1), z, 1.4); } cylTo(b, '#f4ecd8', 6 + 10 * Math.cos(1.15), 18 * Math.sin(1.15), z, 6 + 10 * Math.cos(1.15), -18 * Math.sin(1.15), z, .4); sph(b, ec, 16, 0, z, 1.8); }
   else { const L = wt === 'sns' ? 24 : 21; box(b, dk, 12.5, 0, z, 2.2, 3.4, 9); box(b, bc, 14 + L / 2, 0, z, L, 2.2, 4.6); box(b, ec, 14 + L / 2, 0, z, L - 2, 2.7, 1.4); mbAdd(b, BASE.cone, bc, 14 + L + 2.5, 0, z, 1.1, 5, 2.3, 0, 0, -Math.PI / 2); }
   return mbMesh(b);
 }
-function buildHunter() {
-  const st = G.st, wt = st.wt, w = st.w, ac = ARM[S.eq.chest], ah = ARM[S.eq.head], al = ARM[S.eq.legs], aa = ARM[S.eq.arms];
-  const bodyC = ac ? ac.col : '#9b6b3f', trimC = ac ? ac.col2 : '#e6dcc6', headC = ah ? ah.col : bodyC, legC = shade(al ? al.col : '#7a5a3c', -.25), armC = aa ? aa.col : bodyC;
-  const root = new THREE.Group(), inner = new THREE.Group(), core = new THREE.Group(); root.add(inner); inner.add(core); inner.position.y = 20; core.position.y = -20;
-  let b = mb();
-  box(b, bodyC, 0, 22, 0, 9, 13, 14); box(b, trimC, 4.7, 23, 0, .8, 9, 5); box(b, shade(legC, -.2), 0, 15.5, 0, 9.6, 3, 14.6);
-  sph(b, shade(armC, .2), 0, 28, 9.5, 4.4); sph(b, shade(armC, .2), 0, 28, -9.5, 4.4);
-  tri(b, '#c0392b', -4.6, 30, -4.5, -4.6, 30, 4.5, -17, 19, 0); tri(b, '#a02a20', -4.6, 30, -4.5, -17, 19, 0, -6, 20, 0);
-  sph(b, headC, 1, 35.5, 0, 6.6); box(b, trimC, 6.4, 35.5, 0, 2, 2.4, 8.5); coneDir(b, trimC, -1, 41, 0, 1.8, 6, -.3, 1, 0);
-  if (wt !== 'sns' && wt !== 'db' && wt !== 'bow') cylTo(b, '#f0c9a0', 0, 27, -9.5, 5, 19, -8, 2.1);
-  core.add(mbMesh(b));
-  b = mb(); box(b, legC, 0, -7.5, 0, 5, 15, 5.2); box(b, shade(legC, -.3), 1.6, -14, 0, 7.4, 3, 5.6); const lg = mbGeo(b);
-  const legs = [4.3, -4.3].map(z => { const m = new THREE.Mesh(lg, MATV); m.position.set(0, 15.5, z); core.add(m); return m; });
-  const wp = new THREE.Group(); wp.position.set(0, 24, 0); core.add(wp); wp.add(weaponMesh(wt, w, 1));
-  let wp2 = null, shield = null, arrow = null;
-  if (wt === 'db') { wp2 = new THREE.Group(); wp2.position.set(0, 24, 0); core.add(wp2); wp2.add(weaponMesh(wt, w, -1)); }
-  if (wt === 'sns') { b = mb(); mbAdd(b, BASE.cyl, shade(w.col, .2), 0, 0, 0, 8.5, 1.8, 8.5, Math.PI / 2, 0, 0); mbAdd(b, BASE.cyl, w.el ? EL[w.el].c : w.col2, 0, 0, -1.2, 3, 1, 3, Math.PI / 2, 0, 0); shield = mbMesh(b); core.add(shield); }
-  if (wt === 'bow') { b = mb(); cylTo(b, '#fff6d8', -8, 0, 5, 20, 0, 5, .6); coneDir(b, '#cfd6de', 20, 0, 5, 1.4, 4, 1, 0, 0); arrow = mbMesh(b); wp.add(arrow); }
-  // 斬撃の軌跡
-  const TN = 12, tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.BufferAttribute(new Float32Array((TN + 1) * 6), 3)); const idx = []; for (let i = 0; i < TN; i++) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2); tg.setIndex(idx);
-  const trail = new THREE.Mesh(tg, flatMat(st.el ? EL[st.el].c : '#ffffff', .5)); trail.frustumCulled = false; trail.visible = false; trail.renderOrder = 8; root.add(trail);
-  const shadow = new THREE.Mesh(BASE.circ, flatMat('#000000', .3)); shadow.scale.set(13, 1, 13); shadow.renderOrder = 1;
-  return { root, inner, core, legs, wp, wp2, shield, arrow, trail, TN, shadow };
-}
 function setTrail(o, a0, a1, r0, r1, vert, alpha) {
   const pos = o.trail.geometry.attributes.position, N = o.TN;
   for (let i = 0; i <= N; i++) { const a = a0 + (a1 - a0) * i / N, cs = Math.cos(a), sn = Math.sin(a); if (vert) { pos.setXYZ(i * 2, cs * r0, 24 + sn * r0, 5); pos.setXYZ(i * 2 + 1, cs * r1, 24 + sn * r1, 5); } else { pos.setXYZ(i * 2, cs * r0, 24, sn * r0); pos.setXYZ(i * 2 + 1, cs * r1, 24, sn * r1); } }
   pos.needsUpdate = true; o.trail.material.opacity = .55 * alpha; o.trail.visible = true;
 }
-function r3SyncPlayer() {
-  const o = R3.pl, p = G.p, st = G.st, wt = st.wt, t = G.el;
-  o.root.position.set(p.x, 0, p.y); o.shadow.position.set(p.x, .8, p.y); o.trail.visible = false;
-  o.root.visible = !(p.inv > 0 && !['roll', 'dead', 'down'].includes(p.state) && Math.floor(t * 18) % 2);
-  let ry = -p.dir, iz = 0, iy = 20, sc = 1, yaw = .55, pitch = .2, legA = 0;
-  const rest = { sns: 40, gs: 74, db: 37, hm: 52 }[wt] || 30;
-  switch (p.state) {
-    case 'roll': { const fr = p.t / .4; ry = -p.rdir; iz = -fr * TAU; iy = 11; sc = .82; pitch = 1.2; break; }
-    case 'dead': case 'down': iz = 1.5 * Math.min(1, p.t / .25); iy = 20 - 14 * Math.min(1, p.t / .25); yaw = 1.5; pitch = 0; break;
-    case 'hurt': iz = .4; break;
-    case 'act': iy = 15; iz = -.55; yaw = 1.4; pitch = -.5; break;
-    case 'item': iz = .22; yaw = 1.5; pitch = -.4; break;
-    case 'guard': yaw = 1.2; pitch = .1; break;
-    case 'charge': if (wt !== 'bow') { yaw = 0; pitch = 2.25 + Math.sin(t * 30) * .03 * p.chg; iz = .12; } else { yaw = 0; pitch = 0; } break;
-    case 'shoot': yaw = 0; pitch = 0; break;
-    case 'atk': {
-      const mv = p.mv, tw = mv.wind, ta = tw + mv.act, tt = ta + mv.rec, chop = !mv.spin && mv.arc <= 1.75 && (wt === 'gs' || wt === 'hm'), reach = Math.max(rest, mv.reach * .9);
-      if (mv.spin) { const fr = clamp((p.t - tw) / (mv.act + .2), 0, 1); yaw = fr * TAU; pitch = 0; if (p.t >= tw && fr < 1) setTrail(o, yaw - 2.2, yaw, reach * .5, reach, false, 1); }
-      else if (chop) { const up = 2.2, dn = -.42; yaw = 0; if (p.t < tw) pitch = lerp(.2, up, clamp(p.t / tw * 1.5, 0, 1)); else if (p.t < ta) { pitch = lerp(up, dn, (p.t - tw) / mv.act); setTrail(o, pitch, up, reach * .5, reach, true, 1); } else { const k = (p.t - ta) / (tt - ta); pitch = lerp(dn, .2, clamp((k - .6) / .4, 0, 1)); if (k < .35) setTrail(o, dn, up, reach * .5, reach, true, 1 - k / .35); } iz = -.18; }
-      else { const a0 = (mv.rev ? 1 : -1) * Math.min(mv.arc, 3.4) / 2, a1 = -a0; pitch = .05; if (p.t < tw) yaw = lerp(.55, a0, clamp(p.t / tw * 1.4, 0, 1)); else if (p.t < ta) { yaw = lerp(a0, a1, (p.t - tw) / mv.act); setTrail(o, a0, yaw, reach * .5, reach, false, 1); } else { const k = (p.t - ta) / (tt - ta); yaw = lerp(a1, .55, clamp((k - .55) / .45, 0, 1)); if (k < .35) setTrail(o, a0, a1, reach * .5, reach, false, 1 - k / .35); } iz = -.1; }
-      break;
-    }
-    default: if (p.moving) { legA = Math.sin(p.walk * 4) * .75; iz = -.1; iy = 20 + Math.abs(Math.sin(p.walk * 4)) * 1.2; }
-  }
-  o.root.rotation.y = ry; o.inner.rotation.z = iz; o.inner.position.y = iy; o.inner.scale.setScalar(sc);
-  o.legs[0].rotation.z = legA; o.legs[1].rotation.z = -legA;
-  o.wp.rotation.set(0, -yaw, pitch); if (o.wp2) o.wp2.rotation.set(0, yaw, pitch);
-  if (o.shield) { if (p.state === 'guard') { o.shield.position.set(11, 23, 0); o.shield.rotation.y = Math.PI / 2; } else { o.shield.position.set(2, 23, -11); o.shield.rotation.y = 0; } }
-  if (o.arrow) { o.arrow.visible = p.state === 'charge'; o.arrow.position.x = -(p.chg || 0) * 2; }
-  // 足元の光 (溜め・修羅化)
-  if (p.demon) { const pu = .5 + .5 * Math.sin(t * 14); decal('ring', p.x, p.y, 22 + pu * 3, 0, 1, '#ff5a3c', .9, 2.4); decal('circ', p.x, p.y, 22 + pu * 3, 0, 1, '#ff3c28', .22, 2.2); }
-  if (p.state === 'charge' && p.chg > 0 && wt !== 'bow') { const col = p.chg === 3 ? '#ff5a3c' : p.chg === 2 ? '#ffd24a' : '#ffffff', pu = .5 + .5 * Math.sin(t * 22), r = 18 + p.chg * 5 + pu * 3; decal('ring', p.x, p.y, r, 0, 1, col, .95, 2.4); decal('circ', p.x, p.y, r, 0, 1, col, .2, 2.2); }
-}
-
-/* ---------- 大型モンスター ---------- */
-function buildMon(m) {
-  const D = m.def, L = D.look, k = L.kind, c1 = L.c1, c2 = L.c2, c3 = L.c3, bl = L.bl, bw = L.bw, hr = L.hr, two = L.legs === 2, el = k === 'elder';
-  const ry = bw * (k === 'anky' ? .62 : .8), legLen = bw * (two ? .95 : k === 'anky' ? .42 : k === 'elder' ? .7 : .62), H = legLen + ry * .9;
-  const headY = k === 'bird' ? H + ry * .95 : (k === 'wyvern' || el) ? H + ry * .8 : k === 'anky' ? H - ry * .2 : H + ry * .05;
-  const root = new THREE.Group(), inner = new THREE.Group(); root.add(inner);
-  let b = mb(); const dk = shade(c1, -.2), lt = shade(c1, .2);
-  mbAdd(b, BASE.sph, c1, 0, H, 0, bl, ry, bw); mbAdd(b, BASE.sph, lt, 0, H - ry * .28, 0, bl * .9, ry * .82, bw * .88);
-  const horns = (bb, short) => {
-    switch (k) {
-      case 'boar': for (const s of [1, -1]) coneDir(bb, c3, hr * .5, -hr * .3, s * hr * .6, hr * .2, hr * (short && s > 0 ? .6 : 1.35), .6, .8, s * .35); break;
-      case 'bird': coneDir(bb, c3, hr * .55, -hr * .1, 0, hr * .5, hr * (short ? .9 : 1.55), 1, -.12, 0); break;
-      case 'anky': for (const s of [1, -1]) coneDir(bb, c3, hr * .1, hr * .2, s * hr * .7, hr * .26, hr * (short && s > 0 ? .4 : .95), .3, .5, s); break;
-      case 'tiger': for (const s of [1, -1]) coneDir(bb, '#ffffff', hr * .85, -hr * .3, s * hr * .34, hr * .14, hr * (short && s > 0 ? .5 : 1.15), .25, -1, 0); break;
-      case 'bull': for (const s of [1, -1]) { const q = short && s > 0 ? .55 : 1; cylTo(bb, c3, -hr * .1, hr * .4, s * hr * .7, hr * .1, hr * .9, s * hr * (1.1 + .8 * q), hr * .28); coneDir(bb, c3, hr * .1, hr * .9, s * hr * (1.1 + .8 * q), hr * .3, hr * 1.5 * q, 1, .25, -s * .25); } break;
-      default: for (const s of [1, -1]) coneDir(bb, el ? c3 : '#e8d9b8', -hr * .5, hr * .4, s * hr * .5, hr * .24, hr * (short && s > 0 ? .8 : 1.7), -1, .55, s * .35);
-    }
-  };
-  const mkHead = short => {
-    const h = mb();
-    switch (k) {
-      case 'boar': mbAdd(h, BASE.sph, c1, -2, 0, 0, hr * 1.05, hr * .92, hr * .92); mbAdd(h, BASE.sph, shade(c1, .25), hr * .8, -hr * .12, 0, hr * .5, hr * .45, hr * .48); for (const s of [1, -1]) coneDir(h, c2, -hr * .5, hr * .6, s * hr * .6, hr * .26, hr * .7, -.3, 1, s * .5); break;
-      case 'bird': mbAdd(h, BASE.sph, c1, 0, 0, 0, hr, hr * .9, hr * .86); for (let i = -1; i <= 1; i++) coneDir(h, c3, -hr * .4, hr * .5, i * hr * .4, hr * .2, hr * 1.4, -1, .6, i * .3); break;
-      case 'anky': mbAdd(h, BASE.sph, short ? shade(c1, -.25) : c1, 0, 0, 0, hr, hr * .75, hr * .9); mbAdd(h, BASE.sph, shade(c1, -.25), hr * .75, -hr * .1, 0, hr * .42, hr * .36, hr * .46); break;
-      case 'tiger': mbAdd(h, BASE.sph, c1, 0, 0, 0, hr, hr * .9, hr * .92); mbAdd(h, BASE.sph, '#ffffff', hr * .65, -hr * .2, 0, hr * .5, hr * .42, hr * .52); sph(h, '#2a3340', hr * 1.12, -hr * .12, 0, hr * .12); for (const s of [1, -1]) coneDir(h, c1, -hr * .3, hr * .7, s * hr * .6, hr * .3, hr * .75, -.2, 1, s * .3); box(h, c2, -hr * .1, hr * .8, 0, hr * .5, hr * .3, hr * .5); break;
-      case 'bull': mbAdd(h, BASE.sph, c1, 0, 0, 0, hr, hr * .9, hr * .9); mbAdd(h, BASE.sph, shade(c1, .2), hr * .7, -hr * .15, 0, hr * .46, hr * .44, hr * .5); break;
-      default: mbAdd(h, BASE.sph, c1, 0, 0, 0, hr * 1.25, hr * .72, hr * .82); coneDir(h, c1, hr * .55, -hr * .05, 0, hr * .62, hr * 1.25, 1, -.1, 0); mbAdd(h, BASE.sph, shade(c1, -.25), hr * .3, hr * .5, 0, hr * .7, hr * .25, hr * .5); if (el) gem(h, c3, -hr * .1, hr * .9, 0, hr * .2, hr * .6);
-    }
-    horns(h, short); return mbGeo(h);
-  };
-  switch (k) {
-    case 'boar': for (let i = 0; i < 6; i++) coneDir(b, c2, bl * .6 - i * bl * .25, H + ry * .82, 0, bw * .17, bw * .55, -.4, 1, 0); break;
-    case 'bird': cylTo(b, c1, bl * .55, H + ry * .2, 0, L.hOff - hr * .3, headY - hr * .4, 0, bw * .36); sph(b, c1, bl * .6, H + ry * .25, 0, bw * .5); break;
-    case 'anky': mbAdd(b, BASE.sph, shade(c1, -.12), 0, H + ry * .28, 0, bl * .86, ry * .9, bw * .84); for (let i = 0; i < 3; i++) for (let j = -1; j <= 1; j++) mbAdd(b, BASE.sph, shade(c1, .18), bl * .5 - i * bl * .5, H + ry * 1.0 - Math.abs(j) * ry * .3, j * bw * .46, bw * .21, bw * .17, bw * .21); for (let i = 0; i < 5; i++) for (const s of [1, -1]) coneDir(b, c3, bl * .65 - i * bl * .32, H, s * bw * .88, bw * .15, bw * .52, 0, .25, s); sph(b, c1, L.hOff - hr * 1.0, headY, 0, hr * .95); break;
-    case 'tiger': for (let i = 0; i < 6; i++) box(b, c2, bl * .62 - i * bl * .24, H + ry * .5, 0, 4.5, ry * .9, bw * 1.56); for (let i = 0; i < 5; i++) coneDir(b, c3, bl * .5 - i * bl * .26, H + ry * .88, 0, bw * .15, bw * .6, -.3, 1, 0); break;
-    case 'bull': mbAdd(b, BASE.sph, shade(c1, .1), bl * .32, H + ry * .3, 0, bl * .56, ry * 1.06, bw * 1.03); for (let i = 0; i < 6; i++) coneDir(b, c2, bl * .72 - i * bl * .26, H + ry * 1.18 - i * ry * .07, 0, bw * .16, bw * .55, -.5, 1, 0); for (const s of [1, -1]) { box(b, c3, bl * .3, H + ry * .3, s * bw * 1.0, bl * .42, 3, 2.5, 0, 0, .5); box(b, c3, bl * .05, H + ry * .1, s * bw * .98, bl * .36, 3, 2.5, 0, 0, -.4); } break;
-    default: mbAdd(b, BASE.sph, c1, L.chest.off, H + ry * .12, 0, L.chest.r, L.chest.r * .92, L.chest.r * .92); cylTo(b, c1, L.chest.off + L.chest.r * .3, H + ry * .35, 0, L.hOff - hr * .8, headY - hr * .1, 0, hr * .62); sph(b, c1, L.hOff - hr * .9, headY - hr * .15, 0, hr * .7);
-      for (let i = 0; i < 7; i++) { const px = bl * .8 - i * bl * .27; if (el) gem(b, c3, px, H + ry * 1.05, (i % 2 ? 1 : -1) * bw * .14, bw * .15, bw * .46, -.3, 1, (i % 2 ? .3 : -.3)); else coneDir(b, c2, px, H + ry * .9, 0, bw * .14, bw * .52, -.4, 1, 0); }
-  }
-  inner.add(mbMesh(b));
-  // 頭
-  const head = new THREE.Group(); head.position.set(L.hOff, headY, 0); inner.add(head);
-  const headGeo = mkHead(false), headGeoB = mkHead(true), headMesh = new THREE.Mesh(headGeo, MATV); head.add(headMesh);
-  b = mb(); const ex = (k === 'wyvern' || el) ? hr * .35 : hr * .45; for (const s of [1, -1]) sph(b, '#ffffff', ex, hr * .32, s * hr * .62, hr * .19);
-  const eyes = new THREE.Mesh(mbGeo(b), new THREE.MeshBasicMaterial({ color: 0xffe36a, vertexColors: true })); head.add(eyes);
-  // 脚
-  const hipY = H - ry * .3, lr = bw * (two ? .22 : .26); b = mb(); cylTo(b, dk, 0, 0, 0, 0, -hipY + 3, 0, lr); mbAdd(b, BASE.sph, c2, lr * .5, -hipY + 3, 0, lr * 1.5, 4, lr * 1.25); const lgeo = mbGeo(b), legs = [];
-  const lp = two ? [[-bl * .05, bw * .72], [-bl * .05, -bw * .72]] : [[bl * .5, bw * .78], [bl * .5, -bw * .78], [-bl * .52, bw * .78], [-bl * .52, -bw * .78]];
-  for (const q of lp) { const lg = new THREE.Mesh(lgeo, MATV); lg.position.set(q[0], hipY, q[1]); inner.add(lg); legs.push(lg); }
-  // 翼
-  const wings = [];
-  if (L.wing) for (const s of [1, -1]) {
-    const g = new THREE.Group(), W = L.wing, w = mb(), mem = shade(c1, -.3); g.position.set(W.off + bl * .2, H + ry * .5, s * bw * .5); g._s = s;
-    if (k === 'bird') { const tip = [-bl * .3, ry * .2, s * (W.side + W.r - bw * .5)], rear = [-bl * .95, 0, s * (W.side * .6)]; tri(w, mem, 0, 0, 0, tip[0], tip[1], tip[2], rear[0], rear[1], rear[2]); tri(w, mem, 0, 0, 0, rear[0], rear[1], rear[2], -bl * .6, -ry * .1, s * 2); cylTo(w, c1, 0, 0, 0, tip[0], tip[1], tip[2], 2.4); tri(w, c3, tip[0], tip[1], tip[2], tip[0] - 16, tip[1], tip[2] + s * 10, rear[0], rear[1], rear[2]); }
-    else { const span = W.side + W.r + 34 - bw * .5, tip = [-bl * .1, ry * .5, s * span], mid = [-bl * .8, ry * .2, s * (span - 22)], rear = [-bl * 1.3, -ry * .2, s * (W.side * .7)], br = [-bl * .75, -ry * .1, s * 3];
-      tri(w, mem, 0, 0, 0, tip[0], tip[1], tip[2], mid[0], mid[1], mid[2]); tri(w, shade(c1, -.4), 0, 0, 0, mid[0], mid[1], mid[2], rear[0], rear[1], rear[2]); tri(w, mem, 0, 0, 0, rear[0], rear[1], rear[2], br[0], br[1], br[2]);
-      cylTo(w, c1, 0, 0, 0, tip[0], tip[1], tip[2], 3.2); cylTo(w, c1, 0, 0, 0, mid[0], mid[1], mid[2], 2.2); cylTo(w, c1, 0, 0, 0, rear[0], rear[1], rear[2], 2.2); coneDir(w, el ? c3 : '#e8d9b8', tip[0], tip[1], tip[2], 3, 12, .6, .3, s * .4);
-      if (el) for (let i = 1; i <= 3; i++) gem(w, c3, tip[0] * i / 4, tip[1] * i / 4 + 5, tip[2] * i / 4, 3.5, 10); }
-    g.add(mbMesh(w)); inner.add(g); wings.push(g);
-  }
-  // 尻尾 (ワールドに直接置く)
-  b = mb(); mbAdd(b, BASE.sph, c1, 0, 0, 0, 1, 1, 1); if (k === 'wyvern') coneDir(b, c2, 0, .7, 0, .3, 1, -.4, 1, 0); if (el) gem(b, c3, 0, 1.05, 0, .3, .7); if (k === 'tiger') mbAdd(b, BASE.sph, c2, 0, 0, 0, .35, 1.06, 1.06);
-  const tgeo = mbGeo(b), tail = []; for (let i = 0; i < L.tailN; i++) tail.push(new THREE.Mesh(tgeo, MATV));
-  b = mb(); const tr = L.tailR;
-  if (k === 'anky') { sph(b, c2, 0, 0, 0, tr * 1.9); for (let i = 0; i < 8; i++) { const a = i * .785; coneDir(b, c3, Math.cos(a) * tr * 1.5, i % 2 ? tr * .8 : 0, Math.sin(a) * tr * 1.5, tr * .45, tr * 1.3, Math.cos(a), i % 2 ? .8 : 0, Math.sin(a)); } }
-  else if (k === 'wyvern' || el) { mbAdd(b, BASE.cone, el ? c3 : c2, 14, 0, 0, 3, 34, 15, 0, 0, -Math.PI / 2); }
-  else if (k === 'bird') { for (let i = -1; i <= 1; i++) tri(b, i ? c1 : c3, 0, 0, 0, 36 * Math.cos(i * .5 - .17), 3, 36 * Math.sin(i * .5 - .17), 36 * Math.cos(i * .5 + .17), 3, 36 * Math.sin(i * .5 + .17)); }
-  else if (k === 'bull' || k === 'tiger') sph(b, k === 'bull' ? c3 : c2, 4, 0, 0, 7.5);
-  const tip = b.p.length ? mbMesh(b) : null;
-  const shadow = new THREE.Mesh(BASE.circ, flatMat('#000000', .28)); shadow.renderOrder = 1;
-  return { root, inner, head, headMesh, headGeoB, eyes, legs, wings, tail, tip, shadow, H, ry, legLen, headY, rage: false, hb: false, wb: false };
-}
-function r3SyncMon(m) {
-  let o = R3.mon.get(m), sc = R3.scene;
-  if (!o) { o = buildMon(m); R3.mon.set(m, o); sc.add(o.root); for (const tm of o.tail) sc.add(tm); if (o.tip) sc.add(o.tip); sc.add(o.shadow); }
-  const D = m.def, L = D.look, t = G.el, dead = m.state === 'dead', dying = m.state === 'dying', mv = m.mv;
-  let ox = 0, oz = 0; if (m.shakeT > 0) { ox = rnd(-2, 2); oz = rnd(-2, 2); } if (m.state === 'trap') ox += Math.sin(t * 40) * 1.8;
-  const lift = m.air * (mv && mv.burrow ? -95 : mv && mv.dive ? 120 : 75);
-  o.root.position.set(m.x + ox, lift, m.y + oz); o.root.rotation.y = -m.dir;
-  const still = dead || dying || ['sleep', 'stun', 'trap', 'flash', 'flinch', 'roar'].includes(m.state);
-  let px = 0, py = 0, rz = 0, rx = 0, low = 0, hz = 0;
-  if (m.state === 'wind' && mv) { const fr = clamp(m.t / m.windT, 0, 1), k = mv.k; px = -9 * Math.sin(fr * 1.57); if (k === 'leap' || k === 'charge') py = -o.legLen * .4 * fr; if (k === 'burst' || k === 'rain' || k === 'beam' || k === 'breath' || k === 'shot') rz = .17 * fr; if (k === 'bite') hz = .35 * fr; }
-  else if (m.state === 'roar') { rz = .22 * Math.sin(Math.min(1, m.t / .3) * 1.57); hz = .3; }
-  else if (dying) { const q = clamp(m.t / m.dur, 0, 1); rx = q * q * 1.35; low = q; }
-  else if (dead) { low = 1; if (!m.captured) rx = 1.35; }
-  else if (m.state === 'sleep') { low = 1; hz = -.3; }
-  else if (m.state === 'stun') { rx = 1.2; low = .8; }
-  else if (m.state === 'flinch') { rz = -.12; hz = .3; }
-  else if (m.state === 'flash') hz = .3 * Math.sin(t * 6);
-  if (m.lunge > 0) hz = -.25 * m.lunge;
-  o.inner.position.set(px, py - o.legLen * .78 * low, 0); o.inner.rotation.set(rx, 0, rz);
-  const wk = still ? (m.state === 'stun' ? Math.sin(t * 16) * .8 : 0) : Math.sin(m.walk * 6);
-  for (let i = 0; i < o.legs.length; i++) { const lg = o.legs[i]; lg.rotation.z = ((i % 2) ^ (i > 1 ? 1 : 0) ? -1 : 1) * wk * .55; lg.visible = low < .6 || rx > .5; }
-  for (const g of o.wings) { let a = dead || dying ? -.2 : m.air > .05 ? .5 + Math.sin(t * 15) * .4 : still ? .05 : .12 + Math.sin(t * 3) * .06; if (L.kind === 'bird' && m.air <= .05) a -= .15; g.rotation.x = -g._s * a; }
-  if (m.broken.wing && !o.wb) { o.wb = true; for (const g of o.wings) g.scale.set(.8, 1, .72); }
-  if (m.broken.head && !o.hb) { o.hb = true; o.headMesh.geometry = o.headGeoB; }
-  o.head.position.x = L.hOff + m.lunge * 18; o.head.rotation.z = hz;
-  const rage = m.rageT > 0 && !dead; o.eyes.visible = !(dead || dying || m.state === 'sleep'); if (rage !== o.rage) { o.rage = rage; o.eyes.material.color.set(rage ? 0xff3b2f : 0xffe36a); }
-  // 尻尾
-  let pxw = m.x - Math.cos(m.dir) * L.bl * .85, pyw = m.y - Math.sin(m.dir) * L.bl * .85, ta = m.dir + Math.PI, lastY = 0;
-  const y0 = (o.H * .9) * (1 - low * .6);
-  for (let i = 0; i < o.tail.length; i++) {
-    const tm = o.tail[i]; if (i >= m.tailN) { tm.visible = false; continue; }
-    const s = m.tail[i], r = Math.max(4, L.tailR * (1 - i / (L.tailN + 1) * .75)), yy = Math.max(r * .9, lerp(y0, r, Math.pow((i + 1) / L.tailN, .7)));
-    ta = Math.atan2(s.y - pyw, s.x - pxw); tm.visible = true; tm.position.set((s.x + pxw) / 2 + ox, yy + Math.max(lift, -200), (s.y + pyw) / 2 + oz); tm.rotation.y = -ta; tm.scale.set(L.tailL * .78, r, r); pxw = s.x; pyw = s.y; lastY = yy;
-  }
-  if (o.tip) { o.tip.visible = !m.tailCut && m.tailN > 0; if (o.tip.visible) { o.tip.position.set(pxw + ox, lastY + Math.max(lift, -200), pyw + oz); o.tip.rotation.y = -ta; } }
-  o.shadow.position.set(m.x, .8, m.y); o.shadow.rotation.y = -m.dir; const ss = 1 - m.air * .3; o.shadow.scale.set(L.bl * 1.2 * ss, 1, L.bw * 1.15 * ss); o.shadow.visible = !(mv && mv.burrow && m.air > .3);
-}
-function smallGeo(L) { const b = mb(), c = L.sc, dk = shade(L.sc, -.5); mbAdd(b, BASE.sph, c, 0, 13, 0, 14, 8, 8.5); mbAdd(b, BASE.sph, shade(L.sc, -.2), -2, 15, 0, 8, 5, 5); mbAdd(b, BASE.sph, c, 15, 19, 0, 7.5, 6, 6); coneDir(b, '#e9cf5a', 20, 18, 0, 3, 9, 1, -.1, 0); coneDir(b, c, -10, 13, 0, 5, 24, -1, .15, 0); for (const s of [1, -1]) { cylTo(b, dk, 1, 10, s * 6, 3, 0, s * 7, 2); sph(b, '#1a1010', 17, 21, s * 4.6, 1.5); } return mbGeo(b); }
-
 /* ---------- 地面の表示 (攻撃予兆・影など) ---------- */
 function sectGeo(arc) {
   const key = Math.round(arc * 25); let g = R3.sec[key]; if (g) return g;
@@ -1979,16 +1811,19 @@ function r3Render() {
   const sc = R3.scene, f = G.f, L = f.L, t = G.el, p = G.p, D = R3.dec; R3.frame++;
   r3Camera();
   D.n.circ = D.n.ring = D.n.rect = D.n.sect = 0;
-  r3SyncPlayer();
-  for (const m of G.mons) { r3SyncMon(m); if (m.mv && m.state !== 'dead') r3Tele(m); }
+  const dt = clamp(G.el - R3.lastEl, 0, .1); R3.lastEl = G.el;
+  r3SyncPlayer(dt);
+  for (const m of G.mons) {
+    let o = R3.mon.get(m); if (!o) { o = mkRig(m.def.look, false); o.seed = Math.random() * 9; R3.mon.set(m, o); }
+    rigUpdate(o, m, dt, false); if (m.mv && m.state !== 'dead') r3Tele(m);
+  }
   // 小型モンスター
   for (const s of G.small) {
-    let o = R3.small.get(s); if (!o) { if (!R3.pv) R3.pv = smallGeo(L); o = { m: new THREE.Mesh(R3.pv, MATV), sh: new THREE.Mesh(BASE.circ, flatMat('#000000', .26)) }; o.sh.scale.set(15, 1, 10); o.sh.renderOrder = 1; sc.add(o.m); sc.add(o.sh); R3.small.set(s, o); }
-    o.f = R3.frame; const k = s.dead ? clamp(s.fade, 0, 1) : 1;
-    o.m.position.set(s.x, s.dead ? -14 * (1 - k) : Math.abs(Math.sin(s.walk * 5)) * 2 + (s.state === 'lunge' ? 6 : 0), s.y); o.m.rotation.set(s.dead ? 1.4 : 0, -s.dir, s.state === 'wind' ? .25 : s.state === 'hurt' ? .4 : 0); o.sh.position.set(s.x, .8, s.y); o.sh.rotation.y = -s.dir; o.sh.visible = !s.dead;
+    let o = R3.small.get(s); if (!o) { o = mkRig(smallLook(L), true); o.seed = Math.random() * 9; R3.small.set(s, o); }
+    o.f = R3.frame; rigUpdate(o, s, dt, true);
     if (s.state === 'wind') { decal('sect', s.x, s.y, 84, s.dir, 1, TR, .2, 1.2, 1.0); decal('sect', s.x, s.y, 84 * clamp(s.t / .55, 0, 1), s.dir, 1, TR, .34, 1.5, 1.0); }
   }
-  for (const [s, o] of R3.small) if (o.f !== R3.frame) { sc.remove(o.m); sc.remove(o.sh); o.sh.material.dispose(); R3.small.delete(s); }
+  for (const [s, o] of R3.small) if (o.f !== R3.frame) { rigRemove(o); R3.small.delete(s); }
   // 落下攻撃・罠・切れた尻尾
   for (const hz of G.haz) { const fr = clamp(hz.t / hz.warn, 0, 1); decal('circ', hz.x, hz.y, hz.r, 0, 1, TR, .2, 1.2); decal('ring', hz.x, hz.y, hz.r, 0, 1, '#ff7060', .85, 1.8); decal('circ', hz.x, hz.y, hz.r * fr, 0, 1, TR, .36, 1.5); }
   for (const o of G.objs) {
@@ -2005,7 +1840,7 @@ function r3Render() {
   for (let i = ip; i < R3.pj.length; i++) R3.pj[i].visible = false; for (let i = ia; i < R3.ar.length; i++) R3.ar[i].visible = false;
   // 光線
   R3.beam.visible = false;
-  for (const m of G.mons) if (m.state === 'act' && m.mv && m.mv.k === 'beam') { const h = headPos(m), mv = m.mv, a = 1 - m.t / mv.act, o = R3.mon.get(m); R3.beam.visible = true; R3.beam.position.set(h.x + Math.cos(m.dir) * mv.len / 2, o.headY, h.y + Math.sin(m.dir) * mv.len / 2); R3.beam.rotation.y = -m.dir; R3.beam.scale.set(mv.len, mv.bw * .5 * a + 4, mv.bw * a + 4); R3.beam.material.opacity = .5 + .4 * a; }
+  for (const m of G.mons) if (m.state === 'act' && m.mv && m.mv.k === 'beam') { const h = headPos(m), mv = m.mv, a = 1 - m.t / mv.act, o = R3.mon.get(m); R3.beam.visible = true; R3.beam.position.set(h.x + Math.cos(m.dir) * mv.len / 2, o.headW.y, h.y + Math.sin(m.dir) * mv.len / 2); R3.beam.rotation.y = -m.dir; R3.beam.scale.set(mv.len, mv.bw * .5 * a + 4, mv.bw * a + 4); R3.beam.material.opacity = .5 + .4 * a; }
   // 粒子
   const pos = R3.pts.geometry.attributes.position, colA = R3.pts.geometry.attributes.col, siz = R3.pts.geometry.attributes.size; let n = 0;
   for (const o of G.fx) {
@@ -2032,12 +1867,12 @@ function drawOverlay3D(c) {
   for (const n of f.nodes) if (n.uses > 0) { const q = r3Proj(n.x, 26, n.y); if (q.ok && q.d < 900) { const a = .5 + .5 * Math.sin(t * 4 + n.s * 20); c.globalAlpha = a; star4(c, q.x, q.y, (6 + a * 2) * clamp(380 / q.d, .5, 1.3), '#ffffff'); } }
   c.globalAlpha = 1;
   for (const m of G.mons) {
-    const o = R3.mon.get(m); if (!o) continue; const L = m.def.look, h = headPos(m), q = r3Proj(h.x, o.headY + L.hr + 14, h.y); if (!q.ok) continue;
+    const o = R3.mon.get(m); if (!o) continue; const L = m.def.look, q = r3Proj(o.headW.x, o.headW.y + L.hr + 12, o.headW.z); if (!q.ok) continue;
     if (m.state === 'sleep') { const k = (t * .6) % 1; c.globalAlpha = 1 - k; txt(c, 'Z', q.x + 8 + k * 14, q.y - k * 26, 16 + k * 10, '#dfeaff', 'center'); c.globalAlpha = 1; }
     if (m.state === 'stun' || m.state === 'flash') for (let i = 0; i < 3; i++) { const a = t * 5 + i * 2.09; star4(c, q.x + Math.cos(a) * 22, q.y + Math.sin(a) * 8, 7, '#fff27a'); }
     if (m.state === 'trap') for (let i = 0; i < 3; i++) star4(c, q.x + rnd(-40, 40), q.y + rnd(0, 50), 5, '#fff27a');
     if (m.state !== 'dead' && m.state !== 'dying' && q.d > 620) { const far = !(m.noticed || m.met); c.globalAlpha = .85; P(c, [q.x - 7, q.y - 16, q.x + 7, q.y - 16, q.x, q.y - 4], far ? '#ffb13d' : '#ff4a3a', '#fff', 1.5); c.globalAlpha = 1; }
-    const qb = r3Proj(m.x, o.H + o.ry + 10, m.y);
+    const qb = r3Proj(m.x, (m.state === 'dead' ? L.bw * 1.6 : o.H + o.ry) + 10, m.y);
     if (m.captured) txt(c, '捕獲', qb.x, qb.y, 15, '#d9c0ff', 'center');
     if (m.state === 'dead' && m.carves > 0 && !m.captured) { const a = .5 + .5 * Math.sin(t * 4); c.globalAlpha = a; star4(c, qb.x, qb.y + 20, 9, '#fff'); c.globalAlpha = 1; }
   }
@@ -2048,6 +1883,551 @@ function drawOverlay3D(c) {
   if (p.state === 'item' || p.state === 'act') { const fr = p.state === 'item' ? p.t / p.useT : p.t / (p.act.k === 'node' ? .9 : 1.3); c.lineCap = 'round'; c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = 6; c.beginPath(); c.arc(hq.x, hq.y, 10, 0, TAU); c.stroke(); c.strokeStyle = '#ffe58a'; c.lineWidth = 3.5; c.beginPath(); c.arc(hq.x, hq.y, 10, -Math.PI / 2, -Math.PI / 2 + TAU * clamp(fr, 0, 1)); c.stroke(); }
   if (p.state === 'charge' && G.st.wt === 'bow') for (let i = 0; i < 3; i++) E(c, hq.x - 12 + i * 12, hq.y, 4, 4, i < p.chg ? (i === 2 ? '#ff7a5a' : '#ffe36a') : 'rgba(0,0,0,.4)', '#000', 1);
 }
+
+/* =====================================================================
+   生き物の描画 (高精細版)
+   ・体は「背骨」に沿って輪切りを並べ、皮膚を張った1枚の滑らかな立体
+   ・脚は関節つき。足先を地面に付けたまま体を運び、離れたら踏み出す
+   ・顎は開閉し、首は獲物を追い、姿勢はなめらかに移り変わる
+   ・皮膚の模様と凹凸は、その場で絵を描いて貼っている
+   ===================================================================== */
+let BASE2 = null, MATS = null, MATG = null, _N3 = null, _B1, _B2, _B3, _MA, _MB, _MC;
+const QD = () => (S.opt.lowq ? .5 : 1);
+function crInit() {
+  if (BASE2) return;
+  const ni = g => { const o = g.index ? g.toNonIndexed() : g; o._sh = 1; return o; };
+  const cone = new THREE.ConeGeometry(1, 1, 16, 3); cone.translate(0, .5, 0); const cone8 = new THREE.ConeGeometry(1, 1, 9, 2); cone8.translate(0, .5, 0);
+  BASE2 = { sph: ni(new THREE.SphereGeometry(1, 28, 20)), sphL: ni(new THREE.SphereGeometry(1, 14, 10)), cone: ni(cone), cone8: ni(cone8), cyl: ni(new THREE.CylinderGeometry(1, 1, 1, 18)), oct: ni(new THREE.OctahedronGeometry(1, 0)) };
+  MATS = new THREE.MeshPhongMaterial({ vertexColors: true, shininess: 46, specular: 0x444444 }); MATS._sh = 1;
+  MATG = new THREE.MeshBasicMaterial({ vertexColors: true }); MATG._sh = 1;
+  _N3 = new THREE.Matrix3(); _B1 = new THREE.Vector3(); _B2 = new THREE.Vector3(); _B3 = new THREE.Vector3(); _MA = new THREE.Matrix4(); _MB = new THREE.Matrix4(); _MC = new THREE.Matrix4();
+}
+const sstep = t => { t = clamp(t, 0, 1); return t * t * (3 - 2 * t); };
+const damp = (a, b, rate, dt) => a + (b - a) * (1 - Math.exp(-rate * dt));
+function mixCol(a, b, t) { const p = colRGB(a), q = colRGB(b); return 'rgb(' + Math.round(lerp(p[0], q[0], t) * 255) + ',' + Math.round(lerp(p[1], q[1], t) * 255) + ',' + Math.round(lerp(p[2], q[2], t) * 255) + ')'; }
+
+/* ---------- 滑らかな部品 (角・牙・爪など、形の変わらないもの) ---------- */
+function sb() { return { p: [], n: [], c: [] }; }
+function sbPush(b, geo, col) {
+  const pos = geo.attributes.position, nor = geo.attributes.normal, c = colRGB(col); _N3.getNormalMatrix(_M4);
+  for (let i = 0; i < pos.count; i++) { _P3.fromBufferAttribute(pos, i).applyMatrix4(_M4); b.p.push(_P3.x, _P3.y, _P3.z); _P3.fromBufferAttribute(nor, i).applyMatrix3(_N3).normalize(); b.n.push(_P3.x, _P3.y, _P3.z); b.c.push(c[0], c[1], c[2]); }
+}
+function sbAdd(b, geo, col, x, y, z, sx, sy, sz, rx, ry, rz) { _EU.set(rx || 0, ry || 0, rz || 0); _Q.setFromEuler(_EU); _V3.set(x, y, z); _S3.set(sx, sy === undefined ? sx : sy, sz === undefined ? sx : sz); _M4.compose(_V3, _Q, _S3); sbPush(b, geo, col); }
+function sbDir(b, geo, col, x, y, z, sx, sy, sz, dx, dy, dz) { _V3.set(dx, dy, dz).normalize(); _Q.setFromUnitVectors(_UP, _V3); _V3.set(x, y, z); _S3.set(sx, sy, sz); _M4.compose(_V3, _Q, _S3); sbPush(b, geo, col); }
+const sbCone = (b, col, x, y, z, r, h, dx, dy, dz, lo) => sbDir(b, lo ? BASE2.cone8 : BASE2.cone, col, x, y, z, r, h, r, dx, dy, dz);
+function crv(P, t, out) {
+  const n = P.length, i = Math.min(n - 2, Math.max(0, Math.floor(t))), f = t - i, p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(n - 1, i + 2)], f2 = f * f, f3 = f2 * f;
+  for (let d = 0; d < p1.length; d++) out[d] = .5 * (2 * p1[d] + (-p0[d] + p2[d]) * f + (2 * p0[d] - 5 * p1[d] + 4 * p2[d] - p3[d]) * f2 + (-p0[d] + 3 * p1[d] - 3 * p2[d] + p3[d]) * f3);
+  return out;
+}
+// 曲がった先細りの管 (角・牙・爪)。pts=[[x,y,z,r],...]
+function sbTube(b, col, pts, segs, rings, col2, flat) {
+  const c0 = colRGB(col), c1 = colRGB(col2 || col), C = [], o = [0, 0, 0, 0];
+  for (let i = 0; i < rings; i++) { crv(pts, i / (rings - 1) * (pts.length - 1), o); C.push([o[0], o[1], o[2], Math.max(.05, o[3])]); }
+  const ring = []; let sx = 0, sy = 0, sz = 0;
+  for (let i = 0; i < rings; i++) {
+    const a = C[Math.max(0, i - 1)], d = C[Math.min(rings - 1, i + 1)]; let ax = d[0] - a[0], ay = d[1] - a[1], az = d[2] - a[2]; const al = hyp(ax, ay, az) || 1; ax /= al; ay /= al; az /= al;
+    if (i === 0) { let rx = 0, ry = 1, rz = 0; if (Math.abs(ay) > .9) { rx = 1; ry = 0; } sx = ry * az - rz * ay; sy = rz * ax - rx * az; sz = rx * ay - ry * ax; }
+    const dt = sx * ax + sy * ay + sz * az; sx -= ax * dt; sy -= ay * dt; sz -= az * dt; const sl = hyp(sx, sy, sz) || 1; sx /= sl; sy /= sl; sz /= sl;
+    const ux = ay * sz - az * sy, uy = az * sx - ax * sz, uz = ax * sy - ay * sx, r = C[i][3], row = [];
+    for (let j = 0; j <= segs; j++) { const th = j / segs * TAU, cu = Math.cos(th) * (flat || 1), su = Math.sin(th); row.push([C[i][0] + (ux * cu + sx * su) * r, C[i][1] + (uy * cu + sy * su) * r, C[i][2] + (uz * cu + sz * su) * r, ux * Math.cos(th) + sx * su * (flat || 1), uy * Math.cos(th) + sy * su * (flat || 1), uz * Math.cos(th) + sz * su * (flat || 1)]); }
+    ring.push(row);
+  }
+  const put = (v, t) => { b.p.push(v[0], v[1], v[2]); const l = hyp(v[3], v[4], v[5]) || 1; b.n.push(v[3] / l, v[4] / l, v[5] / l); b.c.push(lerp(c0[0], c1[0], t), lerp(c0[1], c1[1], t), lerp(c0[2], c1[2], t)); };
+  for (let i = 0; i < rings - 1; i++) for (let j = 0; j < segs; j++) { const a = ring[i][j], a1 = ring[i][j + 1], bb = ring[i + 1][j], b1 = ring[i + 1][j + 1], t0 = i / (rings - 1), t1 = (i + 1) / (rings - 1); put(a, t0); put(bb, t1); put(a1, t0); put(a1, t0); put(bb, t1); put(b1, t1); }
+}
+function sbGeo(b) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(b.p, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(b.n, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(b.c, 3)); g.computeBoundingSphere(); return g; }
+const sbMesh = (b, mat) => { const m = new THREE.Mesh(sbGeo(b), mat || MATS); m.frustumCulled = false; return m; };
+
+/* ---------- 毎フレーム形を変える管 (体・脚) ---------- */
+function mkTube(R, Sg, mat) {
+  const n = R * (Sg + 1), f = () => new Float32Array(R);
+  const tb = { R, Sg, n: R, pos: new Float32Array(n * 3), nor: new Float32Array(n * 3), uv: new Float32Array(n * 2), cx: f(), cy: f(), cz: f(), ru: f(), rs: f(), vv: f(), ux: f(), uy: f(), uz: f(), sx: f(), sy: f(), sz: f(), ax: f(), ay: f(), az: f(), cs: new Float32Array(Sg + 1), sn: new Float32Array(Sg + 1), top: 1, bot: 1 };
+  for (let j = 0; j <= Sg; j++) { const a = j / Sg * TAU; tb.cs[j] = -Math.cos(a); tb.sn[j] = Math.sin(a); }
+  const idx = new (n > 65535 ? Uint32Array : Uint16Array)((R - 1) * Sg * 6); let k = 0;
+  for (let i = 0; i < R - 1; i++) for (let j = 0; j < Sg; j++) { const a = i * (Sg + 1) + j, b = a + Sg + 1; idx[k++] = a; idx[k++] = a + 1; idx[k++] = b; idx[k++] = a + 1; idx[k++] = b + 1; idx[k++] = b; }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(tb.pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(tb.nor, 3)); g.setAttribute('uv', new THREE.BufferAttribute(tb.uv, 2)); g.setIndex(new THREE.BufferAttribute(idx, 1));
+  tb.g = g; tb.mesh = new THREE.Mesh(g, mat); tb.mesh.frustumCulled = false; return tb;
+}
+// 輪の中心(cx,cy,cz)と半径(ru,rs)から、面と法線を作る。ref=上の目安, roll=体軸まわりの傾き
+function tubeBuild(tb, rx, ry, rz, roll) {
+  const R = tb.R, Sg = tb.Sg, n = tb.n, cx = tb.cx, cy = tb.cy, cz = tb.cz, pos = tb.pos, nor = tb.nor, uv = tb.uv, cr = Math.cos(roll || 0), sr = Math.sin(roll || 0);
+  let pax = 0, pay = 0, paz = -1, psx = 1, psy = 0, psz = 0, o = 0, q = 0;
+  for (let i = 0; i < R; i++) {
+    const ii = i < n ? i : n - 1, i0 = ii > 0 ? ii - 1 : 0, i1 = ii < n - 1 ? ii + 1 : n - 1;
+    let ax = cx[i1] - cx[i0], ay = cy[i1] - cy[i0], az = cz[i1] - cz[i0]; const al = Math.sqrt(ax * ax + ay * ay + az * az);
+    if (al > 1e-5) { ax /= al; ay /= al; az /= al; } else { ax = pax; ay = pay; az = paz; }
+    let sx = ry * az - rz * ay, sy = rz * ax - rx * az, sz = rx * ay - ry * ax, sl = Math.sqrt(sx * sx + sy * sy + sz * sz);
+    if (sl > 1e-3) { sx /= sl; sy /= sl; sz /= sl; } else { sx = psx; sy = psy; sz = psz; }
+    let ux = ay * sz - az * sy, uy = az * sx - ax * sz, uz = ax * sy - ay * sx;
+    if (sr) { const tx = ux * cr + sx * sr, ty = uy * cr + sy * sr, tz = uz * cr + sz * sr; sx = sx * cr - ux * sr; sy = sy * cr - uy * sr; sz = sz * cr - uz * sr; ux = tx; uy = ty; uz = tz; }
+    pax = ax; pay = ay; paz = az; psx = sx; psy = sy; psz = sz;
+    tb.ax[i] = ax; tb.ay[i] = ay; tb.az[i] = az; tb.ux[i] = ux; tb.uy[i] = uy; tb.uz[i] = uz; tb.sx[i] = sx; tb.sy[i] = sy; tb.sz[i] = sz;
+    const ru = tb.ru[ii], rs = tb.rs[ii], slope = al > 1e-5 ? ((tb.ru[i1] + tb.rs[i1]) - (tb.ru[i0] + tb.rs[i0])) * .5 / al : 0, X = cx[ii], Y = cy[ii], Z = cz[ii], v = tb.vv[ii];
+    for (let j = 0; j <= Sg; j++) {
+      const cu = tb.cs[j], su = tb.sn[j], r1 = ru * (cu < 0 ? tb.bot : tb.top), a = cu * r1, b = su * rs;
+      pos[o] = X + ux * a + sx * b; pos[o + 1] = Y + uy * a + sy * b; pos[o + 2] = Z + uz * a + sz * b;
+      const na = cu * (rs + .01), nb = su * (r1 + .01); let nx = ux * na + sx * nb, ny = uy * na + sy * nb, nz = uz * na + sz * nb, nl = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+      nx = nx / nl - ax * slope; ny = ny / nl - ay * slope; nz = nz / nl - az * slope; nl = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+      nor[o] = nx / nl; nor[o + 1] = ny / nl; nor[o + 2] = nz / nl; o += 3; uv[q] = j / Sg; uv[q + 1] = v; q += 2;
+    }
+  }
+  tb.g.attributes.position.needsUpdate = true; tb.g.attributes.normal.needsUpdate = true; tb.g.attributes.uv.needsUpdate = true;
+}
+
+/* ---------- 皮膚の絵を描く ---------- */
+function mkCv(n) { const c = document.createElement('canvas'); c.width = c.height = n; return c; }
+function heightToNormal(hc, N, str) {
+  const src = hc.getContext('2d').getImageData(0, 0, N, N).data, out = mkCv(N), oc = out.getContext('2d'), img = oc.createImageData(N, N), d = img.data;
+  for (let y = 0; y < N; y++) {
+    const yu = ((y - 1 + N) % N) * N, yd = ((y + 1) % N) * N, yy = y * N;
+    for (let x = 0; x < N; x++) { const xl = (x - 1 + N) % N, xr = (x + 1) % N, dx = (src[(yy + xr) * 4] - src[(yy + xl) * 4]) / 255 * str, dy = (src[(yd + x) * 4] - src[(yu + x) * 4]) / 255 * str, il = 1 / Math.sqrt(dx * dx + dy * dy + 1), o = (yy + x) * 4; d[o] = (-dx * il * .5 + .5) * 255; d[o + 1] = (dy * il * .5 + .5) * 255; d[o + 2] = (il * .5 + .5) * 255; d[o + 3] = 255; }
+  }
+  oc.putImageData(img, 0, 0); return out;
+}
+function skinTex(L) {
+  const k = L.kind, N = S.opt.lowq ? 512 : 1024, u = N / 1024, cc = mkCv(N), hc = mkCv(N), c = cc.getContext('2d'), h = hc.getContext('2d'), R = mulberry(k.length * 97 + L.bl), c1 = L.c1, c2 = L.c2, c3 = L.c3;
+  const belly = k === 'bird' ? mixCol(c1, c3, .65) : k === 'anky' ? c3 : k === 'tiger' ? '#ffffff' : k === 'wyvern' ? mixCol(c1, c3, .6) : k === 'bull' ? shade(c1, .18) : k === 'elder' ? shade(c1, .22) : k === 'raptor' ? shade(c1, .45) : shade(c1, .3);
+  const back = shade(c1, k === 'tiger' ? -.06 : -.22), g = c.createLinearGradient(0, 0, N, 0);
+  for (const st of [[0, belly], [.13, belly], [.3, c1], [.5, back], [.7, c1], [.87, belly], [1, belly]]) g.addColorStop(st[0], st[1]);
+  c.fillStyle = g; c.fillRect(0, 0, N, N); h.fillStyle = '#808080'; h.fillRect(0, 0, N, N);
+  const wrap = (x, y, r, fn) => { for (let ox = -N; ox <= N; ox += N) for (let oy = -N; oy <= N; oy += N) if (x + ox > -r && x + ox < N + r && y + oy > -r && y + oy < N + r) fn(x + ox, y + oy); };
+  const scales = (sz, dark, lightA) => {
+    const rows = Math.round(N / (sz * .78)), cols = Math.round(N / sz), sy = N / rows, sx = N / cols;
+    for (let r = 0; r < rows; r++) for (let q = 0; q < cols; q++) {
+      const x = (q + (r % 2 ? .5 : 0)) * sx, y = r * sy, rr = sx * .56, t = R();
+      wrap(x, y, rr * 1.3, (X, Y) => {
+        c.fillStyle = t < .5 ? 'rgba(255,255,255,' + (lightA * t * 2) + ')' : 'rgba(0,0,0,' + (lightA * (t - .5) * 2) + ')'; c.beginPath(); c.ellipse(X, Y, rr, rr * 1.15, 0, 0, TAU); c.fill();
+        c.strokeStyle = 'rgba(0,0,0,' + dark + ')'; c.lineWidth = Math.max(1, 2.2 * u); c.beginPath(); c.arc(X, Y, rr, .15, Math.PI - .15); c.stroke();
+        const gr = h.createRadialGradient(X, Y - rr * .2, rr * .1, X, Y, rr * 1.05); gr.addColorStop(0, 'rgba(255,255,255,.9)'); gr.addColorStop(.7, 'rgba(150,150,150,.6)'); gr.addColorStop(1, 'rgba(20,20,20,.9)'); h.fillStyle = gr; h.beginPath(); h.ellipse(X, Y, rr, rr * 1.15, 0, 0, TAU); h.fill();
+      });
+    }
+  };
+  const fur = (n, len, a) => { c.lineCap = h.lineCap = 'round'; for (let i = 0; i < n; i++) { const x = R() * N, y = R() * N, l = len * (.5 + R()) * u, ang = (R() - .5) * .5, t = R(), dx = Math.sin(ang) * l, dy = Math.cos(ang) * l; wrap(x, y, l, (X, Y) => { c.strokeStyle = t < .5 ? 'rgba(0,0,0,' + a * (.4 + t) + ')' : 'rgba(255,255,255,' + a * (t - .2) + ')'; c.lineWidth = (1.2 + R() * 1.6) * u; c.beginPath(); c.moveTo(X, Y); c.lineTo(X + dx, Y + dy); c.stroke(); h.strokeStyle = t < .5 ? 'rgba(0,0,0,.5)' : 'rgba(255,255,255,.5)'; h.lineWidth = 1.6 * u; h.beginPath(); h.moveTo(X, Y); h.lineTo(X + dx, Y + dy); h.stroke(); }); } };
+  const plates = () => { const rows = 26, sy = N / rows; for (let r = 0; r < rows; r++) for (const side of [0, 1]) { const x0 = side ? N * .865 : 0, w = N * .135, y = r * sy; c.fillStyle = r % 2 ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.08)'; c.fillRect(x0, y, w, sy); c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(x0, y, w, Math.max(1, 2.5 * u)); const gr = h.createLinearGradient(0, y, 0, y + sy); gr.addColorStop(0, '#202020'); gr.addColorStop(.25, '#e0e0e0'); gr.addColorStop(1, '#707070'); h.fillStyle = gr; h.fillRect(x0, y, w, sy); } };
+  let str = 2.2, ec = null;
+  const veins = (n, col) => { ec = mkCv(N); const e = ec.getContext('2d'); e.fillStyle = '#000'; e.fillRect(0, 0, N, N); e.lineCap = e.lineJoin = 'round'; for (let i = 0; i < n; i++) { const sd = R() < .5 ? -1 : 1; let x = N * (.5 + sd * (.03 + R() * .08)), y = R() * N; const pts = [[x, y]]; for (let s = 0; s < 9; s++) { x += sd * N * (.02 + R() * .035); y += (R() - .5) * N * .09; pts.push([x, y]); } for (const off of [-N, 0, N]) for (const pass of [[9 * u, .22], [3.2 * u, 1]]) { e.strokeStyle = col; e.globalAlpha = pass[1]; e.lineWidth = pass[0]; e.beginPath(); pts.forEach((p, j) => j ? e.lineTo(p[0], p[1] + off) : e.moveTo(p[0], p[1] + off)); e.stroke(); c.strokeStyle = col; c.globalAlpha = pass[1] * .5; c.lineWidth = pass[0] * .7; c.beginPath(); pts.forEach((p, j) => j ? c.lineTo(p[0], p[1] + off) : c.moveTo(p[0], p[1] + off)); c.stroke(); } } e.globalAlpha = c.globalAlpha = 1; return e; };
+  switch (k) {
+    case 'boar': fur(9000, 26, .34); c.fillStyle = 'rgba(30,18,8,.5)'; c.fillRect(N * .455, 0, N * .09, N); fur(2500, 34, .3); str = 1.5; break;
+    case 'bird': scales(40 * u, .34, .2); for (let i = 0; i < 26; i++) { c.fillStyle = c3; c.globalAlpha = .5; const y = i / 26 * N; c.beginPath(); c.ellipse(N * .5, y, 14 * u, 30 * u, 0, 0, TAU); c.fill(); } c.globalAlpha = 1; str = 2.4; break;
+    case 'anky': scales(74 * u, .5, .3); scales(26 * u, .2, .12); str = 3.4; break;
+    case 'tiger': fur(8000, 24, .16); c.fillStyle = c2; for (let i = 0; i < 15; i++) { const y0 = (i + R() * .5) / 15 * N, T = (10 + R() * 12) * u, ph = R() * 6, half = R() < .3; for (const off of [-N, 0, N]) { c.beginPath(); const xa = N * (half ? .5 : .16), xb = N * .84; for (let x = xa; x <= xb; x += 8 * u) { const th = T * Math.pow(Math.max(0, 1 - Math.abs(x - N * .5) / (N * .36)), .7); c.lineTo(x, y0 + off + Math.sin(x * .018 / u + ph) * 9 * u - th); } for (let x = xb; x >= xa; x -= 8 * u) { const th = T * Math.pow(Math.max(0, 1 - Math.abs(x - N * .5) / (N * .36)), .7); c.lineTo(x, y0 + off + Math.sin(x * .018 / u + ph) * 9 * u + th); } c.fill(); } } c.fillStyle = 'rgba(143,210,255,.35)'; c.fillRect(N * .47, 0, N * .06, N); str = 1.3; break;
+    case 'bull': fur(6000, 20, .22); scales(120 * u, .16, .1); veins(16, c3); str = 1.8; break;
+    case 'wyvern': scales(34 * u, .42, .24); plates(); c.fillStyle = 'rgba(40,10,6,.4)'; c.fillRect(N * .44, 0, N * .12, N); str = 2.6; break;
+    case 'elder': { scales(30 * u, .5, .2); plates(); const e = veins(22, c3); for (let i = 0; i < 90; i++) { const x = N * (.2 + R() * .6), y = R() * N, s = (3 + R() * 6) * u; for (const cx of [e, c]) { cx.fillStyle = c3; cx.beginPath(); cx.moveTo(x, y - s * 1.6); cx.lineTo(x + s, y); cx.lineTo(x, y + s * 1.6); cx.lineTo(x - s, y); cx.fill(); } } str = 2.6; break; }
+    default: scales(52 * u, .4, .22); plates(); c.fillStyle = shade(c1, -.4); for (let i = 0; i < 9; i++) c.fillRect(N * .3, i / 9 * N, N * .4, N * .03); str = 2.2;
+  }
+  const mk = cv => { const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = Math.min(4, R3.rnd.capabilities.getMaxAnisotropy()); return t; };
+  return { map: mk(cc), nmap: mk(heightToNormal(hc, N, str)), emap: ec ? mk(ec) : null, belly };
+}
+function wingTex(L) {
+  const N = S.opt.lowq ? 256 : 512, cc = mkCv(N), c = cc.getContext('2d'), bird = L.kind === 'bird', g = c.createLinearGradient(0, 0, 0, N);
+  g.addColorStop(0, shade(L.c1, -.12)); g.addColorStop(.6, shade(L.c1, -.36)); g.addColorStop(1, bird ? L.c3 : shade(L.c1, -.5)); c.fillStyle = g; c.fillRect(0, 0, N, N);
+  if (bird) { c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = N / 170; for (let r = 0; r < 9; r++) for (let q = 0; q < 12; q++) { const x = (q + (r % 2 ? .5 : 0)) / 12 * N, y = r / 9 * N; c.beginPath(); c.ellipse(x, y, N / 26, N / 8, 0, 0, Math.PI); c.stroke(); } }
+  else { c.strokeStyle = 'rgba(0,0,0,.28)'; for (let i = 0; i < 26; i++) { c.lineWidth = (1 + (i % 3)) * N / 512; c.beginPath(); let x = (i + .5) / 26 * N, y = 0; c.moveTo(x, y); while (y < N) { y += N / 16; x += (Math.sin(i * 7.3 + y * .05) * N / 60); c.lineTo(x, y); } c.stroke(); } c.fillStyle = 'rgba(255,255,255,.06)'; for (let i = 0; i < 300; i++) c.fillRect((i * 97.3) % N, (i * 53.7) % N, N / 60, N / 40); }
+  const t = new THREE.CanvasTexture(cc); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
+}
+
+/* ---------- 種族ごとの体つき ---------- */
+function spineCtl(k, L, H, ry, hy) {
+  const bl = L.bl, bw = L.bw, hr = L.hr, ho = L.hOff, C = L.chest;
+  switch (k) {
+    case 'boar': return { neck: bl * .68, pts: [[ho + hr * 1.34, H - hr * .22, .6, .6], [ho + hr * 1.26, H - hr * .22, hr * .3, hr * .36], [ho + hr * .9, H - hr * .18, hr * .4, hr * .44], [ho + hr * .4, H - hr * .05, hr * .62, hr * .64], [ho - hr * .15, H + hr * .1, hr * .84, hr * .82], [bl * .8, H + ry * .1, ry * .86, bw * .74], [bl * .46, H + ry * .22, ry * 1.1, bw * .95], [0, H + ry * .08, ry * 1.05, bw], [-bl * .45, H, ry * .98, bw * .94], [-bl * .8, H - ry * .05, ry * .74, bw * .7], [-bl * 1.0, H - ry * .1, ry * .3, bw * .28]] };
+    case 'bird': return { neck: bl * .5, pts: [[ho + hr * .95, hy, .6, .6], [ho + hr * .8, hy, hr * .46, hr * .44], [ho + hr * .2, hy + hr * .1, hr * .86, hr * .8], [ho - hr * .5, hy, hr * .76, hr * .7], [ho - hr * 1.5, hy - ry * .3, hr * .52, hr * .5], [bl * .86, H + ry * .5, ry * .52, bw * .46], [bl * .45, H + ry * .2, ry * .9, bw * .85], [0, H, ry, bw], [-bl * .5, H - ry * .05, ry * .85, bw * .85], [-bl * .9, H, ry * .5, bw * .45], [-bl * 1.06, H + ry * .05, ry * .3, bw * .25]] };
+    case 'anky': return { neck: bl * .7, pts: [[ho + hr * 1.18, hy - hr * .1, .6, .6], [ho + hr * 1.04, hy - hr * .1, hr * .36, hr * .46], [ho + hr * .4, hy, hr * .64, hr * .82], [ho - hr * .3, hy + hr * .1, hr * .74, hr * .92], [bl * .84, H, ry * .72, bw * .6], [bl * .5, H + ry * .1, ry, bw * .92], [0, H + ry * .15, ry * 1.14, bw], [-bl * .5, H + ry * .05, ry, bw * .92], [-bl * .85, H - ry * .1, ry * .6, bw * .55], [-bl * 1.0, H - ry * .2, ry * .36, bw * .3]] };
+    case 'tiger': return { neck: bl * .6, pts: [[ho + hr * 1.12, H - hr * .15, .6, .6], [ho + hr * .98, H - hr * .15, hr * .34, hr * .4], [ho + hr * .55, H - hr * .05, hr * .56, hr * .6], [ho, H + hr * .12, hr * .86, hr * .88], [ho - hr * .7, H + hr * .1, hr * .76, hr * .76], [bl * .7, H + ry * .1, ry * .76, bw * .68], [bl * .42, H + ry * .15, ry * 1.02, bw * .95], [0, H, ry * .92, bw * .9], [-bl * .45, H + ry * .02, ry * .9, bw * .88], [-bl * .8, H, ry * .72, bw * .7], [-bl * 1.0, H, ry * .3, bw * .28]] };
+    case 'bull': return { neck: bl * .62, pts: [[ho + hr * 1.12, H - hr * .3, .6, .6], [ho + hr * .98, H - hr * .3, hr * .42, hr * .48], [ho + hr * .5, H - hr * .2, hr * .6, hr * .62], [ho, H, hr * .9, hr * .88], [ho - hr * .7, H + hr * .2, hr * .95, hr * .9], [bl * .6, H + ry * .36, ry * 1.26, bw], [bl * .25, H + ry * .32, ry * 1.32, bw * 1.05], [-bl * .1, H + ry * .1, ry * 1.08, bw * .98], [-bl * .5, H, ry * .92, bw * .88], [-bl * .85, H - ry * .05, ry * .7, bw * .66], [-bl * 1.0, H - ry * .1, ry * .3, bw * .26]] };
+    case 'raptor': return { neck: bl * .45, pts: [[ho + hr * 1.5, hy, .3, .3], [ho + hr * 1.3, hy, hr * .3, hr * .32], [ho + hr * .5, hy + hr * .1, hr * .6, hr * .62], [ho - hr * .3, hy + hr * .1, hr * .78, hr * .76], [ho - hr * 1.2, hy - ry * .3, hr * .5, hr * .5], [bl * .6, H + ry * .3, ry * .7, bw * .7], [0, H, ry, bw], [-bl * .6, H, ry * .8, bw * .8], [-bl * 1.0, H + ry * .1, ry * .4, bw * .36]] };
+    default: return { neck: C.off + C.r * .2, pts: [[ho + hr * 1.95, hy - hr * .15, .6, .6], [ho + hr * 1.8, hy - hr * .15, hr * .26, hr * .3], [ho + hr * 1.1, hy - hr * .05, hr * .42, hr * .48], [ho + hr * .3, hy + hr * .1, hr * .7, hr * .76], [ho - hr * .5, hy + hr * .05, hr * .66, hr * .68], [ho - hr * 1.7, hy - ry * .18, hr * .52, hr * .52], [C.off + C.r * .7, H + ry * .45, hr * .66, hr * .66], [C.off, H + ry * .15, C.r * .95, C.r * .92], [bl * .2, H + ry * .05, ry * 1.02, bw * .98], [-bl * .4, H, ry * .95, bw * .9], [-bl * .8, H, ry * .68, bw * .62], [-bl * 1.0, H, ry * .42, bw * .38]] };
+  }
+}
+function resample(P, n) {
+  const fine = 420, pts = [], len = [0], o = [0, 0, 0, 0];
+  for (let i = 0; i <= fine; i++) { crv(P, i / fine * (P.length - 1), o); pts.push([o[0], o[1], Math.max(.3, o[2]), Math.max(.3, o[3])]); if (i) len.push(len[i - 1] + hyp(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1])); }
+  const tot = len[fine], out = []; let j = 0;
+  for (let i = 0; i < n; i++) { const want = tot * i / (n - 1); while (j < fine - 1 && len[j + 1] < want) j++; const f = (want - len[j]) / ((len[j + 1] - len[j]) || 1), a = pts[j], b = pts[j + 1]; out.push([lerp(a[0], b[0], f), lerp(a[1], b[1], f), lerp(a[2], b[2], f), lerp(a[3], b[3], f), want]); }
+  return out;
+}
+const JAWMAX = { boar: .5, bird: .55, anky: .42, tiger: .8, bull: .42, wyvern: .85, elder: .85, raptor: .6 };
+
+function mkRig(L, small) {
+  crInit(); const q = QD(), k = L.kind, bl = L.bl, bw = L.bw, hr = L.hr, ho = L.hOff, two = L.legs === 2, c1 = L.c1, c2 = L.c2, c3 = L.c3, el = k === 'elder', drg = k === 'wyvern' || el;
+  const ry = bw * (k === 'anky' ? .62 : k === 'bird' ? .9 : .8), legLen = bw * (k === 'bird' ? 1.05 : k === 'wyvern' ? .95 : k === 'anky' ? .42 : el ? .72 : k === 'raptor' ? 1.0 : .64), H = legLen + ry * .88;
+  const hy = k === 'bird' ? H + ry : drg ? H + ry * .78 : k === 'anky' ? H - ry * .18 : k === 'bull' ? H - ry * .05 : k === 'raptor' ? H + ry * .8 : H + ry * .04;
+  const ctl = spineCtl(k, L, H, ry, hy), tipX = ctl.pts[0][0], jawX = ho - hr * .2, skullX = ho - hr * .75, neckX = ctl.neck;
+  const RB = Math.max(24, Math.round((small ? 52 : 210) * q)), tailLen = L.tailN * L.tailL, RT = Math.max(10, Math.round((small ? 26 : Math.min(120, 30 + tailLen * .62)) * q)), SG = Math.max(10, Math.round((small ? 16 : 72) * q));
+  const loc = resample(ctl.pts, RB), per = TAU * bw * .85;
+  let neckY = H; for (const r of loc) if (r[0] >= neckX) neckY = r[1];
+  // 上あごは薄く、下あごは別部品にする
+  const jawRings = [];
+  for (const r of loc) { r.w = r[0] >= skullX ? 1 : sstep((r[0] - neckX) / (skullX - neckX)); if (r[0] > jawX && k !== 'bird') { const t = sstep((r[0] - jawX) / (hr * .4)); jawRings.push([r[0], r[1] - r[2] * (1 - .62 * t), r[2] * .5, r[3] * .94]); r[1] += r[2] * .38 * t; r[2] *= 1 - .4 * t; } }
+  const tex = (R3.tex[k + bl] = R3.tex[k + bl] || skinTex(L));
+  const skin = new THREE.MeshPhongMaterial({ map: tex.map, normalMap: tex.nmap, shininess: k === 'boar' || k === 'tiger' || k === 'bull' ? 12 : 44, specular: k === 'boar' || k === 'tiger' ? 0x1a1a1a : 0x555555 });
+  skin.normalScale.set(1.1, 1.1); if (tex.emap) { skin.emissiveMap = tex.emap; skin.emissive.set(0xffffff); skin.emissiveIntensity = .7; }
+  const sub = (rx, ox, ryp) => { const m = skin.clone(); m.emissiveMap = null; m.emissive.set(0); m.map = tex.map.clone(); m.map.repeat.set(rx, ryp); m.map.offset.set(ox, 0); m.normalMap = tex.nmap.clone(); m.normalMap.repeat.set(rx, ryp); m.normalMap.offset.set(ox, 0); m.map.needsUpdate = m.normalMap.needsUpdate = true; return m; };
+  const legMat = sub(.22, .39, 1), jawMat = sub(.28, -.14, 1);
+  const o = { L, k, small, bl, bw, hr, ry, legLen, H, hy, tipX, jawX, skullX, neckX, neckY, loc, RB, RT, per, skin, two, objs: [], inst: [], legs: [], wings: [], P: { by: 0, pitch: 0, roll: 0, ny: 0, np: 0, lunge: 0, jaw: 0, wing: 0, lean: 0, tailUp: 0, front: 0, low: 0 }, t: Math.random() * 9, blink: 2, px: null, py: 0, vx: 0, vy: 0, rage: -1, M: new THREE.Matrix4(), Hm: new THREE.Matrix4(), headW: { x: 0, y: 0, z: 0 }, topY: H + ry, wb: false, hb: false, tailPts: [] };
+  const add = ob => { o.objs.push(ob); R3.scene.add(ob); return ob; };
+  o.body = mkTube(RB + RT, SG, skin); add(o.body.mesh);
+  const bodyRS = x => { let b = loc[0]; for (const r of loc) if (Math.abs(r[0] - x) < Math.abs(b[0] - x)) b = r; return b; };
+  // ---- 頭 (角・牙・目など) ----
+  const head = new THREE.Group(); head.matrixAutoUpdate = false; add(head); o.head = head;
+  const bone = '#efe6cf', hb = sb(), hbB = sb(), glow = sb(), eyeB = sb(), eyeAt = bodyRS(ho + hr * (drg ? .25 : .2)), ex = eyeAt[0], ez = eyeAt[3] * .86, ey = eyeAt[1] + eyeAt[2] * .42, er = hr * (small ? .22 : .16);
+  for (const s of [1, -1]) { sbAdd(eyeB, small ? BASE2.sphL : BASE2.sph, '#ffe36a', ex, ey, s * ez, er, er, er * .7); sbAdd(eyeB, BASE2.sphL, '#140c08', ex + er * .25, ey, s * (ez + er * .52), er * .28, er * .78, er * .3); sbAdd(eyeB, BASE2.sphL, '#ffffff', ex + er * .45, ey + er * .35, s * (ez + er * .5), er * .16, er * .16, er * .12); }
+  const horn = (b, short) => {
+    const yb = hy, S1 = [1, -1];
+    switch (k) {
+      case 'boar': for (const s of S1) { const f = short && s > 0 ? .5 : 1; sbTube(b, bone, [[ho + hr * .75, yb - hr * .45, s * hr * .42, hr * .17], [ho + hr * .95, yb - hr * .3, s * hr * .78, hr * .16], [ho + hr * (.95 + .35 * f), yb + hr * .2 * f, s * hr * (.78 + .32 * f), hr * .12], [ho + hr * (.95 + .5 * f), yb + hr * .75 * f, s * hr * (.78 + .34 * f), hr * .02]], 12, 18, '#fff8e8'); sbTube(b, c2, [[ho - hr * .35, yb + hr * .6, s * hr * .55, hr * .2], [ho - hr * .55, yb + hr * 1.0, s * hr * .8, hr * .18], [ho - hr * .6, yb + hr * 1.3, s * hr * .95, hr * .03]], 10, 10, shade(c1, .2), .45); } sbAdd(b, BASE2.sph, shade(c1, .3), tipX - hr * .04, H - hr * .12, 0, hr * .1, hr * .3, hr * .36); for (const s of S1) sbAdd(b, BASE2.sphL, '#2a1a10', tipX + hr * .02, H - hr * .1, s * hr * .14, hr * .05, hr * .09, hr * .07); break;
+      case 'bird': { const f = short ? .7 : 1; sbTube(b, c3, [[ho + hr * .45, yb + hr * .12, 0, hr * .52], [ho + hr * (.45 + .6 * f), yb + hr * .1, 0, hr * .4], [ho + hr * (.45 + 1.15 * f), yb - hr * .1, 0, hr * .2], [ho + hr * (.45 + 1.5 * f), yb - hr * .45, 0, hr * .02]], 14, 18, shade(c3, -.25), .62); for (let i = -2; i <= 2; i++) sbTube(b, c3, [[ho - hr * .3, yb + hr * .6, i * hr * .22, hr * .13], [ho - hr * 1.0, yb + hr * 1.15, i * hr * .34, hr * .12], [ho - hr * 1.9, yb + hr * (1.3 - Math.abs(i) * .12), i * hr * .5, hr * .02]], 8, 12, c1, .4); break; }
+      case 'anky': for (const s of S1) { const f = short && s > 0 ? .45 : 1; sbTube(b, c3, [[ho, yb + hr * .35, s * hr * .7, hr * .26], [ho + hr * .25 * f, yb + hr * .7 * f + hr * .3, s * hr * 1.05, hr * .18], [ho + hr * .5 * f, yb + hr * 1.05 * f + hr * .3, s * hr * 1.3, hr * .02]], 12, 14, bone); for (let i = 0; i < 3; i++) sbAdd(b, BASE2.sphL, shade(c1, .2), ho - hr * .5 + i * hr * .42, yb + hr * (.7 - i * .1), s * hr * .34, hr * .2, hr * .14, hr * .2); } break;
+      case 'tiger': for (const s of S1) { const f = short && s > 0 ? .45 : 1; sbTube(b, '#ffffff', [[ho + hr * .78, H - hr * .3, s * hr * .33, hr * .13], [ho + hr * .9, H - hr * (.3 + .55 * f), s * hr * .36, hr * .1], [ho + hr * .82, H - hr * (.3 + 1.25 * f), s * hr * .36, hr * .015]], 10, 16, '#dff2ff'); sbTube(b, c1, [[ho - hr * .35, yb + hr * .75, s * hr * .55, hr * .26], [ho - hr * .45, yb + hr * 1.15, s * hr * .72, hr * .2], [ho - hr * .5, yb + hr * 1.45, s * hr * .8, hr * .03]], 10, 10, c2, .5); } sbAdd(b, BASE2.sphL, '#2a3340', tipX - hr * .05, H - hr * .02, 0, hr * .13, hr * .1, hr * .16); break;
+      case 'bull': for (const s of S1) { const f = short && s > 0 ? .55 : 1; sbTube(glow, c3, [[ho - hr * .2, yb + hr * .55, s * hr * .6, hr * .3], [ho - hr * .1, yb + hr * .95, s * hr * 1.35, hr * .28], [ho + hr * .35 * f, yb + hr * 1.2, s * hr * (1.35 + .55 * f), hr * .22], [ho + hr * 1.1 * f, yb + hr * 1.3, s * hr * (1.35 + .6 * f), hr * .12], [ho + hr * 1.75 * f, yb + hr * 1.55, s * hr * (1.35 + .45 * f), hr * .02]], 14, 26, '#fffbe0'); sbTube(b, c1, [[ho - hr * .5, yb + hr * .4, s * hr * .8, hr * .2], [ho - hr * .7, yb + hr * .3, s * hr * 1.25, hr * .16], [ho - hr * .75, yb + hr * .15, s * hr * 1.5, hr * .03]], 8, 8, c2, .5); } sbAdd(b, BASE2.sphL, '#15161f', tipX - hr * .06, H - hr * .28, 0, hr * .14, hr * .2, hr * .4); break;
+      default: for (const s of S1) { const f = short && s > 0 ? .5 : 1, hc = el ? glow : b, col = el ? c3 : bone; sbTube(hc, col, [[ho - hr * .25, yb + hr * .5, s * hr * .5, hr * .26], [ho - hr * (.25 + .7 * f), yb + hr * .85, s * hr * .7, hr * .2], [ho - hr * (.25 + 1.5 * f), yb + hr * 1.15, s * hr * .85, hr * .12], [ho - hr * (.25 + 2.3 * f), yb + hr * 1.7, s * hr * .8, hr * .015]], 12, 22, el ? '#ffffff' : '#fff8e8'); sbTube(el ? glow : b, el ? c3 : bone, [[ho - hr * .5, yb + hr * .15, s * hr * .66, hr * .14], [ho - hr * 1.1, yb + hr * .2, s * hr * .95, hr * .1], [ho - hr * 1.7, yb + hr * .35, s * hr * 1.05, hr * .01]], 8, 12); for (let i = 0; i < (small ? 0 : 4); i++) sbCone(b, c2, ho + hr * (.2 + i * .34), bodyRS(ho + hr * (.2 + i * .34))[1] + bodyRS(ho + hr * (.2 + i * .34))[2] * .78, s * hr * .22, hr * .09, hr * (.3 - i * .04), -.3, 1, s * .25, 1); } if (el) for (let i = 0; i < 5; i++) sbDir(glow, BASE2.oct, c3, ho - hr * .1 + (i - 2) * hr * .05, yb + hr * .95 + (2 - Math.abs(i - 2)) * hr * .12, (i - 2) * hr * .26, hr * .1, hr * .36, hr * .1, 0, 1, (i - 2) * .22);
+    }
+  };
+  // 歯 (上あご) と口の中
+  const TN = k === 'bird' ? 0 : k === 'boar' || k === 'bull' || k === 'anky' ? 7 : small ? 6 : 12, jl = tipX - jawX, tcol = '#fdf6e0';
+  const teeth = (b, up) => { for (let i = 0; i < TN; i++) for (const s of [1, -1]) { const t = .22 + .72 * i / (TN - 1 || 1), x = jawX + jl * t, r = bodyRS(x), fang = (drg || k === 'tiger' || k === 'raptor') && i === TN - 3, sz = hr * (k === 'boar' || k === 'bull' || k === 'anky' ? .09 : .1) * (fang ? 1.9 : 1 + .3 * Math.sin(i * 2.4)); if (up) sbCone(b, tcol, x, r[1] - r[2] * .92, s * r[3] * .8, sz * .42, sz * 1.5, .1, -1, s * .08, 1); else sbCone(b, tcol, x - jawX, .4, s * r[3] * .72, sz * .4, sz * 1.25, .1, 1, s * .05, 1); } };
+  if (k !== 'bird') { teeth(hb, true); teeth(hbB, true); const pr = bodyRS(jawX + jl * .5); sbAdd(hb, BASE2.sphL, '#5a1418', jawX + jl * .48, pr[1] - pr[2] * .85, 0, jl * .46, pr[2] * .25, pr[3] * .78); sbAdd(hbB, BASE2.sphL, '#5a1418', jawX + jl * .48, pr[1] - pr[2] * .85, 0, jl * .46, pr[2] * .25, pr[3] * .78); }
+  horn(hb, false); horn(hbB, true);
+  o.headMesh = sbMesh(hb); o.headGeoB = sbGeo(hbB); head.add(o.headMesh);
+  o.eyes = sbMesh(eyeB, new THREE.MeshBasicMaterial({ vertexColors: true })); head.add(o.eyes);
+  const glowMat = () => new THREE.MeshPhongMaterial({ vertexColors: true, emissive: new THREE.Color(c3), emissiveIntensity: .55, shininess: 90, specular: 0xffffff });
+  if (glow.p.length) { o.glow = sbMesh(glow, glowMat()); head.add(o.glow); }
+  // 下あご
+  const jaw = new THREE.Group(), jb = sb(); o.jaw = jaw; head.add(jaw);
+  if (k === 'bird') { jaw.position.set(ho + hr * .4, hy - hr * .32, 0); sbTube(jb, shade(c3, -.12), [[0, 0, 0, hr * .44], [hr * .6, -hr * .02, 0, hr * .32], [hr * 1.1, hr * .02, 0, hr * .15], [hr * 1.4, hr * .08, 0, hr * .02]], 12, 14, shade(c3, -.3), .5); sbAdd(jb, BASE2.sphL, '#7a2a30', hr * .5, hr * .1, 0, hr * .5, hr * .05, hr * .24); }
+  else {
+    const j0 = jawRings[jawRings.length - 1] || [jawX, hy, hr * .3, hr * .5], hingeY = j0[1] + j0[2] * .2; jaw.position.set(jawX, hingeY, 0);
+    const jr = jawRings.slice().reverse(), JR = Math.max(8, Math.round(26 * q)), jt = mkTube(JR, Math.max(8, Math.round(28 * q)), jawMat), o4 = [0, 0, 0, 0]; jt.top = .22;
+    const jc = jr.map(r => [r[0] - jawX, r[1] - hingeY - r[2] * .2, r[2], r[3]]); jc.unshift([-hr * .25, jc[0][1] + hr * .05, jc[0][2] * .5, jc[0][3] * .9]); jc.push([jl * 1.0, jc[jc.length - 1][1] + hr * .05, .4, .4]);
+    for (let i = 0; i < JR; i++) { crv(jc, i / (JR - 1) * (jc.length - 1), o4); jt.cx[i] = o4[0]; jt.cy[i] = o4[1]; jt.cz[i] = 0; jt.ru[i] = Math.max(.3, o4[2]); jt.rs[i] = Math.max(.3, o4[3] * .9); jt.vv[i] = o4[0] / per; }
+    tubeBuild(jt, 0, 1, 0, 0); jaw.add(jt.mesh);
+    const jtop = xr => { let bi = 0; for (let i = 0; i < JR; i++) if (Math.abs(jt.cx[i] - xr) < Math.abs(jt.cx[bi] - xr)) bi = i; return [jt.cy[bi] + jt.ru[bi] * .2, jt.rs[bi]]; };
+    for (let i = 0; i < TN; i++) for (const s of [1, -1]) { const t = .24 + .7 * i / (TN - 1 || 1), jp = jtop(jl * t), fang = (drg || k === 'tiger' || k === 'raptor') && i === TN - 3, sz = hr * (k === 'boar' || k === 'bull' || k === 'anky' ? .09 : .1) * (fang ? 1.6 : 1 + .3 * Math.cos(i * 2.4)); sbCone(jb, tcol, jl * t, jp[0] - sz * .2, s * jp[1] * .8, sz * .4, sz * 1.3, .1, 1, s * .05, 1); }
+    const jm = jtop(jl * .45); sbAdd(jb, BASE2.sphL, '#b0444c', jl * .45, jm[0], 0, jl * .4, hr * .06, jm[1] * .5); sbAdd(jb, BASE2.sphL, '#5a1418', jl * .4, jm[0] - .3, 0, jl * .5, hr * .04, jm[1] * .82);
+  }
+  jaw.add(sbMesh(jb));
+  o.mouth = new THREE.Mesh(BASE2.sphL, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .9 })); o.mouth.visible = false; o.mouth.position.set(tipX - jawX - hr * .5, hr * .25, 0); jaw.add(o.mouth);
+  // ---- 脚 ----
+  const hipY = H - ry * .12, tot = hipY * 1.1, lr = bw * .3;
+  const lp = two ? [[-bl * .12, bw * .58, 1.25], [-bl * .12, -bw * .58, 1.25]] : [[bl * .5, bw * .62, .9], [bl * .5, -bw * .62, .9], [-bl * .55, bw * .66, 1.1], [-bl * .55, -bw * .66, 1.1]];
+  const fb = sb(), claw = k === 'boar' || k === 'bull' ? '#1c1410' : '#f1e6cc', fr = lr * (two ? 1.15 : 1);
+  if (k === 'boar' || k === 'bull') { sbAdd(fb, BASE2.cyl, claw, fr * .2, fr * .42, 0, fr * .78, fr * .84, fr * .78); for (const s of [1, -1]) sbAdd(fb, BASE2.sphL, claw, fr * .75, fr * .34, s * fr * .34, fr * .5, fr * .34, fr * .36); }
+  else { sbAdd(fb, BASE2.sphL, shade(c1, -.25), fr * .15, fr * .4, 0, fr * .95, fr * .45, fr * .85); const nt = two ? 3 : 4; for (let i = 0; i < nt; i++) { const a = (i - (nt - 1) / 2) * (two ? .55 : .36), dx = Math.cos(a), dz = Math.sin(a); sbTube(fb, shade(c1, -.25), [[fr * .2, fr * .4, 0, fr * .32], [fr * .2 + dx * fr * .9, fr * .32, dz * fr * .9, fr * .26], [fr * .2 + dx * fr * 1.5, fr * .2, dz * fr * 1.5, fr * .2]], 8, 6); sbTube(fb, claw, [[fr * .2 + dx * fr * 1.45, fr * .3, dz * fr * 1.45, fr * .17], [fr * .2 + dx * fr * 1.95, fr * .32, dz * fr * 1.95, fr * .12], [fr * .2 + dx * fr * 2.3, fr * .04, dz * fr * 2.3, fr * .01]], 8, 8); } if (two) sbTube(fb, claw, [[-fr * .5, fr * .35, 0, fr * .2], [-fr * 1.0, fr * .3, 0, fr * .12], [-fr * 1.35, fr * .04, 0, fr * .01]], 8, 6); }
+  const fgeo = sbGeo(fb), LR = Math.max(8, Math.round((small ? 12 : 40) * q)), LS = Math.max(8, Math.round((small ? 10 : 26) * q));
+  lp.forEach((p, i) => { const tb = mkTube(LR, LS, legMat), foot = new THREE.Mesh(fgeo, MATS); foot.frustumCulled = false; add(tb.mesh); add(foot); o.legs.push({ tb, foot, hx: p[0], hz: p[1], hy: hipY, a: tot * .52, b: tot * .5, r: lr * p[2] * (two ? 1.2 : 1), front: !two && i < 2, fx: 0, fz: 0, fy: 0, init: false, step: 0, sx: 0, sz: 0, dur: .2 }); });
+  // ---- 翼 ----
+  if (L.wing) { const W = L.wing, span = (W.side + W.r) * (drg ? 1.45 : 1.25), wt = (R3.tex['w' + k] = R3.tex['w' + k] || wingTex(L)), wm = new THREE.MeshPhongMaterial({ map: wt, side: THREE.DoubleSide, shininess: 20 }), n = Math.max(4, Math.round(10 * q)), NP = 4;
+    for (const s of [1, -1]) { const vn = NP * (n + 1) * (n + 1), pos = new Float32Array(vn * 3), nor = new Float32Array(vn * 3), uv = new Float32Array(vn * 2), idx = []; for (let p = 0; p < NP; p++) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const a = p * (n + 1) * (n + 1) + i * (n + 1) + j, b = a + n + 1; idx.push(a, b, a + 1, a + 1, b, b + 1); } for (let p = 0; p < NP; p++) for (let i = 0; i <= n; i++) for (let j = 0; j <= n; j++) { const v = p * (n + 1) * (n + 1) + i * (n + 1) + j; uv[v * 2] = (p + j / n) / NP; uv[v * 2 + 1] = i / n; }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx); const mem = new THREE.Mesh(g, wm); mem.frustumCulled = false; add(mem);
+      const bones = [mkTube(Math.round(18 * q) + 4, 10, legMat), mkTube(8, 8, legMat), mkTube(8, 8, legMat), mkTube(8, 8, legMat)]; bones.forEach(b => add(b.mesh));
+      o.wings.push({ s, span, n, NP, pos, nor, g, bones, sh: [W.off + bl * .25, H + ry * .55, s * bw * .42], rear: [-bl * .8, H + ry * .2, s * bw * .3] }); } }
+  // ---- 背中の飾り (たてがみ・とげ・結晶など) ----
+  const ring = x => { let b = 0; for (let i = 0; i < RB; i++) if (Math.abs(loc[i][0] - x) < Math.abs(loc[b][0] - x)) b = i; return b; };
+  const instAdd = (geo, mat, items) => { if (!items.length) return; const im = new THREE.InstancedMesh(geo, mat, items.length); im.frustumCulled = false; add(im); o.inst.push({ im, items }); };
+  const spike = col => { const b = sb(); sbCone(b, col, 0, 0, 0, 1, 1, 0, 1, 0); return sbGeo(b); }, items = [], it2 = [];
+  const tailRing = f => RB + Math.round(f * (RT - 2));
+  if (k === 'boar') { for (let i = 0; i < 26; i++) for (let j = -2; j <= 2; j++) items.push({ ri: ring(bl * .82 - i * bl * .068), th: Math.PI + j * .13, sc: [bw * .05, bw * (.34 + .3 * Math.sin(i / 26 * 3.1)) * (1 - Math.abs(j) * .18), bw * .05], tilt: .75 }); instAdd(spike(c2), MATS, items); }
+  else if (k === 'anky') { const bg = sbGeo((() => { const b = sb(); sbAdd(b, BASE2.sphL, shade(c1, .2), 0, 0, 0, 1, .7, 1); return b; })()); for (let i = 0; i < 9; i++) for (let j = -3; j <= 3; j++) { const x = bl * .66 - i * bl * .165; it2.push({ ri: ring(x), th: Math.PI + j * .3 + (i % 2 ? .15 : 0), sc: [bw * .15, bw * .12, bw * .15], tilt: 0 }); } instAdd(bg, MATS, it2); for (let i = 0; i < 7; i++) for (const s of [1, -1]) items.push({ ri: ring(bl * .68 - i * bl * .22), th: Math.PI + s * 1.42, sc: [bw * .13, bw * .56, bw * .13], tilt: .15 }); instAdd(spike(c3), MATS, items); }
+  else if (k === 'tiger') { for (let i = 0; i < 12; i++) items.push({ ri: ring(bl * .6 - i * bl * .14), th: Math.PI + (i % 2 ? .07 : -.07), sc: [bw * .13, bw * (.42 + .22 * Math.sin(i * 1.3)), bw * .1], tilt: .45 }); for (let i = 0; i < 5; i++) items.push({ ri: tailRing(.1 + i * .16), th: Math.PI, sc: [3, 9 - i, 2.5], tilt: .5 }); const g = (() => { const b = sb(); sbDir(b, BASE2.oct, c3, 0, .5, 0, 1, .5, 1, 0, 1, 0); return sbGeo(b); })(); instAdd(g, new THREE.MeshPhongMaterial({ color: 0xffffff, vertexColors: true, shininess: 90, specular: 0xffffff, transparent: true, opacity: .88 }), items); }
+  else if (k === 'bull') { for (let i = 0; i < 18; i++) for (let j = -1; j <= 1; j++) items.push({ ri: ring(bl * .8 - i * bl * .09), th: Math.PI + j * .16, sc: [bw * .075, bw * (.5 - i * .014) * (j ? .8 : 1), bw * .075], tilt: .7 }); instAdd(spike(c2), MATS, items); }
+  else if (k === 'wyvern') { for (let i = 0; i < 16; i++) items.push({ ri: ring(ho - hr * 1.2 - i * (ho + bl * .8) / 16), th: Math.PI, sc: [bw * .1, bw * (.3 + .26 * Math.sin(i / 16 * 3.1)), bw * .07], tilt: .6 }); for (let i = 0; i < 12; i++) items.push({ ri: tailRing(.04 + i * .075), th: Math.PI, sc: [3.4, 15 - i * .9, 2.4], tilt: .6 }); instAdd(spike(c2), MATS, items); }
+  else if (el) { for (let i = 0; i < 18; i++) items.push({ ri: ring(ho - hr * 1.4 - i * (ho + bl * .8) / 18), th: Math.PI + (i % 2 ? .22 : -.22), sc: [bw * .12, bw * (.36 + .3 * Math.sin(i / 18 * 3.1)), bw * .12], tilt: .35 }); for (let i = 0; i < 14; i++) items.push({ ri: tailRing(.03 + i * .065), th: Math.PI + (i % 2 ? .3 : -.3), sc: [4.2, 17 - i * .8, 4.2], tilt: .4 }); for (let i = 0; i < 10; i++) for (const s of [1, -1]) items.push({ ri: ring(bl * .6 - i * bl * .15), th: Math.PI + s * (.8 + (i % 3) * .14), sc: [bw * .07, bw * .2, bw * .07], tilt: .3 }); const g = (() => { const b = sb(); sbDir(b, BASE2.oct, c3, 0, .5, 0, 1, .5, 1, 0, 1, 0); return sbGeo(b); })(); o.gmat = glowMat(); instAdd(g, o.gmat, items); }
+  else if (k === 'bird') { for (let i = 0; i < 14; i++) items.push({ ri: ring(ho - hr * 1.0 - i * (ho - bl * .1) / 14), th: Math.PI, sc: [bw * .12, bw * .3, bw * .04], tilt: 1.0 }); instAdd(spike(c3), MATS, items); }
+  // ---- 尻尾の先 ----
+  const tp = sb(), tr = L.tailR;
+  if (k === 'anky') { sbAdd(tp, BASE2.sph, c2, tr * .8, 0, 0, tr * 2.0, tr * 1.7, tr * 2.0); for (let i = 0; i < 10; i++) { const a = i * .628, up = i % 2 ? .7 : -.2; sbCone(tp, c3, tr * .8 + Math.cos(a) * tr * 1.5, up * tr, Math.sin(a) * tr * 1.5, tr * .42, tr * 1.5, Math.cos(a), up, Math.sin(a)); } }
+  else if (drg) { sbAdd(tp, BASE2.sph, el ? c3 : c2, 16, 0, 0, 22, 3.2, 14); sbCone(tp, el ? c3 : c2, 30, 0, 0, 4, 16, 1, 0, 0); if (el) for (let i = 0; i < 4; i++) sbDir(tp, BASE2.oct, c3, 8 + i * 5, 4, (i % 2 ? 5 : -5), 3, 9, 3, .3, 1, (i % 2 ? .4 : -.4)); }
+  else if (k === 'bird') { for (let i = -2; i <= 2; i++) sbTube(tp, i % 2 ? c1 : c3, [[0, 0, 0, 3], [18 * Math.cos(i * .34), 2, 18 * Math.sin(i * .34), 6], [40 * Math.cos(i * .34), 4, 40 * Math.sin(i * .34), .4]], 8, 10, c3, .22); }
+  else if (k === 'bull' || k === 'tiger') { sbAdd(tp, BASE2.sph, k === 'bull' ? c3 : c2, 5, 0, 0, 9, 6, 6); }
+  if (tp.p.length) { o.tip = sbMesh(tp, k === 'bull' || el ? (o.gmat || (o.gmat = glowMat())) : MATS); o.tip.matrixAutoUpdate = false; add(o.tip); }
+  o.stump = add(new THREE.Mesh(BASE2.sphL, new THREE.MeshPhongMaterial({ color: 0xa02a2a }))); o.stump.visible = false;
+  o.shadow = add(new THREE.Mesh(BASE.circ, flatMat('#000000', .3))); o.shadow.renderOrder = 1;
+  o.tris = 0; for (const ob of o.objs) ob.traverse(c => { if (c.isMesh) o.tris += (c.geometry.index ? c.geometry.index.count : c.geometry.attributes.position.count) / 3 * (c.isInstancedMesh ? c.count : 1); });
+  return o;
+}
+function rigRemove(o) { for (const ob of o.objs) { R3.scene.remove(ob); ob.traverse(c => { if (c.geometry && !c.geometry._sh) c.geometry.dispose(); }); } }
+
+/* ---------- 姿勢の目標を決める (状態 → 体の構え) ---------- */
+function rigTargets(o, e, T, small) {
+  const p = G.p, st = e.state, mv = e.mv, t = o.t, drg = o.k === 'wyvern' || o.k === 'elder';
+  T.by = 0; T.pitch = 0; T.roll = 0; T.ny = 0; T.np = 0; T.lunge = 0; T.jaw = .06 + .05 * Math.sin(t * 2.2); T.wing = 0; T.lean = 0; T.tailUp = 0; T.front = 0; T.low = 0; T.rate = 7;
+  const ad = angD(e.dir, Math.atan2(p.y - e.y, p.x - e.x)), aware = small ? st !== 'wander' : e.noticed;
+  if (aware && p.state !== 'dead') { T.ny = clamp(ad, -.95, .95); T.np = -.05; }
+  else { T.ny = Math.sin(t * .5) * .5; T.np = Math.sin(t * .37) * .1; }
+  if (small) {
+    if (e.dead) { T.roll = 1.4; T.low = 1; T.ny = .6; T.jaw = .4; T.rate = 9; }
+    else if (st === 'wind') { T.lunge = -.7; T.jaw = .8; T.by = -o.legLen * .25; T.rate = 12; }
+    else if (st === 'lunge') { T.lunge = 1; T.jaw = .1; T.pitch = -.12; T.rate = 30; }
+    else if (st === 'hurt') { T.pitch = .25; T.jaw = .7; T.ny = -T.ny; T.rate = 20; }
+    return;
+  }
+  const fr = st === 'wind' ? clamp(e.t / e.windT, 0, 1) : 0, k = mv ? mv.k : '';
+  switch (st) {
+    case 'roar': T.pitch = .2; T.np = .5; T.jaw = 1; T.wing = 1; T.ny *= .4; T.front = .15; T.rate = 10; break;
+    case 'wind':
+      T.rate = 9;
+      if (k === 'bite') { T.lunge = -.75; T.np = .22; T.jaw = .35 + .6 * fr; T.by = -o.legLen * .12; }
+      else if (k === 'spin') { T.lean = -.5 * (e.sd || 1); T.by = -o.legLen * .22; T.tailUp = 1; T.ny = -.7 * (e.sd || 1); T.jaw = .5; }
+      else if (k === 'charge') { T.by = -o.legLen * .28; T.np = -.42; T.pitch = -.1; T.jaw = .3; T.front = .35 * (Math.sin(t * 9) > .3 ? 1 : 0); T.wing = .25; }
+      else if (k === 'leap') { T.by = -o.legLen * .55 * fr; T.pitch = .12 * fr; T.wing = .5 + .5 * fr; T.np = .15; T.jaw = .4; }
+      else if (k === 'burst' || k === 'rain') { T.pitch = .42 * sstep(fr * 1.3); T.front = sstep(fr * 1.3); T.np = .35; T.jaw = 1; T.wing = 1; T.ny = 0; }
+      else { T.pitch = .1; T.lunge = -.5; T.np = .28 * (1 - fr); T.jaw = .25 + .75 * fr; T.wing = .35; }
+      break;
+    case 'act':
+      T.rate = 26;
+      if (k === 'bite') { T.lunge = 1.1; T.jaw = e.t < .07 ? 1 : .02; T.np = -.12; T.pitch = -.06; }
+      else if (k === 'spin') { T.lean = .6 * (e.sd || 1); T.tailUp = .6; T.jaw = .6; T.ny = .5 * (e.sd || 1); }
+      else if (k === 'charge') { T.by = -o.legLen * .18; T.np = -.4; T.pitch = -.08; T.jaw = .5; T.ny = 0; }
+      else if (k === 'leap') { const f = clamp(e.t / mv.air, 0, 1); T.pitch = mv.burrow ? -.5 + f * .9 : .35 - f * .75; T.wing = 1; T.jaw = .7; T.rate = 16; }
+      else if (k === 'burst') { T.pitch = -.12; T.by = -o.legLen * .3; T.jaw = 1; T.wing = .8; }
+      else if (k === 'rain') { T.pitch = .32; T.front = .8; T.np = .4; T.jaw = 1; T.wing = 1; T.ny = 0; }
+      else { T.jaw = 1; T.lunge = .35; T.np = k === 'breath' ? -.14 : 0; T.ny = 0; T.wing = .3; }
+      break;
+    case 'rec': T.rate = 5; T.jaw = .25 + .12 * Math.sin(t * 5); T.by = -o.legLen * .06; break;
+    case 'flinch': T.rate = 22; T.ny = -T.ny * .8 + .5 * Math.sin(o.seed || 1); T.np = .35; T.pitch = .1; T.jaw = .8; T.lunge = -.4; break;
+    case 'stun': T.roll = 1.25; T.low = .9; T.ny = .5 + .2 * Math.sin(t * 3); T.np = -.2; T.jaw = .5 + .2 * Math.sin(t * 7); T.rate = 8; break;
+    case 'trap': T.by = -o.legLen * .15 + Math.sin(t * 50) * .8; T.jaw = .8; T.np = .25 + Math.sin(t * 31) * .06; T.ny = Math.sin(t * 23) * .15; T.wing = .4; T.rate = 30; break;
+    case 'flash': T.ny = Math.sin(t * 7) * .8; T.np = .2 + Math.sin(t * 5) * .15; T.jaw = .7; T.pitch = .06; T.rate = 12; break;
+    case 'flee': T.by = -o.legLen * .14; T.np = -.3; T.jaw = .4 + .2 * Math.sin(t * 6); T.ny = 0; break;
+    case 'sleep': T.low = 1; T.by = -o.legLen * .82; T.ny = 1.0; T.np = -.35; T.jaw = .02; T.rate = 3; break;
+    case 'dying': { const f = clamp(e.t / e.dur, 0, 1); T.rate = 9; if (f < .28) { T.pitch = .3; T.np = .5; T.jaw = 1; T.wing = .8; T.front = .5; } else { T.roll = 1.35; T.low = 1; T.ny = .55; T.np = -.25; T.jaw = .45; T.wing = .1; } break; }
+    case 'dead': T.rate = 8; T.low = 1; T.jaw = e.captured ? .05 : .45; if (e.captured) { T.by = -o.legLen * .82; T.ny = 1.0; T.np = -.35; } else { T.roll = 1.35; T.ny = .55; T.np = -.25; T.wing = .1; } break;
+    default: if (e.rageT > 0) T.jaw = .3 + .15 * Math.sin(t * 6);
+  }
+  if (e.air > .05) T.wing = 1;
+}
+
+/* ---------- 毎フレームの更新 ---------- */
+const _T = {}, _o4 = [0, 0, 0, 0];
+function rigUpdate(o, e, dt, small) {
+  const L = o.L, P = o.P, bl = o.bl, bw = o.bw, body = o.body, RB = o.RB, RT = o.RT, loc = o.loc, t = (o.t += dt), mv = e.mv, dead = small ? e.dead : e.state === 'dead';
+  rigTargets(o, e, _T, small);
+  for (const key in P) P[key] = damp(P[key], _T[key], key === 'roll' || key === 'low' ? Math.min(_T.rate, 9) : _T.rate, dt);
+  const lunge = P.lunge + (e.lunge || 0) * .5;
+  let ox = 0, oz = 0; if (e.shakeT > 0) { ox = rnd(-1.5, 1.5); oz = rnd(-1.5, 1.5); }
+  const air = e.air || 0, lift = air * (mv && mv.burrow ? -(o.H + o.ry) * 1.5 : mv && mv.dive ? 130 : 80) + (small ? (e.state === 'lunge' ? 5 : 0) - (e.dead ? (1 - clamp(e.fade, 0, 1)) * 22 : 0) : 0);
+  // 速度 (歩幅の計算用)
+  if (o.px === null) { o.px = e.x; o.py = e.y; }
+  const idt = dt > 1e-4 ? 1 / dt : 0, vx = (e.x - o.px) * idt, vy = (e.y - o.py) * idt; o.vx = damp(o.vx, clamp(vx, -900, 900), 12, dt); o.vy = damp(o.vy, clamp(vy, -900, 900), 12, dt); o.px = e.x; o.py = e.y;
+  const spd = hyp(o.vx, o.vy), gait = small ? e.walk * 5 : (e.walk || 0) * 6;
+  // 体の行列: 位置 → 向き → (腰を軸に)起き上がり → 横転
+  const rollK = P.roll, pvY = o.legLen * .9, lowY = P.low * rollK / 1.35 * (bw * .78 - (pvY + (o.H - pvY) * .22)), bob = dead ? 0 : Math.sin(gait * 2) * Math.min(1.6, spd * .012) + Math.sin(t * 1.6) * .5;
+  const M = o.M; M.makeTranslation(e.x + ox, lift + P.by + lowY + bob, e.y + oz).multiply(_MA.makeRotationY(-e.dir)).multiply(_MA.makeTranslation(-bl * .35, o.legLen * .9, 0)).multiply(_MA.makeRotationZ(P.pitch)).multiply(_MA.makeRotationX(rollK + P.lean * .22)).multiply(_MA.makeTranslation(bl * .35, -o.legLen * .9, 0));
+  const me = M.elements, pvx = o.neckX, pvy = o.neckY, breath = 1 + Math.sin(t * (e.state === 'sleep' ? 1.2 : 2.6)) * (dead ? 0 : e.state === 'sleep' ? .035 : .014);
+  const und = dead ? 0 : Math.min(1, spd * .006);
+  for (let i = 0; i < RB; i++) {
+    const r = loc[i], w = r.w; let x = r[0], y = r[1], z = 0;
+    if (w > 0) { const dx = x - pvx + lunge * o.hr * .75 * w, dy = y - pvy, a = P.np * w, b = P.ny * w, ca = Math.cos(a), sa = Math.sin(a), x1 = dx * ca - dy * sa; y = pvy + dx * sa + dy * ca; x = pvx + x1 * Math.cos(b); z = x1 * Math.sin(b); }
+    else if (und) z = Math.sin(gait + x * .035) * und * bw * .05;
+    body.cx[i] = me[0] * x + me[4] * y + me[8] * z + me[12]; body.cy[i] = me[1] * x + me[5] * y + me[9] * z + me[13]; body.cz[i] = me[2] * x + me[6] * y + me[10] * z + me[14];
+    const br = w > 0 ? 1 : breath; body.ru[i] = r[2] * br; body.rs[i] = r[3] * br; body.vv[i] = r[4] / o.per;
+  }
+  // 尻尾: ゲーム側の節をなめらかな曲線でつなぐ
+  const tp = o.tailPts, last = RB - 1, bx = body.cx[last], byy = body.cy[last], bz = body.cz[last], N = e.tail ? e.tailN : 3, tr0 = Math.min(loc[last][2], loc[last][3]);
+  tp.length = 0; tp.push([bx, byy, bz, tr0]);
+  const cut = e.tailCut, wag = dead ? 0 : 1;
+  for (let i = 0; i < N; i++) {
+    const f = (i + 1) / N; let x, z;
+    if (e.tail) { x = e.tail[i].x + ox; z = e.tail[i].y + oz; } else { const d = (i + 1) * L.tailL, a = e.dir + Math.PI + Math.sin(t * 3 + i * .8 + (o.seed || 0)) * .25 * wag; x = e.x + Math.cos(e.dir + Math.PI) * bl + Math.cos(a) * d; z = e.y + Math.sin(e.dir + Math.PI) * bl + Math.sin(a) * d; }
+    const r = Math.max(1.2, L.tailR * (1 - f * (cut ? .35 : .86))), yy = Math.max(r * .9, lerp(byy - lift, r + (o.k === 'anky' ? L.tailR * 1.2 : 2), Math.pow(f, .75)) * (1 - P.low * .5) + P.tailUp * f * o.H * .5 + Math.sin(t * 2.4 - i * .9) * 2.5 * wag * f);
+    tp.push([x, yy + Math.max(lift, -400), z, r]);
+  }
+  const lp2 = tp[tp.length - 1], lp1 = tp[tp.length - 2], tdx = lp2[0] - lp1[0], tdz = lp2[2] - lp1[2], tdl = hyp(tdx, tdz) || 1;
+  tp.push([lp2[0] + tdx / tdl * 2, lp2[1], lp2[2] + tdz / tdl * 2, cut ? lp2[3] * .5 : .3]);
+  let vv = loc[last][4] / o.per, pxp = bx, pyp = byy, pzp = bz;
+  for (let i = 0; i < RT; i++) { crv(tp, (i + 1) / RT * (tp.length - 1), _o4); const j = RB + i; body.cx[j] = _o4[0]; body.cy[j] = _o4[1]; body.cz[j] = _o4[2]; body.ru[j] = body.rs[j] = Math.max(.25, _o4[3]); vv += hyp(_o4[0] - pxp, _o4[1] - pyp, _o4[2] - pzp) / o.per; body.vv[j] = vv; pxp = _o4[0]; pyp = _o4[1]; pzp = _o4[2]; }
+  tubeBuild(body, 0, 1, 0, rollK + P.lean * .22);
+  // 頭
+  const Hm = o.Hm; Hm.copy(M).multiply(_MA.makeTranslation(pvx, pvy, 0)).multiply(_MA.makeRotationY(-P.ny)).multiply(_MA.makeRotationZ(P.np)).multiply(_MA.makeTranslation(-pvx + lunge * o.hr * .75, -pvy, 0));
+  o.head.matrix.copy(Hm); o.head.matrixWorldNeedsUpdate = true;
+  o.jaw.rotation.z = -clamp(P.jaw, 0, 1.1) * JAWMAX[o.k];
+  _B1.set(L.hOff, o.hy, 0).applyMatrix4(Hm); o.headW.x = _B1.x; o.headW.y = _B1.y; o.headW.z = _B1.z; o.topY = byy + o.ry;
+  // 目: まばたき・怒り
+  o.blink -= dt; if (o.blink < -.12) o.blink = 1.5 + Math.random() * 4;
+  const asleep = dead || e.state === 'sleep' || e.state === 'dying' && e.t > e.dur * .5; o.eyes.scale.y = 1; o.eyes.visible = !(asleep || o.blink < 0);
+  const rage = e.rageT > 0 && !dead ? 1 : 0; if (rage !== o.rage) { o.rage = rage; o.eyes.material.color.setRGB(1, rage ? .32 : 1, rage ? .26 : 1); }
+  const gi = dead ? .1 : (rage ? .85 : .45) + .22 * Math.sin(t * (rage ? 16 : 3)) + (e.state === 'wind' ? .35 : 0); if (o.glow) o.glow.material.emissiveIntensity = gi; if (o.gmat) o.gmat.emissiveIntensity = gi;
+  if (o.skin.emissiveMap) o.skin.emissiveIntensity = dead ? .15 : (rage ? .95 : .5) + .25 * Math.sin(t * (rage ? 14 : 2.5)) + (e.state === 'wind' && mv && (mv.k === 'burst' || mv.k === 'rain' || mv.k === 'beam') ? .6 : 0);
+  if (!small) { if (e.broken.head && !o.hb) { o.hb = true; o.headMesh.geometry = o.headGeoB; } const ch = (e.state === 'wind' || e.state === 'act') && mv && (mv.k === 'shot' || mv.k === 'breath' || mv.k === 'beam') ? (e.state === 'act' ? 1 : clamp(e.t / e.windT, 0, 1)) : 0; o.mouth.visible = ch > .05; if (ch > .05) { const c = colRGB(mv.el ? EL[mv.el].c : '#ffe0b0'), s = o.hr * (.15 + .4 * ch) * (1 + .15 * Math.sin(t * 40)); o.mouth.material.color.setRGB(c[0], c[1], c[2]); o.mouth.scale.set(s, s, s); } }
+  // 脚
+  const cd = Math.cos(e.dir), sd = Math.sin(e.dir), limp = P.roll > .5, inAir = air > .05 && !(mv && mv.burrow), fast = spd > 260;
+  for (let i = 0; i < o.legs.length; i++) {
+    const lg = o.legs[i], tb = lg.tb;
+    _B1.set(lg.hx, lg.hy, lg.hz).applyMatrix4(M); const hx = _B1.x, hy = _B1.y, hz = _B1.z;
+    const rx = lg.hx + (lg.front ? bl * .06 : -bl * .02), rz = lg.hz * 1.12, homeX = e.x + cd * rx - sd * rz, homeZ = e.y + sd * rx + cd * rz;
+    let fx, fy, fz;
+    if (limp || (mv && mv.burrow && air > .05)) { _B1.set(lg.hx + (lg.front ? lg.a * .3 : -lg.a * .2), lg.hy - (lg.a + lg.b) * .8, lg.hz * 1.25).applyMatrix4(M); fx = _B1.x; fy = Math.max(limp ? 1 : -999, _B1.y); fz = _B1.z; lg.init = false; }
+    else if (inAir) { _B1.set(lg.hx + (lg.front ? lg.a * .5 : -lg.a * .35), lg.hy - (lg.a + lg.b) * .62, lg.hz * 1.05).applyMatrix4(M); fx = _B1.x; fy = _B1.y; fz = _B1.z; lg.init = false; }
+    else {
+      const lead = lg.dur * .5 + .06, wantX = homeX + o.vx * lead, wantZ = homeZ + o.vy * lead;
+      if (!lg.init) { lg.init = true; lg.fx = homeX; lg.fz = homeZ; lg.step = 0; }
+      const d = hyp(lg.fx - wantX, lg.fz - wantZ), th = bl * (o.two ? .34 : .3) * (fast ? .8 : 1), other = o.legs[i ^ 1];
+      if (d > th * 3.2) { lg.fx = wantX; lg.fz = wantZ; lg.step = 0; }
+      else if (lg.step <= 0 && d > th && !(other.step > 0 && other.step < .55)) { lg.step = 1e-4; lg.sx = lg.fx; lg.sz = lg.fz; lg.dur = clamp(.3 - spd * .0005, .1, .3); }
+      if (lg.step > 0) { lg.step += dt / lg.dur; const s = sstep(lg.step); lg.fx = lerp(lg.sx, wantX, s); lg.fz = lerp(lg.sz, wantZ, s); if (lg.step >= 1) { lg.step = 0; lg.fx = wantX; lg.fz = wantZ; if (!small && spd > 40 && Math.random() < .5) fx_dust(lg.fx, lg.fz); } }
+      fx = lg.fx; fz = lg.fz; fy = lg.step > 0 ? Math.sin(Math.min(1, lg.step) * Math.PI) * o.legLen * (fast ? .5 : .34) : 0;
+      if (lg.front && P.front > .02) { _B1.set(lg.hx + lg.a * .55, lg.hy - (lg.a + lg.b) * .5 + Math.sin(t * 9 + i * 2) * 2, lg.hz).applyMatrix4(M); fx = lerp(fx, _B1.x, P.front); fy = lerp(fy, _B1.y, P.front); fz = lerp(fz, _B1.z, P.front); }
+      fy += Math.min(0, lift);
+    }
+    // 2関節の逆運動学: 膝(肘)の位置を求める
+    const ankY = fy + lg.r * .7; let dx = fx - hx, dy = ankY - hy, dz = fz - hz, dl = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1; const a = lg.a, b = lg.b, dc = clamp(dl, Math.abs(a - b) + .5, a + b - .3); dx /= dl; dy /= dl; dz /= dl;
+    const xk = (a * a - b * b + dc * dc) / (2 * dc), hk = Math.sqrt(Math.max(0, a * a - xk * xk)), pf = lg.front ? -1 : 1; let pxv = cd * pf + (-sd) * Math.sign(lg.hz) * .18, pyv = .25, pzv = sd * pf + cd * Math.sign(lg.hz) * .18; const pd = pxv * dx + pyv * dy + pzv * dz; pxv -= dx * pd; pyv -= dy * pd; pzv -= dz * pd; const pl = Math.sqrt(pxv * pxv + pyv * pyv + pzv * pzv) || 1;
+    const kx = hx + dx * xk + pxv / pl * hk, ky = hy + dy * xk + pyv / pl * hk, kz = hz + dz * xk + pzv / pl * hk, ex2 = hx + dx * dc, ey2 = hy + dy * dc, ez2 = hz + dz * dc;
+    const pts = lg.pts || (lg.pts = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]), r = lg.r;
+    _B2.set(lg.hx * .7, lg.hy + o.ry * .25, lg.hz * .55).applyMatrix4(M);
+    pts[0][0] = _B2.x; pts[0][1] = _B2.y; pts[0][2] = _B2.z; pts[0][3] = r * 1.25; pts[1][0] = hx; pts[1][1] = hy; pts[1][2] = hz; pts[1][3] = r * 1.3;
+    pts[2][0] = kx; pts[2][1] = ky; pts[2][2] = kz; pts[2][3] = r * .82; pts[3][0] = lerp(kx, ex2, .7); pts[3][1] = lerp(ky, ey2, .7); pts[3][2] = lerp(kz, ez2, .7); pts[3][3] = r * .56; pts[4][0] = ex2; pts[4][1] = ey2 - r * .3; pts[4][2] = ez2; pts[4][3] = r * .62;
+    let lv = 0, qx = pts[0][0], qy = pts[0][1], qz = pts[0][2];
+    for (let j = 0; j < tb.R; j++) { crv(pts, j / (tb.R - 1) * 4, _o4); tb.cx[j] = _o4[0]; tb.cy[j] = _o4[1]; tb.cz[j] = _o4[2]; tb.ru[j] = tb.rs[j] = Math.max(.3, _o4[3]); lv += hyp(_o4[0] - qx, _o4[1] - qy, _o4[2] - qz); tb.vv[j] = lv / o.per; qx = _o4[0]; qy = _o4[1]; qz = _o4[2]; }
+    tubeBuild(tb, cd, 0.001, sd, 0);
+    lg.foot.position.set(ex2, ey2 - lg.r * .7, ez2); if (limp || inAir) lg.foot.quaternion.setFromRotationMatrix(M); else lg.foot.rotation.set(0, -e.dir, lg.step > 0 ? -.5 * Math.sin(Math.min(1, lg.step) * Math.PI) : 0);
+  }
+  // 翼
+  for (const wg of o.wings) wingUpdate(o, wg, e, dead, air);
+  if (!small && e.broken.wing && !o.wb) o.wb = true;
+  // 背中の飾り
+  for (const g of o.inst) {
+    const im = g.im, arr = g.items;
+    for (let i = 0; i < arr.length; i++) {
+      const it = arr[i], r = it.ri, cu = -Math.cos(it.th), su = Math.sin(it.th), ru = body.ru[r], rs = body.rs[r], ux = body.ux[r], uy = body.uy[r], uz = body.uz[r], sx = body.sx[r], sy = body.sy[r], sz = body.sz[r], ax = body.ax[r], ay = body.ay[r], az = body.az[r];
+      let nx = ux * cu * rs + sx * su * ru, ny = uy * cu * rs + sy * su * ru, nz = uz * cu * rs + sz * su * ru; const nl = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1; nx /= nl; ny /= nl; nz /= nl;
+      const ct = Math.cos(it.tilt), stt = Math.sin(it.tilt); _B1.set(nx * ct + ax * stt, ny * ct + ay * stt, nz * ct + az * stt).normalize(); _B2.set(ax, ay, az).addScaledVector(_B1, -(ax * _B1.x + ay * _B1.y + az * _B1.z)).normalize(); _B3.crossVectors(_B2, _B1);
+      const k2 = r >= RB && e.tail && (r - RB) / RT > (e.tailN / L.tailN) ? 0 : 1;
+      _MA.makeBasis(_B2, _B1, _B3); _S3.set(it.sc[0] * k2, it.sc[1] * k2, it.sc[2] * k2); _MA.scale(_S3); _MA.setPosition(body.cx[r] + (ux * cu * ru + sx * su * rs) * .96, body.cy[r] + (uy * cu * ru + sy * su * rs) * .96, body.cz[r] + (uz * cu * ru + sz * su * rs) * .96); im.setMatrixAt(i, _MA);
+    }
+    im.instanceMatrix.needsUpdate = true;
+  }
+  // 尻尾の先・切り口・影
+  const li = RB + RT - 2, ex = body.cx[li], ey = body.cy[li], ez = body.cz[li];
+  if (o.tip) { o.tip.visible = !cut; if (!cut) { _B1.set(body.ax[li], body.ay[li], body.az[li]); _B2.set(body.ux[li], body.uy[li], body.uz[li]); _B3.set(body.sx[li], body.sy[li], body.sz[li]); o.tip.matrix.makeBasis(_B1, _B2, _B3).setPosition(ex, ey, ez); o.tip.matrixWorldNeedsUpdate = true; } }
+  o.stump.visible = !!cut; if (cut) { o.stump.position.set(ex, ey, ez); o.stump.scale.setScalar(Math.max(1, body.ru[li] * .9)); }
+  const ss = 1 - air * .3; o.shadow.position.set(e.x, .8, e.y); o.shadow.rotation.y = -e.dir; o.shadow.scale.set(bl * 1.25 * ss, 1, bw * 1.2 * ss); o.shadow.visible = !(mv && mv.burrow && air > .3);
+}
+function fx_dust(x, z) { if (G.fx.length < 220) G.fx.push({ x, y: z, h: 3, vx: rnd(-14, 14), vy: rnd(-14, 14), life: .45, max: .45, r: 4, c: 'rgba(225,215,195,.4)', grow: 1 }); }
+// 翼: 骨(上腕→前腕→指3本)の角度を「たたむ⇔広げる」で補間し、指の間に膜を張る
+function wingUpdate(o, wg, e, dead, air) {
+  const P = o.P, s = wg.s, t = o.t, sp = clamp(.14 + P.wing * (o.wb ? .74 : .86), 0, 1), span = wg.span, drg = o.k !== 'bird', fold = 1 - sp;
+  const flap = dead ? -.25 : air > .05 ? .25 + Math.sin(t * 14) * .55 : sp > .5 ? .42 + Math.sin(t * 6) * .16 * sp : .1 + Math.sin(t * 2) * .03, cf = Math.cos(flap), sf = Math.sin(flap);
+  const L1 = span * .34, L2 = span * .4, L3 = span * (drg ? .74 : .5), a1 = lerp(1.25, -.15, sp), a2 = lerp(-1.75, .22, sp), fa = [lerp(1.45, -.05, sp), lerp(1.56, .55, sp), lerp(1.68, 1.12, sp)], fl = [1, .94, .8];
+  const pt = (ox, oy, oz, ang, len, drop) => { const out = Math.cos(ang) * len, back = Math.sin(ang) * len; return [ox - back, oy + out * sf - (drop || 0), oz + s * out * cf]; };
+  const S0 = wg.sh, E = pt(S0[0], S0[1], S0[2], a1, L1, -fold * span * .2), Wr = pt(E[0], E[1], E[2], a2, L2, -fold * span * .04), F = fa.map((a, i) => pt(Wr[0], Wr[1], Wr[2], a, L3 * fl[i], fold * span * (.1 + .05 * i))), Rr = wg.rear;
+  const M = o.M, w = v => { _B1.set(v[0], v[1], v[2]).applyMatrix4(M); return [_B1.x, _B1.y, _B1.z]; }, wS = w(S0), wE = w(E), wW = w(Wr), wF = F.map(w), wR = w(Rr);
+  // 膜: 4枚の面 (手首-指1-指2 / 手首-指2-指3 / 肘-手首-指3-胴 / 肩-肘-胴)
+  const n = wg.n, pos = wg.pos, nor = wg.nor, quads = [[wW, wF[0], wW, wF[1]], [wW, wF[1], wW, wF[2]], [wE, wW, wR, wF[2]], [wS, wE, wR, wR]]; let v = 0;
+  const sag = span * .05 * (.4 + sp * .6);
+  for (let p = 0; p < 4; p++) { const q = quads[p], A = q[0], B = q[1], C = q[2], D = q[3];
+    for (let i = 0; i <= n; i++) { const fi = i / n; for (let j = 0; j <= n; j++) { const fj = j / n, x0 = lerp(A[0], B[0], fi), y0 = lerp(A[1], B[1], fi), z0 = lerp(A[2], B[2], fi), x1 = lerp(C[0], D[0], fi), y1 = lerp(C[1], D[1], fi), z1 = lerp(C[2], D[2], fi), bil = Math.sin(fi * Math.PI) * Math.sin(fj * Math.PI) * sag; pos[v] = lerp(x0, x1, fj); pos[v + 1] = lerp(y0, y1, fj) - bil; pos[v + 2] = lerp(z0, z1, fj); v += 3; } } }
+  const st = (n + 1) * 3;
+  for (let p = 0; p < 4; p++) for (let i = 0; i <= n; i++) for (let j = 0; j <= n; j++) { const b = (p * (n + 1) * (n + 1) + i * (n + 1) + j) * 3, iu = i < n ? b + st : b, id = i > 0 ? b - st : b, jr = j < n ? b + 3 : b, jl = j > 0 ? b - 3 : b, ax = pos[iu] - pos[id], ay = pos[iu + 1] - pos[id + 1], az = pos[iu + 2] - pos[id + 2], bx = pos[jr] - pos[jl], by = pos[jr + 1] - pos[jl + 1], bz = pos[jr + 2] - pos[jl + 2]; let nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx; const nl = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1; if (ny < 0) { nx = -nx; ny = -ny; nz = -nz; } nor[b] = nx / nl; nor[b + 1] = ny / nl; nor[b + 2] = nz / nl; }
+  wg.g.attributes.position.needsUpdate = true; wg.g.attributes.normal.needsUpdate = true;
+  // 骨
+  const br = o.bw * .12, bone = (tb, pts) => { for (let j = 0; j < tb.R; j++) { crv(pts, j / (tb.R - 1) * (pts.length - 1), _o4); tb.cx[j] = _o4[0]; tb.cy[j] = _o4[1]; tb.cz[j] = _o4[2]; tb.ru[j] = tb.rs[j] = Math.max(.3, _o4[3]); tb.vv[j] = j / tb.R; } tubeBuild(tb, 0, 1, 0.001, 0); };
+  bone(wg.bones[0], [[wS[0], wS[1], wS[2], br * 1.5], [wE[0], wE[1], wE[2], br * 1.1], [wW[0], wW[1], wW[2], br * .9]]);
+  for (let i = 0; i < 3; i++) bone(wg.bones[i + 1], [[wW[0], wW[1], wW[2], br * .8], [lerp(wW[0], wF[i][0], .5), lerp(wW[1], wF[i][1], .5) + sag * .3, lerp(wW[2], wF[i][2], .5), br * .55], [wF[i][0], wF[i][1], wF[i][2], br * .12]]);
+}
+
+/* ---------- ハンター (関節つき) ---------- */
+function buildHunter() {
+  crInit(); const st = G.st, wt = st.wt, w = st.w, ac = ARM[S.eq.chest], ah = ARM[S.eq.head], al = ARM[S.eq.legs], aa = ARM[S.eq.arms], aw = ARM[S.eq.waist];
+  const bodyC = ac ? ac.col : '#9b6b3f', trimC = ac ? ac.col2 : '#e6dcc6', headC = ah ? ah.col : bodyC, legC = shade(al ? al.col : '#7a5a3c', -.2), armC = aa ? aa.col : bodyC, waistC = shade(aw ? aw.col : bodyC, -.3), skin = '#f0c9a0';
+  const root = new THREE.Group(), inner = new THREE.Group(), core = new THREE.Group(), upper = new THREE.Group(), headG = new THREE.Group(); root.add(inner); inner.add(core); inner.position.y = 20; core.position.y = -20; core.add(upper); upper.position.y = 18; upper.add(headG); headG.position.set(.4, 17.6, 0);
+  let b = sb();
+  sbTube(b, bodyC, [[0, -1.5, 0, 5.4], [.2, 1.5, 0, 4.9], [.5, 5, 0, 5.3], [.9, 8.6, 0, 6.5], [.6, 11.6, 0, 5.6], [.3, 13.6, 0, 2.6], [.3, 15, 0, 2.2]], 20, 22, shade(bodyC, .12));
+  for (const s of [1, -1]) { sbAdd(b, BASE2.sph, shade(armC, .22), .3, 11.6, s * 7.6, 3.6, 3.2, 3.9); sbAdd(b, BASE2.sphL, trimC, .3, 13.4, s * 7.6, 1.4, 1.2, 2.2); }
+  sbAdd(b, BASE2.cyl, waistC, .2, .6, 0, 5.9, 2.6, 5.9); sbAdd(b, BASE2.sphL, trimC, 5.6, .6, 0, 1.2, 1.5, 1.8); sbAdd(b, BASE2.sphL, trimC, 5.6, 8.4, 0, 1.3, 3.4, 3.6);
+  upper.add(sbMesh(b));
+  b = sb(); sbAdd(b, BASE2.sph, headC, 0, 0, 0, 5.7, 5.9, 5.6); sbAdd(b, BASE2.sph, skin, 2.2, -1.6, 0, 3.9, 3.6, 4.2); sbAdd(b, BASE2.sphL, shade(headC, -.3), 4.6, 1.2, 0, 1.6, 1.2, 4.6); sbTube(b, trimC, [[-1, 5, 0, 1.3], [-3.5, 8.5, 0, 1.0], [-7.5, 9.5, 0, .1]], 8, 10, '#c0392b'); for (const s of [1, -1]) sbAdd(b, BASE2.sphL, '#1a1410', 5.4, -1.0, s * 1.7, .5, .7, .6);
+  headG.add(sbMesh(b));
+  const lmat = c => new THREE.MeshPhongMaterial({ color: c, shininess: 24, specular: 0x222222 }), mkL = (c, R) => { const tb = mkTube(R, 12, lmat(c)); core.add(tb.mesh); return tb; };
+  const legs = [1, -1].map(s => ({ s, tb: mkTube(14, 12, lmat(legC)), foot: null })), arms = [1, -1].map(s => ({ s, tb: mkTube(12, 10, lmat(armC)), hand: null }));
+  b = sb(); sbAdd(b, BASE2.sphL, shade(legC, -.35), 1.6, 1.3, 0, 3.9, 1.6, 2.3); const fg = sbGeo(b); b = sb(); sbAdd(b, BASE2.sphL, skin, 0, 0, 0, 1.9, 1.9, 1.9); const hg = sbGeo(b);
+  for (const l of legs) { core.add(l.tb.mesh); l.foot = new THREE.Mesh(fg, MATS); core.add(l.foot); } for (const a of arms) { core.add(a.tb.mesh); a.hand = new THREE.Mesh(hg, MATS); core.add(a.hand); }
+  const wp = new THREE.Group(); wp.position.set(0, 24, 0); core.add(wp); wp.add(weaponMesh(wt, w, 1));
+  let wp2 = null, shield = null, arrow = null;
+  if (wt === 'db') { wp2 = new THREE.Group(); wp2.position.set(0, 24, 0); core.add(wp2); wp2.add(weaponMesh(wt, w, -1)); }
+  if (wt === 'sns') { b = sb(); sbAdd(b, BASE2.cyl, shade(w.col, .2), 0, 0, 0, 8.6, 1.6, 8.6, Math.PI / 2, 0, 0); sbAdd(b, BASE2.sph, w.el ? EL[w.el].c : w.col2, 0, 0, -1.2, 3, 3, 1.4); sbAdd(b, BASE2.cyl, shade(w.col, -.2), 0, 0, -.3, 9.2, .7, 9.2, Math.PI / 2, 0, 0); shield = sbMesh(b); core.add(shield); }
+  if (wt === 'bow') { b = mb(); cylTo(b, '#fff6d8', -8, 0, 5, 20, 0, 5, .6); coneDir(b, '#cfd6de', 20, 0, 5, 1.4, 4, 1, 0, 0); arrow = mbMesh(b); wp.add(arrow); }
+  // マント (風になびく布)
+  const CN = 7, CW = 4, cpos = new Float32Array((CN + 1) * (CW + 1) * 3), cidx = []; for (let i = 0; i < CN; i++) for (let j = 0; j < CW; j++) { const a = i * (CW + 1) + j, d = a + CW + 1; cidx.push(a, d, a + 1, a + 1, d, d + 1); }
+  const cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.BufferAttribute(cpos, 3)); cg.setIndex(cidx); const cape = new THREE.Mesh(cg, new THREE.MeshPhongMaterial({ color: 0xc0392b, side: THREE.DoubleSide, shininess: 8 })); cape.frustumCulled = false;
+  const TN = 16, tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.BufferAttribute(new Float32Array((TN + 1) * 6), 3)); const idx = []; for (let i = 0; i < TN; i++) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2); tg.setIndex(idx);
+  const trail = new THREE.Mesh(tg, flatMat(st.el ? EL[st.el].c : '#ffffff', .5)); trail.frustumCulled = false; trail.visible = false; trail.renderOrder = 8; root.add(trail);
+  const shadow = new THREE.Mesh(BASE.circ, flatMat('#000000', .3)); shadow.scale.set(13, 1, 13); shadow.renderOrder = 1;
+  return { root, inner, core, upper, headG, legs, arms, wp, wp2, shield, arrow, cape, cpos, CN, CW, cp: null, trail, TN, shadow, yaw: .55, pitch: .2, twist: 0, lean: 0, iy: 20, iz: 0, hy: 0, ph: 0, run: 0 };
+}
+function limbIK(tb, hx, hy, hz, fx, fy, fz, a, b, px, py, pz, r0, r1) {
+  let dx = fx - hx, dy = fy - hy, dz = fz - hz; const dl = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1, dc = clamp(dl, Math.abs(a - b) + .2, a + b - .1); dx /= dl; dy /= dl; dz /= dl;
+  const xk = (a * a - b * b + dc * dc) / (2 * dc), hk = Math.sqrt(Math.max(0, a * a - xk * xk)), pd = px * dx + py * dy + pz * dz; px -= dx * pd; py -= dy * pd; pz -= dz * pd; const pl = Math.sqrt(px * px + py * py + pz * pz) || 1;
+  const kx = hx + dx * xk + px / pl * hk, ky = hy + dy * xk + py / pl * hk, kz = hz + dz * xk + pz / pl * hk, ex = hx + dx * dc, ey = hy + dy * dc, ez = hz + dz * dc, pts = tb._p || (tb._p = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]);
+  pts[0][0] = hx; pts[0][1] = hy; pts[0][2] = hz; pts[0][3] = r0; pts[1][0] = lerp(hx, kx, .55); pts[1][1] = lerp(hy, ky, .55); pts[1][2] = lerp(hz, kz, .55); pts[1][3] = r0 * 1.02; pts[2][0] = kx; pts[2][1] = ky; pts[2][2] = kz; pts[2][3] = lerp(r0, r1, .6); pts[3][0] = ex; pts[3][1] = ey; pts[3][2] = ez; pts[3][3] = r1;
+  for (let j = 0; j < tb.R; j++) { crv(pts, j / (tb.R - 1) * 3, _o4); tb.cx[j] = _o4[0]; tb.cy[j] = _o4[1]; tb.cz[j] = _o4[2]; tb.ru[j] = tb.rs[j] = Math.max(.2, _o4[3]); tb.vv[j] = j / tb.R; }
+  tubeBuild(tb, 1, 0.001, 0.001, 0); _B3.set(ex, ey, ez);
+}
+function r3SyncPlayer(dt) {
+  const o = R3.pl, p = G.p, st = G.st, wt = st.wt, t = G.el;
+  o.root.position.set(p.x, 0, p.y); o.shadow.position.set(p.x, .8, p.y); o.trail.visible = false;
+  const vis = !(p.inv > 0 && !['roll', 'dead', 'down'].includes(p.state) && Math.floor(t * 18) % 2); o.root.visible = vis; o.cape.visible = vis;
+  let ry = -p.dir, iz = 0, iy = 20, sc = 1, yaw = .55, pitch = .2, rate = 16, run = 0, tuck = 0, twistT = 0, leanT = 0, exact = false, headYaw = 0;
+  const rest = { sns: 40, gs: 74, db: 37, hm: 52 }[wt] || 30, tg = G.c3 && G.c3.tgt;
+  if (tg && tg.state !== 'dead') headYaw = clamp(angD(p.dir, Math.atan2(tg.y - p.y, tg.x - p.x)), -1, 1);
+  switch (p.state) {
+    case 'roll': { const fr = p.t / .4; ry = -p.rdir; iz = -sstep(fr) * TAU; iy = 10.5; sc = .86; pitch = 1.3; yaw = .2; tuck = 1; rate = 40; exact = true; headYaw = 0; break; }
+    case 'dead': case 'down': iz = 1.5; iy = 6.5; yaw = 1.5; pitch = 0; rate = 14; headYaw = .5; break;
+    case 'hurt': iz = .42; leanT = .1; yaw = 1.0; pitch = .7; rate = 24; break;
+    case 'act': iy = 14.5; leanT = -.55; yaw = 1.3; pitch = -.6; rate = 10; break;
+    case 'item': leanT = .22; yaw = 1.3; pitch = -.35; rate = 10; break;
+    case 'guard': yaw = 1.15; pitch = .15; iy = 18.6; twistT = -.2; rate = 22; break;
+    case 'charge': if (wt !== 'bow') { yaw = -.25; pitch = 2.3 + Math.sin(t * 34) * .025 * p.chg; iy = 18.4; leanT = .14; twistT = .25; rate = 14; } else { yaw = 0; pitch = .05; twistT = .5; rate = 20; } break;
+    case 'shoot': yaw = 0; pitch = .1; twistT = .45; rate = 26; break;
+    case 'atk': {
+      const mv = p.mv, tw = mv.wind, ta = tw + mv.act, tt = ta + mv.rec, chop = !mv.spin && mv.arc <= 1.75 && (wt === 'gs' || wt === 'hm'), reach = Math.max(rest, mv.reach * .9); exact = true; rate = 46;
+      if (mv.spin) { const fr = clamp((p.t - tw) / (mv.act + .2), 0, 1); yaw = sstep(fr) * TAU; pitch = 0; twistT = .5; if (p.t >= tw && fr < 1) setTrail(o, yaw - 2.4, yaw, reach * .5, reach, false, 1); }
+      else if (chop) { const up = 2.25, dn = -.45; yaw = 0; if (p.t < tw) { pitch = lerp(.2, up, sstep(p.t / tw * 1.25)); leanT = .16; } else if (p.t < ta) { const f = sstep((p.t - tw) / mv.act); pitch = lerp(up, dn, f); leanT = lerp(.16, -.38, f); setTrail(o, pitch, up, reach * .5, reach, true, 1); } else { const k = (p.t - ta) / (tt - ta); pitch = lerp(dn, .2, sstep((k - .55) / .45)); leanT = lerp(-.38, 0, sstep(k)); if (k < .4) setTrail(o, dn, up, reach * .5, reach, true, 1 - k / .4); } iy = 18.6; }
+      else { const a0 = (mv.rev ? 1 : -1) * Math.min(mv.arc, 3.4) / 2, a1 = -a0; pitch = .06; if (p.t < tw) yaw = lerp(.55, a0, sstep(p.t / tw * 1.3)); else if (p.t < ta) { yaw = lerp(a0, a1, sstep((p.t - tw) / mv.act)); setTrail(o, a0, yaw, reach * .5, reach, false, 1); } else { const k = (p.t - ta) / (tt - ta); yaw = lerp(a1, .55, sstep((k - .5) / .5)); if (k < .4) setTrail(o, a0, a1, reach * .5, reach, false, 1 - k / .4); } twistT = clamp(yaw * .5, -.8, .8); leanT = -.12; iy = 19; }
+      break;
+    }
+    default: if (p.moving) { run = 1; leanT = -.16; }
+  }
+  o.yaw = exact ? damp(o.yaw, yaw, rate, dt) : damp(o.yaw, yaw, rate, dt); o.pitch = damp(o.pitch, pitch, rate, dt); o.twist = damp(o.twist, twistT, 18, dt); o.lean = damp(o.lean, leanT, 14, dt); o.run = damp(o.run, run, 12, dt); o.iy = damp(o.iy, iy, 18, dt); o.hy = damp(o.hy, headYaw, 8, dt);
+  if (p.state === 'roll') o.iz = iz; else o.iz = damp(Math.abs(o.iz) > 4 ? 0 : o.iz, iz, 16, dt);
+  const ph = p.walk * 4, bobv = Math.abs(Math.sin(ph)) * 1.5 * o.run + Math.sin(t * 2.2) * .25;
+  o.root.rotation.y = ry; o.inner.rotation.z = o.iz; o.inner.position.y = o.iy + bobv; o.inner.scale.setScalar(sc);
+  o.upper.rotation.set(0, -o.twist, o.lean - (1 - sc) * 2); o.headG.rotation.set(0, -clamp(o.hy - o.twist, -1, 1) * .8, -o.lean * .6);
+  const yw = o.yaw, pt = o.pitch; o.wp.rotation.set(0, -yw, pt); if (o.wp2) o.wp2.rotation.set(0, yw, pt);
+  if (o.shield) { if (p.state === 'guard') { o.shield.position.set(11.5, 23, -1); o.shield.rotation.y = Math.PI / 2; } else { o.shield.position.set(1.5, 22 + Math.sin(ph) * o.run, -11.5); o.shield.rotation.y = 0; } }
+  if (o.arrow) { o.arrow.visible = p.state === 'charge'; o.arrow.position.x = -(p.chg || 0) * 2; }
+  // 脚: 走りの周期に合わせて足先を動かし、膝は逆算で決める
+  const tk = p.state === 'roll' ? 1 : 0, low = (20 - o.iy);
+  for (const l of o.legs) { const s = l.s, a = ph + (s > 0 ? 0 : Math.PI), sw = Math.sin(a), fxp = sw * 7.5 * o.run + (tk ? 3 : 0), fyp = Math.max(0, Math.cos(a)) * 5.2 * o.run + (tk ? 8 : 0) - 0 + low * 0 - (o.iy + bobv - 20) * 0; limbIK(l.tb, 0, 16.5, s * 3.5, fxp, 1.6 + fyp - (o.iy + bobv - 20), s * 3.8, 8.8, 8.6, 1, .2, s * .12, 3.0, 2.0); l.foot.position.copy(_B3).y -= 1.2; l.foot.rotation.z = -Math.max(0, sw) * .5 * o.run + (tk ? -.8 : 0); }
+  // 腕: 利き手は武器の柄へ、もう一方は盾・弓・添え手・走りの振り
+  const cy = Math.cos(-yw), sy = Math.sin(-yw), cp = Math.cos(pt), spn = Math.sin(pt), grip = (gx, gz, m) => { const x1 = gx * cp, y1 = gx * spn, yy = m ? sy * -1 : sy; return [x1 * cy + gz * yy, 24 + y1, -x1 * yy + gz * cy]; };
+  const ct = Math.cos(-o.twist), stw = Math.sin(-o.twist), shoulder = s => { const x = .3, z = s * 7.6, yv = 11.4; return [x * ct + z * stw - o.lean * yv, 18 + yv + o.lean * x, -x * stw + z * ct]; };
+  for (const a of o.arms) {
+    const s = a.s, sh = shoulder(s); let h;
+    if (s > 0) h = wt === 'bow' ? [sh[0] + 4 - (p.state === 'charge' ? (p.chg || 0) * 1.6 + 2 : 0), 24.5, sh[2] - 3] : grip(10, 5, false);
+    else if (wt === 'db') h = grip(10, -5, true);
+    else if (wt === 'bow') h = grip(8, 5, false);
+    else if (wt === 'sns') h = p.state === 'guard' ? [9.5, 23, -1.5] : [2.5, 21 + Math.sin(ph) * o.run, -10];
+    else if ((wt === 'gs' || wt === 'hm') && ['atk', 'charge', 'guard'].includes(p.state)) h = grip(5.5, 5, false);
+    else h = [sh[0] + Math.sin(ph + Math.PI) * 5 * o.run + 1, sh[1] - 11.5 + Math.abs(Math.sin(ph)) * 1.5 * o.run, sh[2] - s * -1.2];
+    if (tk) h = [sh[0] + 4, sh[1] - 7, sh[2] * .7];
+    limbIK(a.tb, sh[0], sh[1], sh[2], h[0], h[1], h[2], 7.6, 7.6, -.7, -.6, s * .5, 2.3, 1.7); a.hand.position.copy(_B3);
+  }
+  // マント: 肩から下がる鎖を、ひとつ前の節に引かれるように動かす
+  const CN = o.CN, CW = o.CW, cpos = o.cpos; o.root.updateMatrixWorld(true);
+  _B1.set(-4.4, 12.2, 0).applyMatrix4(o.upper.matrixWorld); const ax = _B1.x, ay = _B1.y, az = _B1.z; _B2.set(0, 0, 1).transformDirection(o.upper.matrixWorld); const wx = _B2.x, wy = _B2.y, wz = _B2.z, bxd = -Math.cos(p.state === 'roll' ? p.rdir : p.dir), bzd = -Math.sin(p.state === 'roll' ? p.rdir : p.dir);
+  if (!o.cp || hyp(o.cp[0] - ax, o.cp[2] - az) > 120) { o.cp = []; for (let i = 0; i <= CN; i++) o.cp.push(ax + bxd * i * 1.5, ay - i * 3.2, az + bzd * i * 1.5); }
+  const cpn = o.cp, seg = 3.3; cpn[0] = ax; cpn[1] = ay; cpn[2] = az;
+  for (let i = 1; i <= CN; i++) { const b = i * 3; cpn[b] += bxd * 9 * dt + Math.sin(t * 5 + i) * 2.5 * dt; cpn[b + 1] -= 34 * dt; cpn[b + 2] += bzd * 9 * dt + Math.cos(t * 4.3 + i) * 2.5 * dt; let dx = cpn[b] - cpn[b - 3], dy = cpn[b + 1] - cpn[b - 2], dz = cpn[b + 2] - cpn[b - 1]; const dl = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1; cpn[b] = cpn[b - 3] + dx / dl * seg; cpn[b + 1] = Math.max(1.2, cpn[b - 2] + dy / dl * seg); cpn[b + 2] = cpn[b - 1] + dz / dl * seg; }
+  for (let i = 0; i <= CN; i++) { const hw = (3.6 + i * .85); for (let j = 0; j <= CW; j++) { const f = j / CW * 2 - 1, v = (i * (CW + 1) + j) * 3, bow = (1 - f * f) * -1.6; cpos[v] = cpn[i * 3] + wx * f * hw + bxd * bow; cpos[v + 1] = cpn[i * 3 + 1] + wy * f * hw; cpos[v + 2] = cpn[i * 3 + 2] + wz * f * hw + bzd * bow; } }
+  o.cape.geometry.attributes.position.needsUpdate = true; o.cape.geometry.computeVertexNormals();
+  if (p.demon) { const pu = .5 + .5 * Math.sin(t * 14); decal('ring', p.x, p.y, 22 + pu * 3, 0, 1, '#ff5a3c', .9, 2.4); decal('circ', p.x, p.y, 22 + pu * 3, 0, 1, '#ff3c28', .22, 2.2); }
+  if (p.state === 'charge' && p.chg > 0 && wt !== 'bow') { const col = p.chg === 3 ? '#ff5a3c' : p.chg === 2 ? '#ffd24a' : '#ffffff', pu = .5 + .5 * Math.sin(t * 22), r = 18 + p.chg * 5 + pu * 3; decal('ring', p.x, p.y, r, 0, 1, col, .95, 2.4); decal('circ', p.x, p.y, r, 0, 1, col, .2, 2.2); }
+}
+const SMALL_LOOK = {};
+function smallLook(L) { return SMALL_LOOK[L.sc] || (SMALL_LOOK[L.sc] = { kind: 'raptor', c1: L.sc, c2: shade(L.sc, -.5), c3: '#e9cf5a', bl: 13, bw: 7.5, hOff: 15, hr: 5.6, tailN: 3, tailL: 9, tailR: 4.6, legs: 2 }); }
 
 /* =====================================================================
    効果音・拠点メニュー・タッチ操作・メインループ
