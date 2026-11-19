@@ -468,9 +468,10 @@ async function sayAs(id,text){const o=SPEAKER;SPEAKER=id;metPerson(id);try{await
 
 /* ---------- 道具の絵（item/I0001.webp）と 持たせる道具 ---------- */
 const ITEM_PIC={};
-function drawItemPic(no,x,y,sz){
-  let P=ITEM_PIC[no];if(!P){P=ITEM_PIC[no]={st:0,img:new Image()};P.img.onload=()=>{P.st=1;};P.img.src='item/I'+('000'+no).slice(-4)+'.webp';}
-  if(P.st!==1)return;const w=P.img.width,h=P.img.height,f=sz/Math.max(w,h);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(P.img,x+(sz-w*f)/2,y+(sz-h*f)/2,w*f,h*f);
+function itemPic(no){let P=ITEM_PIC[no];if(!P){P=ITEM_PIC[no]={st:0,img:new Image()};P.img.onload=()=>{P.st=1;};P.img.src='item/I'+('000'+no).slice(-4)+'.webp';}return P;}
+function drawItemPic(no,x,y,sz,g){      // (x,y)を左上に、sz四方に おさめて描く。まだ読めていなければ false
+  const P=itemPic(no);if(P.st!==1)return false;g=g||ctx;
+  const w=P.img.width,h=P.img.height,f=sz/Math.max(w,h);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(P.img,x+(sz-w*f)/2,y+(sz-h*f)/2,w*f,h*f);return true;
 }
 const NO_HELD={};
 const heldOf=m=>(m&&m.item&&ITEMS[m.item]&&ITEMS[m.item].h)||NO_HELD;
@@ -4125,6 +4126,7 @@ async function battle(o){
   const B={o,wild:!!o.wild,foes:o.wild?[o.wild]:o.trainer.team,fi:0,pi:S.party.findIndex(m=>m.hp>0),ps:newStg(),fs:newStg(),runTry:0,
     parts:new Set(),result:null,line:'',env:battleEnv(o),hpShow:[0,0],foeDown:false,weather:null,wT:0,wall:[[0,0],[0,0]],coins:0,
     fx:{foeX:120,meX:-120,foeA:1,meA:1,foeY:0,meY:0,foeHide:0,meHide:0,seal:null,glow:0,pulse:0,trX:null,plX:null}};
+  for(const k in S.bag)if(ITEMS[k]&&ITEMS[k].k==='seal')itemPic(ITEMS[k].img);
   for(const m of S.party){monPreload(m.sp);monPreload(SP[m.sp].next);}for(const m of B.foes)monPreload(m.sp);      // 原画を 先に読んでおく
   B.parts.add(B.pi);B.hpShow=[bmon(B,0).hp,bmon(B,1).hp];fxClear();
   sfx('alert');
@@ -4250,7 +4252,7 @@ function drawBattlePix(){
   if(fx.seal){ // カンテラ（灯りの強さで まわりが 明るくなる）
     const Lq=fx.seal,lt=Lq.lit||0;
     if(lt>0){g.fillStyle='rgba(255,226,150,'+Math.min(0.5,0.16*lt)+')';g.beginPath();g.arc(Lq.x,Lq.y,13+lt*5,0,6.3);g.fill();g.fillStyle='rgba(255,244,200,'+Math.min(0.6,0.2*lt)+')';g.beginPath();g.arc(Lq.x,Lq.y,7+lt*2,0,6.3);g.fill();}
-    g.save();g.translate(Lq.x,Lq.y+11);g.rotate(Lq.rot||0);drawIcon(g,1,-11,-22,22,22);g.restore();
+    g.save();g.translate(Lq.x,Lq.y+11);g.rotate(Lq.rot||0);const cim=ITEMS[Lq.tier]&&ITEMS[Lq.tier].img;if(!(cim&&drawItemPic(cim,-9,-20,18,g)))drawIcon(g,1,-11,-22,22,22);g.restore();      // キャプセルの絵
   }
   battleAnim(g,env,true);
   fxDraw(g);
@@ -4972,6 +4974,7 @@ const KEY_TALK={
  95:['モナカ「巡環図鑑の 編集者です。アニマだけでなく、出会った 人の 記録も 図鑑の 大事な ページですよ。」','I0100'],
  96:['エルド「遠方から 来た 交換使節です。この 地方の キャプセルは 種類が 多くて おどろきました。」','I0070'],
  97:['チカル「迷子の 道案内なら まかせて！ 町の 看板と、地図の 青い 道を たどれば だいじょうぶ。」','I0039'],
+ 98:['サナラ「五圏連絡所の 調整役です。圏の さかいの 関所でも お会いしましたね。50の 地区、どうぞ 気の向くままに。」'],
  99:['クニル「旧巡回路の 灯守じゃ。灯りは 強ければ よいと いうものでは ない。月の 休む 夜も いるのじゃよ。」','I0041'],
  100:['シキエ「世界巡回の ベテラン…と 人は 呼ぶがね。50の ジムを すべて 回ったら、また 会いに おいで。」','all']};
 async function keyTalk(o){
@@ -5576,12 +5579,15 @@ function drawWorldPix(){
     const o=e.o,x=o.x*16+(o.ox||0)-camx,y=o.y*16+(o.oy||0)-camy;
     if(x<-32||y<-32||x>LW+16||y>LH+16)return;
     if(o.k==='item')drawIcon(g,0,x,y);
-    else if(o.k==='starter')drawIcon(g,1,x,y-3);
+    else if(o.k==='starter'){if(!drawItemPic(51,x+1,y-4,14,g))drawIcon(g,1,x,y-3);}
     else if(o.k==='legend'){drawIcon(g,3,x-4,y+2,24,18);if(!o.absent)g.drawImage(monCanvas(o.sp,false,false),x-8,y-18+Math.sin(G.t/20)*1.5,32,32);}
     else{
       const water=m.t[o.y*m.W+o.x]===T.WATER;
       if(water)drawChar(g,o.spr,o.dir,0,x,y-2+Math.sin(G.t/16+o.x)*0.5,12);
-      else{drawIcon(g,3,x,y+2);drawChar(g,o.spr,o.dir,(o.ox||o.oy)?walkFr(G.t>>3):0,x,y-6);}
+      else{drawIcon(g,3,x,y+2);
+        if(o.role==='trainer'&&!o.beaten&&!(o.ox||o.oy)){const ax=x+8+DX[o.dir]*10,ay=y+11+DY[o.dir]*9,a=[-Math.PI/2,0,Math.PI/2,Math.PI][o.dir];      // 見ている向きの しるし（絵は正面だけなので）
+          g.save();g.translate(ax,ay);g.rotate(a);g.fillStyle='rgba(200,80,58,'+(0.55+0.25*Math.sin(G.t/9))+')';g.beginPath();g.moveTo(4,0);g.lineTo(-1.5,-3);g.lineTo(-1.5,3);g.closePath();g.fill();g.restore();}
+        drawChar(g,o.spr,o.dir,(o.ox||o.oy)?walkFr(G.t>>3):0,x,y-6);}
       if(o.alert)drawIcon(g,2,x,y-35);
     }
   },skip);
