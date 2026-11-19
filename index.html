@@ -154,6 +154,37 @@ const MV=[
  ['くらやみぎり',15,90,100,15,'crit'],['やみのつぶて',15,40,100,30,''],['よいやみのなみ',15,65,100,20,'flinch20'],['じょうやのとばり',15,120,80,5,''],
  ['かなきりごえ',16,40,100,30,''],['ぎんせんこう',16,65,100,20,'foe:acc-1@10'],['じりょくほう',16,90,100,15,''],['てっこうほうげき',16,120,80,5,'']
 ];
+// ---- さらに足した技（全部で もとの3倍の480）。タイプごとに「名前|型」。型は XS、タイプごとの追加効果は XT。「=」ではじまるのは変化技（=効果|命中|PP） ----
+const XT=[['flinch','crit','foe:spd-1@30'],['brn','brn30','foe:spd-1@30'],['foe:spe-1','crit','foe:acc-1@30'],['par','par30','foe:spe-1@30'],['foe:acc-1','crit','foe:spd-1@30'],['frz','foe:spe-1@50','foe:spe-1@30'],
+ ['foe:def-1','crit','foe:spd-1@30'],['psn','psn50','foe:spd-1@30'],['foe:acc-1','foe:def-1@30','foe:spe-1@30'],['flinch','crit','foe:spd-1@30'],['cnf','foe:spd-1@30','foe:spd-1@30'],['foe:spa-1','crit','foe:spe-1@30'],
+ ['flinch','crit','foe:spe-1@30'],['foe:spd-1','flinch30','foe:spd-1@30'],['par','crit','foe:atk-1@30'],['flinch','foe:def-1@30','foe:spd-1@30'],['foe:def-1','crit','foe:spd-1@30']];
+const XS={q:['P',40,100,30,'prio'],m:['P',25,90,20,'multi'],t:['P',45,100,15,'twice'],d:['P',75,100,15,'$d'],r:['P',100,95,10,'recoil'],u:['P',150,90,5,'rech'],
+ Q:['S',50,100,25,'$s30'],H:['S',65,100,15,'hex'],I:['S',80,100,15,'$i'],B:['S',100,90,10,'$s20'],O:['S',130,90,5,'self:spa-2'],U:['S',150,90,5,'rech'],
+ c:['P',40,100,20,'coin'],x:['P',200,100,5,'boom'],p:['P',60,100,15,'pinch'],P:['S',60,100,15,'pinch'],f:['S',1,100,10,'fixed40'],l:['P',1,100,15,'level'],L:['S',1,100,15,'level'],
+ h:['P',1,90,10,'halve'],g:['S',75,100,10,'drain'],G:['P',70,100,15,'drain'],n:['P',80,0,15,''],N:['S',80,0,15,'']};
+const MX=[
+ 'あめあられ|m かえしうち|t ひっさつづき|d むぼうなとつげき|r てんちほうかい|u めくらましこう|Q よわりめねらい|H たいきのふるえ|I ごうおん|B こんしんのさけび|O しゅうえんのひかり|U きんかとばし|c みがまえ|=protect|0|10 ひとねむり|=rest|0|10 はらをくくる|=belly|0|10 ねらいさだめ|=focus|0|30 わかちあい|=split|0|20',
+ 'ひばしり|q れんえんげき|m そうえんづめ|t やけつくきば|d かえんとっこう|r えんていのてっつい|u かげろう|Q やけどあぶり|H あぶりかぜ|I こうえんだん|B たいようのいかり|O しゅうえんのごうか|U だいばくねん|x ひでりよび|=wx:sun|0|5 たぎるちしお|=self:atk+1,self:spa+1|0|20 ほのおのいのり|=self:spa+2|0|20 よろいとかし|=foe:def-2|100|20 ねつでばてる|=foe:atk-1,foe:spa-1|100|20 やきはらい|=cure|0|20',
+ 'みずばしり|q しぶきれんだ|m ふたなみうち|t うずまきぎり|d げきろうとつげき|r わだつみのほこ|u みなわだま|Q おぼれぜめ|H にごりみず|I ほんりゅうほう|B だいうずまき|O しんかいのいかり|U どたんばのなみ|P くもよび|=wx:rain|0|5 みずのころも|=self:def+1,self:spd+1|0|20 ながれにのる|=self:spe+2|0|20 ひやみず|=foe:atk-2|100|20 みずかがみ|=wall:s|0|20 きよめのしずく|=cure|0|20',
+ 'いなびかりづき|q らいれんだ|m そうらいきゃく|t しびれがみ|d らいめいとっしん|r らいていのつち|u いなだま|Q まひぜめ|H でんじのあみ|I ごうらいほう|B らいうんほうかい|O しんらいめっきゃく|U ていでんあつ|f いなずまのあし|=self:spe+2|0|20 たいでん|=self:spa+1,self:spe+1|0|20 じばみだし|=foe:spd-2|100|20 でんじのかべ|=wall:p|0|20 めくらみのひかり|=foe:acc-1,foe:spe-1|100|15 しょうじゅん|=self:acc+1,self:spa+1|0|20',
+ 'つるばしり|q たねつぶて|m ふたばぎり|t やまかぜぎり|d たいぼくとっしん|r せかいじゅのつち|u かふんだま|Q よわりねこそぎ|H めぶきのかぜ|I もりのいぶき|B らくようのあらし|O しんりょくほうかい|U ようぶんうばい|g やどりだね|=seed|90|10 こけのころも|=self:def+1,self:spd+1|0|20 めぶきのまい|=self:atk+1,self:spe+1|0|20 つるしばり|=foe:spe-2|100|20 かおりのいやし|=cure|0|20 しびれかふん|=par|75|20',
+ 'ゆきばしり|q あられうち|m そうひょうが|t こおりのかぎづめ|d せっかいとつげき|r ひょうていのつち|u しもばしら|Q とうしょうぜめ|H こごえるといき|I ごくかんほう|B えいきゅうとうど|O はくぎんのしゅうえん|U こおりのまなざし|N ゆきよび|=wx:hail|0|5 ひょうのよろい|=self:def+2|0|20 せいじゃくのこころ|=self:spa+1,self:spd+1|0|20 こごえるじめん|=foe:spe-2|100|20 こおりのかべ|=wall:p|0|20 ゆきにうもれる|=foe:atk-1,foe:spe-1|100|20',
+ 'しゅんそくけり|q れんだけん|m ふたえげり|t きゅうしょづき|d いのちしらずげり|r はおうのこぶし|u とうこんは|Q ついげきは|H きはくのあつ|I ばくれつきだん|B とうきかいほう|O てんかむそうは|U かつぎなげ|l たけるこころ|=self:atk+1,self:spe+1|0|20 ふどうのかまえ|=self:def+2|0|20 いあつのかまえ|=foe:atk-2|100|20 いってんしゅうちゅう|=focus|0|30 こきゅうほう|=cure|0|20 かまえくずし|=foe:def-2|100|20',
+ 'どくばしり|q どくとげれんだ|m ふたまたのきば|t どくづめひっかき|d もうどくとつげき|r ばんどくのほこ|u どくあわ|Q どくまわり|H ふしょくえき|I おでいほう|B だいしょうき|O ばんどくのしゅうえん|U むしばむきば|h とけるえき|=foe:def-2|100|20 どくのよろい|=self:def+2|0|20 ふはいのこな|=foe:spd-2|100|20 しょうきをまとう|=self:spa+1,self:spe+1|0|20 けむにまく|=haze|0|20 ねばるどく|=foe:acc-1,foe:spe-1|100|15',
+ 'つちばしり|q つぶてあめ|m にだんほり|t ちそうぎり|d じひびきとつげき|r たいちのてっつい|u すなあられ|Q ぬかるみぜめ|H じばんちんか|I どしゃほう|B だいちれっぱ|O ちかくほうかい|U ふみかためうち|n すなよび|=wx:sand|0|5 だいちのかご|=self:atk+1,self:def+1|0|20 じひびきのまい|=self:atk+2|0|20 どろぬま|=foe:spe-2|100|20 じばんくずし|=foe:def-2|100|20 つちのめぐみ|=heal|0|10',
+ 'はやてづき|q みだればね|m かえしばね|t つばさぎり|d きゅうこうかとつげき|r おおとりおとし|u かぜのつぶて|Q ついふうは|H うずまくかぜ|I れっぷうほう|B だいせんぷう|O てんくうほうかい|U かぜのやいば|N かぜにのる|=self:eva+1|0|15 はばたきのまい|=self:atk+1,self:spe+1|0|20 かざきりのおどし|=foe:atk-2|100|20 ふきはらい|=haze|0|20 はねづくろい|=heal|0|10 すなぼこり|=foe:acc-1,foe:def-1|100|15',
+ 'ねんそくづき|q しねんれんだ|m そうねんげき|t ねんばのやいば|d せいしんとつげき|r ちょうねんのてっつい|u まどいのひかり|Q こころえぐり|H しねんのなみ|I ねんりょくほう|B せいしんかいほう|O しんいほうかい|U こころのおもさ|L ねんのかべ|=wall:s|0|20 こころのたて|=wall:p|0|20 むねんむそう|=self:spa+2|0|20 こころゆさぶり|=foe:spd-2|100|20 こころのいやし|=heal|0|10',
+ 'はねばしり|q はりれんだ|m ふたつあご|t するどいかま|d ぐんたいとつげき|r じょおうのやり|u りんぷんだま|Q よわりむしばみ|H ねばるいとだま|I はおとほう|B ぐんぜいのあらし|O たいぐんのしゅうえん|U たいえきすい|G むれのまい|=self:spa+1,self:spd+1,self:spe+1|0|15 かたいから|=self:atk+1,self:def+1|0|20 いとしばり|=foe:atk-2|100|20 しびれりんぷん|=par|75|20 まゆごもり|=protect|0|10 みつあつめ|=heal|0|10',
+ 'いしばしり|q がんせきれんだ|m ふたついわ|t するどいいわば|d がんくつとつげき|r たいがんのてっつい|u こいしあられ|Q ひびわれねらい|H すなじんは|I がんぺきほう|B りゅうせいがん|O てんがいほうかい|U だいがんばくさい|x ばんじゃくのかまえ|=self:def+1,self:spd+1|0|20 いしみがき|=self:spe+2|0|20 いわのとうし|=self:atk+1,self:def+1|0|20 じゃりまき|=foe:spe-2|100|20 すいしょうのかべ|=wall:s|0|20 いわがくれ|=protect|0|10',
+ 'かげばしり|q ひとだまれんだ|m ふたつかげ|t たましいがみ|d じゅばくとつげき|r めいおうのかま|u うらめしだま|Q たたりがえし|H れいきのなみ|I ぼうれいほう|B こんぱくかいほう|O よみのしゅうえん|U しりょうのおもみ|L のろいのまなざし|=foe:atk-2|100|20 れいりょくしゅうちゅう|=self:spa+2|0|20 すがたをけす|=self:eva+1|0|15 あくむのさそい|=slp|65|15 たましいけずり|=foe:def-1,foe:spd-1|100|20 かげがくれ|=protect|0|10',
+ 'りゅうばしり|q うろこれんだ|m そうりゅうが|t ごうりゅうぎり|d ひりゅうとつげき|r りゅうおうのてっつい|u りゅうのひばな|Q りゅういのあつ|H りゅうふうは|I りゅうじんほう|B ごうりゅうせい|O しゅうえんのりゅうごう|U たつのいかずち|f たつのぶとう|=self:atk+1,self:spe+1|0|20 りゅうりんのまもり|=self:def+1,self:spd+1|0|20 りゅうのにらみ|=foe:atk-2|100|20 さかうろこ|=self:atk+2|0|20 りゅうがん|=focus|0|30 たつのねむり|=heal|0|10',
+ 'やみばしり|q やみづめれんだ|m ふたやみぎり|t うらぎりのきば|d あんこくとつげき|r やみおうのてっつい|u くろいひばな|Q よわいものいじめ|H やみのささやき|I あんやほう|B しっこくかいほう|O とこやみのしゅうえん|U いのちけずり|h やみのちかい|=self:atk+2|0|20 おどしつける|=foe:def-2|100|20 なきおとし|=foe:spd-2|100|20 やみにまぎれる|=self:eva+1|0|15 こころをおる|=foe:atk-1,foe:spa-1|100|20 まよいのやみ|=slp|60|15',
+ 'はがねばしり|q てつびしれんだ|m そうじんぎり|t とぎすましぎり|d こうてつとつげき|r くろがねのてっつい|u てっぷんだま|Q さびねらい|H じりょくは|I こうてつほう|B ようてつかいほう|O はがねのしゅうえん|U ふくつのてつけん|p たんれん|=self:atk+1,self:def+1|0|20 みがきあげ|=self:spe+2|0|20 きんぞくのひびき|=foe:spd-2|100|20 くろがねのかべ|=wall:p|0|20 かがみのたて|=wall:s|0|20 てつのから|=protect|0|10'];
+MX.forEach((row,t)=>{const X=XT[t],isSt=/^(brn|par|psn|slp|frz|cnf|flinch)$/.test(X[0]);
+  for(const ent of row.split(' ')){const f=ent.split('|');
+    if(f[1][0]==='='){MV.push([f[0],t,0,+f[2],+f[3],f[1].slice(1)]);continue;}
+    const d=XS[f[1]],ch=n=>isSt?X[0]+(X[0]==='frz'?10:n):X[0]+'@'+n;
+    MV.push([f[0],t,d[1],d[2],d[3],d[4]==='$d'?X[1]:d[4]==='$i'?X[2]:d[4]==='$s30'?ch(30):d[4]==='$s20'?ch(20):d[4],d[0]]);}});
 const N_MOVE0=MV.findIndex(m=>m[0]==='いってんとっぱ');      // むかしからある技の数（これより後ろが 足した技）
 // 物理／特殊は「技ごと」に決まる（第4世代以降に準拠）。タイプごとに 威力の段階順で 物理4つ・特殊4つ
 const LINE_P=[['ぶつかる','きりさきづめ','だいとつげき','いってんとっぱ'],['もえづめ','ほむらげり','しゃくねつとつげき','ばくえんおとし'],['しぶきづき','みなもぎり','あらなみとっしん','たきわりおとし'],
@@ -176,23 +207,46 @@ function parseEff(s){
     let m;
     if((m=/^(brn|par|psn|slp|frz|cnf|flinch)(\d+)?$/.exec(tk)))out.push({k:'st',st:m[1],ch:m[2]?+m[2]:100});
     else if((m=/^(self|foe):(atk|def|spa|spd|spe|acc|eva)([+-]\d)(?:@(\d+))?$/.exec(tk)))out.push({k:'stage',who:m[1],stat:m[2],n:+m[3],ch:m[4]?+m[4]:100});
+    else if((m=/^fixed(\d+)$/.exec(tk)))out.push({k:'fixed',n:+m[1]});
+    else if((m=/^wx:(\w+)$/.exec(tk)))out.push({k:'wx',w:m[1]});
+    else if((m=/^wall:(p|s)$/.exec(tk)))out.push({k:'wall',c:m[1]==='s'?1:0});
     else out.push({k:tk});
   }
   return out;
 }
-const moveCat=m=>m[2]===0?2:LINE_S[m[1]].indexOf(m[0])>=0?1:LINE_P[m[1]].indexOf(m[0])>=0?0:PHYS[m[1]]?0:1;
+const moveCat=m=>m[2]===0?2:m[6]?(m[6]==='S'?1:0):LINE_S[m[1]].indexOf(m[0])>=0?1:LINE_P[m[1]].indexOf(m[0])>=0?0:PHYS[m[1]]?0:1;
 const MOVES=MV.map((m,i)=>{const cat=moveCat(m);return{id:i,name:m[0],type:m[1],pow:m[2],acc:m[3],pp:m[4],eff:parseEff(m[5]),
-  prio:m[5].indexOf('prio')>=0?1:0,crit:m[5].indexOf('crit')>=0,cat,phys:cat===0};});
-const STRUGGLE={id:-1,name:'すてみのあがき',type:-1,pow:50,acc:0,pp:1,eff:[{k:'recoil'}],prio:0,crit:false,cat:0,phys:true};
+  prio:m[5]==='protect'?3:m[5].indexOf('prio')>=0?1:0,crit:m[5].indexOf('crit')>=0,cat,phys:cat===0};});
+for(const m of MOVES)m.has=k=>m.eff.some(e=>e.k===k);
+const STRUGGLE={id:-1,name:'すてみのあがき',type:-1,pow:50,acc:0,pp:1,eff:[{k:'recoil'}],prio:0,crit:false,cat:0,phys:true,has:k=>k==='recoil'};
 // タイプ別: dmg=威力順の攻撃技, st=変化技
 const TYPE_MOVES=[];
 for(let t=0;t<NT;t++){
   const byName=n=>MOVES.findIndex(m=>m.name===n);
   TYPE_MOVES.push({dmg:MOVES.filter(m=>m.id<N_MOVE0&&m.type===t&&m.pow>0).sort((a,b)=>a.pow-b.pow).map(m=>m.id),
                    phys:LINE_P[t].map(byName),spec:LINE_S[t].map(byName),
+                   P:MOVES.filter(m=>m.type===t&&m.pow>0&&m.cat===0).sort((a,b)=>a.pow-b.pow).map(m=>m.id),S:MOVES.filter(m=>m.type===t&&m.pow>0&&m.cat===1).sort((a,b)=>a.pow-b.pow).map(m=>m.id),
                    st:MOVES.filter(m=>m.type===t&&m.pow===0).map(m=>m.id)});
 }
 const moveId=n=>MOVES.findIndex(m=>m.name===n);
+const powTxt=m=>m.pow>1?m.pow:'―';
+// 技の効果を ひとことで
+function moveNote(m){
+  const o=[],SJ={brn:'やけど',par:'まひ',psn:'どく',slp:'ねむり',frz:'こおり',cnf:'こんらん',flinch:'ひるみ'};
+  const D={recoil:'はんどうを うける',drain:'HPを すいとる',heal:'HPを 半分 回復',prio:'先に 動ける',crit:'急所に 当たりやすい',multi:'2〜5回 れんぞく',twice:'2回 れんぞく',rech:'次のターン 動けない',pinch:'ピンチで 威力2倍',
+    hex:'状態異常の相手に 威力2倍',level:'レベルと同じ ダメージ',halve:'相手のHPを 半分に',boom:'自分は たおれる',coin:'お金を ひろう',protect:'そのターン 技を ふせぐ',seed:'毎ターン HPを すいとる',
+    haze:'能力の変化を もとにもどす',belly:'HP半分で こうげき最大',cure:'状態異常を なおす',rest:'ねむって 全回復',split:'HPを 分けあう',focus:'急所に 当たりやすくなる'};
+  for(const e of m.eff){
+    if(e.k==='st')o.push((e.ch<100?e.ch+'%で ':'')+SJ[e.st]);
+    else if(e.k==='stage')o.push((e.ch<100?e.ch+'%で ':'')+(e.who==='self'?'自分の':'相手の')+STAGE_JP[e.stat]+(e.n>0?'↑':'↓')+(Math.abs(e.n)>1?Math.abs(e.n):''));
+    else if(e.k==='fixed')o.push('いつも '+e.n+'ダメージ');
+    else if(e.k==='wx')o.push(({sun:'日ざしを 強くする',rain:'雨を ふらせる',sand:'砂あらしを おこす',hail:'あられを ふらせる'})[e.w]+'（5ターン）');
+    else if(e.k==='wall')o.push((e.c?'特殊':'物理')+'の ダメージを 5ターン 半分');
+    else if(D[e.k])o.push(D[e.k]);
+  }
+  if(m.acc===0&&m.pow>0)o.push('かならず 当たる');
+  return o.join('・');
+}
 
 /* ---------- 性格（5×5） ---------- */
 const NAT_NAMES=[
@@ -258,7 +312,7 @@ const ITEMS={
  k_rod:{n:'つりざお',p:0,k:'key',d:'水辺でアニマを釣りあげる。'},
  k_bike:{n:'自転車',p:0,k:'key',d:'走るよりも速く進める。メニューの「自転車」か Cキーで 乗り降りする。建物の中では乗れない。'}
 };
-for(const m of MOVES)ITEMS['tm'+m.id]={n:'技の書『'+m.name+'』',p:0,k:'tm',v:m.id,d:TK[m.type]+'タイプ・'+CAT_JP[m.cat]+'の技「'+m.name+'」を覚えさせる。何回でも使える。'};
+for(const m of MOVES)ITEMS['tm'+m.id]={n:'技の書『'+m.name+'』',k:'tm',v:m.id,p:m.pow>1?500+m.pow*20:m.pow===1?1500:1200,d:TK[m.type]+'・'+CAT_JP[m.cat]+(m.pow>1?' 威力'+m.pow:'')+'の技。'+(moveNote(m)||'何回でも使える')+'。'};
 const ITEM_ORDER=Object.keys(ITEMS);
 
 'use strict';
@@ -325,6 +379,18 @@ function buildLearn(r,t1,t2,ori){   // ori: 0=物理が得意 1=特殊が得意 
   L.sort((a,b)=>a[0]-b[0]);
   return L;
 }
+// 技が増えたぶん、系統ごとに ちがう技も覚える（べつの乱数を使い、名前や見た目の乱数は動かさない）
+function extendLearn(L,q,t1,t2,ori){
+  const seen=new Set(L.map(a=>a[1])),key=ori?'S':'P',tb=t2>=0?t2:0;
+  const add=(lv,id)=>{if(id==null||id<0||seen.has(id))return;seen.add(id);L.push([lv,id]);};
+  const lvFor=m=>m.pow<=1?q.range(22,34):m.pow<=50?q.range(6,14):m.pow<=70?q.range(15,27):m.pow<=90?q.range(28,41):m.pow<=110?q.range(42,53):q.range(54,68);
+  const pk=(arr,n)=>{const a=arr.filter(id=>!seen.has(id));q.shuffle(a);return a.slice(0,n);};
+  for(const id of pk(TYPE_MOVES[t1][key],3))add(lvFor(MOVES[id]),id);
+  for(const id of pk(TYPE_MOVES[tb][key],t2>=0?2:1))add(lvFor(MOVES[id]),id);
+  for(const id of pk(TYPE_MOVES[t1].st,2))add(q.range(8,46),id);
+  for(const id of pk(TYPE_MOVES[tb].st,1))add(q.range(12,50),id);
+  L.sort((a,b)=>a[0]-b[0]);return L;
+}
 function statsFor(r,t1,bst,w){
   let s=0;for(const x of w)s+=x;
   return w.map(x=>Math.max(12,Math.round(bst*x/s)));
@@ -363,6 +429,7 @@ function makeWeights(r,t1){
       const fam={id:fi,n,t1,t2,t2From,tier,pre,plan:r.pick(PLAN_BY_TYPE[t1]),abil:starter?0:r.pick(ABIL_BY_TYPE[t1]),
         growth:n===2?0.8:n>=5?1.25:1,learn:buildLearn(r,t1,t2,ori),ori,ids:[],starter,legend:false,hab:t1===2?'water':'land',
         evo,bst0,bstN,w,cb,sufs:SUF_MAP[n].map(k=>r.int(10))};
+      extendLearn(fam.learn,RNG('lrn'+fi),t1,t2,ori);
       FAMS.push(fam);
     }
   }
@@ -400,7 +467,10 @@ function makeWeights(r,t1){
 })();
 const STARTERS=FAMS.slice(0,5).map(f=>f.ids[0]);       // 焔→森→土→雷→潮→焔 の順で有利
 const famOf=sp=>FAMS[sp.fam];
-function movesAt(sp,lv){const L=famOf(sp).learn.filter(a=>a[0]<=lv).map(a=>a[1]);return L.slice(-4);}
+// そのレベルで覚えている技：新しい攻撃技3つ＋変化技1つ（攻撃技がなくならないように）
+function movesAt(sp,lv){const L=famOf(sp).learn.filter(a=>a[0]<=lv).map(a=>a[1]),d=L.filter(id=>MOVES[id].pow>0),s=L.filter(id=>MOVES[id].pow===0);
+  const pk=d.slice(-3);if(s.length)pk.push(s[s.length-1]);else if(d.length>3)pk.push(d[d.length-4]);
+  return L.filter(id=>pk.indexOf(id)>=0).slice(-4);}
 function formAt(fam,lv,rng){let s=0;while(s<fam.n-1&&lv>=SP[fam.ids[s]].evoLv)s++;if(rng&&s>0&&rng()<0.5)s--;return fam.ids[s];}
 const expFor=(sp,lv)=>lv<=1?0:Math.floor(sp.growth*lv*lv*lv);
 
@@ -683,8 +753,14 @@ function champTeam(){
 function itemFor(r,prog,rich){
   const early=['fuda','fuda','heal1','heal1','c_psn','c_par','repel'],mid=['fuda2','fuda2','heal2','heal2','c_all','revive','rope','repel','c_slp','c_brn'],
         late=['fuda3','fuda3','heal3','heal3','heal4','revive','c_all','candy','ppup'];
-  if(rich||r.chance(0.12)){const x=r();if(x<0.35)return'candy';if(x<0.5)return'ppup';const tier=prog<14?1:prog<32?2:3;const t=r.int(NT);const d=TYPE_MOVES[t][(t+tier+prog)%2?'spec':'phys'];return'tm'+d[tier];}
+  if(rich||r.chance(0.12)){const x=r();if(x<0.35)return'candy';if(x<0.5)return'ppup';const tier=prog<14?1:prog<32?2:3;const t=r.int(NT);const d=MOVES.filter(m=>m.type===t&&(m.pow<=1||(tier===1?m.pow<=70:tier===2?(m.pow>=60&&m.pow<=100):m.pow>=90))).map(m=>m.id);return'tm'+d[(prog*7+t*13+Math.floor(x*997))%d.length];}
   return r.pick(prog<12?early:prog<30?mid.concat(early.slice(0,3)):late.concat(mid.slice(0,4)));
+}
+// 店ごとに ちがう 技の書を5さつ（町の進み具合で 強さが変わる）
+function tmStock(key){
+  const c=CELLS[key];if(!c)return[];const q=RNG('tmshop'+key),tier=c.prog<14?1:c.prog<32?2:3,out=[];
+  for(let n=0;out.length<5&&n<80;n++){const m=MOVES[q.int(MOVES.length)],ok=m.pow<=1||(tier===1?m.pow<=70:tier===2?m.pow<=100:true);if(ok&&out.indexOf('tm'+m.id)<0)out.push('tm'+m.id);}
+  return out;
 }
 function shopStock(badges){
   const s=['fuda','heal1','c_psn','c_par'];
@@ -1915,7 +1991,8 @@ const TYPE_ACC=[[[20,50,42],[350,58,60],[200,40,50]],[[44,95,58],[50,90,70],[30,
  [[45,75,56],[195,60,58],[0,65,50]]];
 function monPal(sp,F,shiny){
   const fam=FAMS[sp.fam],t1=fam.t1,B=TYPE_BASE[t1][F.baseI];
-  let h=B[0]+F.hj,s=B[1]+F.sj,l=B[2]+F.lj;
+  const rk=sp.legend?1:(sp.rank||0);
+  let h=B[0]+F.hj,s=B[1]+F.sj+(rk-0.45)*10,l=B[2]+F.lj+(0.45-rk)*9;      // こどもは明るくやわらかく、育つと深くこい色に
   let A=fam.t2>=0&&F.accI===0?TYPE_BASE[fam.t2][0].slice():TYPE_ACC[t1][F.accI].slice();
   if(Math.abs(((A[0]-h+540)%360)-180)>150&&Math.abs(A[2]-l)<14)A[2]=l>55?l-26:l+26;      // 体色と似すぎたら明度をずらす
   if(sp.legend)s=Math.min(90,s+8);
@@ -1939,7 +2016,9 @@ function monBuild(spId){
     baseI:r.int(4),accI:r.int(3),hj:r()*14-7,lj:r()*8-4,crest:r.int(4),lg:r.int(5),tl:0.85+r()*0.5,spk:r.int(3),sj:r()*12-6,sh:r()*60,mane:r.int(3)};
   const j=RNG('jit'+spId),w=()=>1+(j()-0.5)*0.08;
   const lerp=(a,b)=>a+(b-a)*rank;
-  const hs=lerp(1.24,0.9),ll=lerp(0.7,1.12),bl=lerp(0.86,1.1),b=F.b,neck=F.neck*lerp(0.1,1);
+  // こどもは 頭でっかちで手足みじかく（かわいく）、最終進化は すらりと長く（かっこよく）
+  const cuteK=sp.legend?0:Math.max(0,1-rank*1.7),coolK=sp.legend?1:Math.max(0,(rank-0.6)/0.4);
+  const hs=lerp(1.24,0.9)+cuteK*0.24-coolK*0.05+(plan==='biped'?coolK*0.14:0),ll=lerp(0.7,1.12)-cuteK*0.15+coolK*0.1,bl=lerp(0.86,1.1)-cuteK*0.05+coolK*0.05,b=F.b*(1+cuteK*0.1),neck=F.neck*lerp(0.1,1)*(1+coolK*0.25);
   const has=t=>sp.types.indexOf(t)>=0;
   const groups=[];let x0=99,x1=-99,y0=99,y1=-99;
   const bb=(x,y)=>{if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;};
@@ -1985,12 +2064,12 @@ function monBuild(spId){
   }else if(plan==='biped'){
     const th=6.2*bl,cy=28.2-6*ll-th*0.7,cx=16.8;
     const far=G('dark');limb(far,cx+1.6,cy+th*0.55,cx+2.2,27.5,2*b,1.4*b);ell(far,cx+1.4,27.8,2.2*b,1);limb(far,cx-2.4*b,cy-th*0.45,cx-5.2*b,cy+1.4,1.5*b,1.15*b);
-    const bz=groups.length,body=G('main');ell(body,cx,cy,4.7*b,th,0.06);limb(body,cx-1.2,cy+th*0.55,cx-1.9,28,2.3*b,1.55*b);ell(body,cx-2.9,28.4,2.5*b,1.1);
+    const cb=1+coolK*0.32,bz=groups.length,body=G('main');ell(body,cx,cy,4.7*b,th,0.06);if(coolK>0.2)ell(body,cx+0.3,cy-th*0.4,(4.7+coolK*1.2)*b,th*0.58,0.1);limb(body,cx-1.2,cy+th*0.55,cx-1.9,28,2.3*b*(1+coolK*0.15),1.55*b*(1+coolK*0.15));ell(body,cx-2.9,28.4,2.5*b,1.1);
     const hx=cx-1.6,hy=cy-th-2.5*hs-neck*1.2;
     if(neck>0.5)limb(body,cx-0.4,cy-th*0.75,hx+0.6,hy+2,2.2*b,2*hs);
     bellyMark(body,cx-1.3,cy+th*0.18,3*b,th*0.72);
     const head=G('main'),sl=F.snout===1?1.3:1;ell(head,hx,hy,4.6*hs,4.3*hs);if(F.snout!==2)ell(head,hx-3.3*hs*sl,hy+1.3*hs,2.2*hs*sl,1.7*hs);
-    const arm=G('main');limb(arm,cx+1.9*b,cy-th*0.5,cx-0.5*b,cy+2.2,1.75*b,1.3*b);ell(arm,cx-0.9*b,cy+2.7,1.55*b,1.4*b);
+    const arm=G('main');limb(arm,cx+1.9*b,cy-th*0.5,cx-0.5*b,cy+2.2,1.75*b*cb,1.3*b*cb);ell(arm,cx-0.9*b,cy+2.7,1.55*b*cb,1.4*b*cb);
     A={float:false,bz,body,head,hx,hy,hr:4.4*hs,eye:[hx-1.1*hs,hy-0.3*hs],eye2:F.snout===1?null:[hx-3.5*hs,hy-0.35*hs],earN:[hx+2.3*hs,hy-3*hs],earF:[hx-1.6*hs,hy-3.7*hs],hornB:[hx-0.2*hs,hy-4*hs],
       nose:F.snout===2?[hx-4.3*hs,hy+0.9*hs]:[hx-3.3*hs*sl-2*hs*sl,hy+0.9*hs],mouth:[hx-(F.snout===2?3.2:3.4*sl)*hs,hy+2.3*hs],tailB:[cx+3.6*b,cy+th*0.45],sh:[cx+2.2*b,cy-th*0.6],
       back:[[cx+2.9*b,cy-th*0.75],[cx+4*b,cy-th*0.3],[cx+4.3*b,cy+th*0.15]],cx,cy,rx:4.7*b,ry:th,cheek:[hx+0.8*hs,hy+1.8*hs],legs:true,arm};
@@ -2164,6 +2243,7 @@ function monBuild(spId){
         const hg=G('bone');horn(hg,bx+hr*0.5,by+hr*0.5,bx+hr*1.25,by-L*1.25,hr*0.26,0.28);
         if(hn===3&&lv>=2){horn(hg,bx+hr*0.8,by-L*0.35,bx+hr*0.15,by-L*0.95,hr*0.14,0);horn(hg,bx+hr*1.05,by-L*0.75,bx+hr*1.85,by-L*1.05,hr*0.13,0);}}
     }
+    if(lv===0&&!sp.legend&&!A.plantP&&!A.bird&&!A.golem&&!A.fish&&!A.serp&&!has(1)&&!has(4)&&groups.indexOf(A.head)>=0){const tf=G('main',null,groups.indexOf(A.head));leaf(tf,bx,by+hr*0.5,bx+hr*0.6,by-hr*0.7,hr*0.2,0.5);leaf(tf,bx+hr*0.1,by+hr*0.55,bx-hr*0.5,by-hr*0.42,hr*0.16,-0.4);}
     if(sp.legend&&F.lg===4){const cr=G('beak');for(let i=-1;i<=1;i++)horn(cr,bx+i*hr*0.5,by+hr*0.5,bx+i*hr*0.75,by-hr*(1.2-Math.abs(i)*0.35),hr*0.22,0);}
     if(A.bird&&F.crest>0){const cr=G('acc',null,groups.indexOf(A.head));for(let i=0;i<F.crest+1;i++)leaf(cr,bx-hr*0.3,by+hr*0.6,bx+hr*(0.4+i*0.55),by-hr*(0.9-i*0.2)-lv*0.3,hr*0.2,0.2);}
   }
@@ -2197,7 +2277,7 @@ function monBuild(spId){
   A.head.marks.push((g,pal,lx)=>{if(A.head===A.body)return;g.fillStyle=pal.mainL;g.beginPath();g.ellipse(A.hx+lx*A.hr*0.42,A.hy-A.hr*0.62,A.hr*0.3,A.hr*0.12,lx*0.5,0,6.3);g.fill();});
   /* ---------- 顔 ---------- */
   // 目は系統ごとに型を決める（0くりくり 1つぶら 2たれ目 3つり目 4まんまる 5ねむたげ 6にっこり 7きらきら 8ねこ目 9複眼 11てん目とまゆ 12ゴーレムの光る目）
-  const eq=RNG('eye2'+fam.id),eA=eq.pick([0,0,0,1,1,2,4,5,6,7,7,8,11,3,0,1,2,8]),eL=eq.chance(0.3),eB=eq.chance(0.5),eM=eq.int(5),eC=eq.int(8),eD=eq.chance(0.6),eE=eq.chance(0.5),eBug=eq.chance(0.55),eGol=eq.chance(0.6);
+  const eq=RNG('eye2'+fam.id),eA=eq.pick([0,0,0,1,1,2,4,5,6,7,7,8,11,3,0,1,2,8]),eL=eq.chance(0.3),eB=eq.chance(0.5),eM=eq.int(5),eC=eq.int(8),eD=eq.chance(0.6),eE=eq.chance(0.5),eBug=eq.chance(0.55),eGol=eq.chance(0.6),eCool=eq.chance(0.62),eCoolK=eq.pick([3,3,8,3]),eKid=eq.pick([0,7,1,0,7,4]);
   const sharpT=has(15)||has(14);
   let es=eA;
   if(plan==='bug'&&eBug)es=9;
@@ -2206,9 +2286,11 @@ function monBuild(spId){
   if(es===3&&lv===0)es=11;                                 // 小さいうちはつり目にしない
   if(sharpT&&lv>=2&&(es===4||es===5||es===11||es===2))es=3;
   if(sp.legend&&(es===1||es===4||es===6||es===11||es===5))es=eE?8:7;
+  if(!sp.legend&&lv===0&&!A.golem&&es!==9&&(es===2||es===5||es===8||es===3||es===11))es=eKid;                    // こどもは つぶらな目
+  if(!sp.legend&&lv>=3&&!A.golem&&es!==9&&eCool&&(es===0||es===1||es===4||es===11||es===5||es===6||es===2||es===7))es=eCoolK;   // 最終進化は りりしい目
   F.ec=(fam.t1===15||fam.t1===13)&&eD?(eE?5:4):eC;
-  const brow=(es===3&&lv>=3)||(sharpT&&lv>=3&&es===8),fierce=brow||(sharpT&&lv>=2&&es===3),cute=es===0||es===1||es===6||es===7||es===11||es===4;
-  const eS=[1.24,1.12,1,0.95][lv];
+  const brow=lv>=3&&(es===3||es===8),fierce=brow||(sharpT&&lv>=2&&es===3),cute=es===0||es===1||es===6||es===7||es===11||es===4;
+  const eS=[1.5,1.2,1,0.96][lv];
   const faceG=G('white',{ink:false,shade:false});
   faceG.lines.push((g,pal,iw)=>{
     const hr=A.hr,W='#ffffff',hw=[0.92,0.74,1.06,1.12,1,1,0.9,0.95,1.08,0.9,1,0.8,1.1][es]||1;let er=clamp(hr*(es===0||es===7||es===1?0.41:0.36)*eS,0.95,2.7);
@@ -2295,6 +2377,8 @@ function monBuild(spId){
     if((lv===0||(cute&&lv<=1)||es===6)&&!A.golem&&A.cheek&&!has(3)){g.fillStyle=pal.blush;g.beginPath();g.ellipse(A.cheek[0]-hr*0.2,A.cheek[1]-hr*0.1,hr*0.26,hr*0.15,0,0,6.3);g.fill();}
     if((plan==='quad'&&F.snout!==1&&(fam.t1===0||fam.t1===15))&&A.nose){g.strokeStyle=pal.ink;g.lineWidth=iw*0.18;for(let i=0;i<2;i++){g.beginPath();g.moveTo(A.nose[0]+hr*0.5,A.nose[1]+hr*(0.3+i*0.22));g.lineTo(A.nose[0]-hr*0.5,A.nose[1]+hr*(0.5+i*0.4));g.stroke();}}
   });
+  if(lv>=3&&!sp.legend&&eCool&&!A.golem&&!A.ghost&&A.eye&&plan!=='bug')faceG.lines.push((g,pal,iw)=>{const ex=A.eye[0],ey=A.eye[1],hr=A.hr;g.strokeStyle=pal.acc;g.lineWidth=iw*0.95;g.lineCap='round';
+    g.beginPath();g.moveTo(ex+hr*0.55,ey+hr*0.4);g.lineTo(ex+hr*0.82,ey+hr*0.84);g.moveTo(ex+hr*0.16,ey+hr*0.5);g.lineTo(ex+hr*0.36,ey+hr*0.9);g.stroke();});
   // 伝説の後光
   let halo=null;
   if(sp.legend&&F.lg===2)halo=[A.hx+2,A.hy+2,A.hr*2.6+3];
@@ -2310,12 +2394,17 @@ function drawMonArt(g,M,shiny,flip){
   const iw=0.95/f,sh=1.05/f,lx=flip?1:-1;
   g.lineJoin='round';g.lineCap='round';
   if(M.halo){g.strokeStyle=pal.accL;g.lineWidth=iw*0.9;g.beginPath();g.arc(M.halo[0],M.halo[1],M.halo[2],0,6.3);g.stroke();g.lineWidth=iw*0.4;for(let i=0;i<16;i++){const a=i/16*6.2832;g.beginPath();g.moveTo(M.halo[0]+Math.cos(a)*(M.halo[2]+1),M.halo[1]+Math.sin(a)*(M.halo[2]+1));g.lineTo(M.halo[0]+Math.cos(a)*(M.halo[2]+(i%2?2.6:1.8)),M.halo[1]+Math.sin(a)*(M.halo[2]+(i%2?2.6:1.8)));g.stroke();}}
+  const cool=sp.legend||(M.rank>=0.99&&sp.forms>=3),hl=0.6/f;
+  if(cool){g.save();g.globalAlpha=0.7;g.strokeStyle=pal.accL;g.lineWidth=iw*2.5;for(const gr of M.groups)if(gr.ink!==false)g.stroke(gr.P);g.restore();}      // 最終進化と伝説は 色のオーラをまとう
   for(const gr of M.groups){
     const base=pal[gr.c]||gr.c,shade=pal[gr.c+'S'];
     if(gr.ink!==false){g.save();g.translate(-lx*iw*0.2,iw*0.22);g.strokeStyle=pal.ink;g.lineWidth=iw;g.stroke(gr.P);g.restore();}
     g.fillStyle=base;g.fill(gr.P);
     g.save();g.clip(gr.P);
-    if(gr.shade!==false&&shade){g.fillStyle=shade;g.fillRect(-40,-40,120,120);g.save();g.translate(lx*sh,-sh*1.15);g.fillStyle=base;g.fill(gr.P);g.restore();}
+    if(gr.shade!==false&&shade){   // 影（光と反対のふち）→ 光のふち → まんなかは地の色
+      g.fillStyle=shade;g.fillRect(-40,-40,120,120);
+      g.save();g.translate(lx*sh,-sh*1.15);g.fillStyle=base;g.fill(gr.P);g.fillStyle=cool?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.22)';g.fill(gr.P);g.restore();
+      g.save();g.translate(-lx*hl,hl*1.1);g.clip(gr.P);g.translate(lx*hl+lx*sh,-hl*1.1-sh*1.15);g.fillStyle=base;g.fill(gr.P);g.restore();}
     for(const m of gr.marks)m(g,pal,lx);
     g.restore();
     for(const m of gr.lines)m(g,pal,iw);
@@ -3976,7 +4065,12 @@ const TCOL_RGB=TCOL.map(h=>{const n=parseInt(h.slice(1),16);return(n>>16&255)+',
 // 足した技の演出：物理は 飛びこんで斬る／特殊は 弾や光線を放つ。色と粒はタイプごと
 const TSPR=['star','flame','drop','glow:255,230,90','leaf','shard','star','bubble:170,90,200','rock:brown','feather','glow:255,120,190','glow:170,210,60','rock:gray','flame:ghost','scale','smoke:60,40,80','shard:steel'];
 async function altPhysFx(B,sd,A,T,tr,mv){
-  const col=TCOL_RGB[mv.type],sp=TSPR[mv.type],ad=/^(glow|flame|star)/.test(sp),n=tr+2;
+  const col=TCOL_RGB[mv.type],sp=TSPR[mv.type],ad=/^(glow|flame|star)/.test(sp),n=mv.has('multi')||mv.has('twice')?1:tr+2;
+  if(mv.prio){   // 先制技：ひとすじの 残像
+    LN({k:'speed',x:T.x,y:T.y,col,n:16,life:6});await lungeTo(B,sd,A,T,21);
+    slash(T.x,T.y,-0.6,36,col,4.2);slash(T.x,T.y,-0.6,26,'255,255,255',1.6);burst(sp,T.x,T.y,5,3,{r0:2,r1:4,l0:8,l1:16,add:ad});sfx('hit');impact(sd,T,0,col);
+    await sleep(30);await lungeBack(B,sd);return;
+  }
   if(tr>=2)await charge(B,sd,A,col,tr-1);
   await lungeTo(B,sd,A,T,13+tr*4);
   for(let i=0;i<n;i++){
@@ -3987,11 +4081,26 @@ async function altPhysFx(B,sd,A,T,tr,mv){
     await sleep(60);
   }
   if(tr>=3){await finisher(sd,T,col);FX.dim=0;}else impact(sd,T,tr,col);
+  if(mv.has('drain'))drainFx(A,T);
   await sleep(40);await lungeBack(B,sd);
 }
+function drainFx(A,T){for(let i=0;i<9;i++)P({s:'glow:130,255,160',x:T.x+rnd(-8,8),y:T.y+rnd(-8,8),vx:(A.x-T.x)/24+rnd(-0.4,0.4),vy:(A.y-T.y)/24+rnd(-0.4,0.4),r:rnd(1.8,3.4),life:24,add:true});}
 async function altSpecFx(B,sd,A,T,tr,mv){
   const col=TCOL_RGB[mv.type],sp=TSPR[mv.type],ad=/^(glow|flame|star)/.test(sp),ang=Math.atan2(T.y-A.y,T.x-A.x)+1.57;
   if(tr>=1)await charge(B,sd,A,col,tr);
+  const v=mv.id%3;
+  if(v===1||(tr>=2&&v===2)){   // 足もとから ふきあがる柱／空から ふりそそぐ
+    const up=v===1;sfx('hit');
+    await tween(330+tr*70,p=>{
+      for(let i=0;i<2+tr;i++){const x=T.x+rnd(-11-tr*2,11+tr*2);
+        if(up)P({s:sp,x,y:T.y+24-p*26+rnd(-4,4),vy:-rnd(1.6,3.4),r:rnd(2.6,5+tr),life:12,add:ad,rot:0});
+        else P({s:sp,x:x+16,y:T.y-62+rnd(-6,6),vx:-1.5,vy:rnd(4.6,6.2),r:rnd(2.4,4.4+tr),life:12,add:ad,rot:0.3});}
+      P({s:'glow:'+col,x:T.x+rnd(-12,12),y:T.y+rnd(-10,16),r:rnd(1.6,3.6),life:10,add:true});
+      if(p>0.35){FX.lit[1-sd]=1;shakeFx(1+tr*0.7);}});
+    ring(T.x,T.y+(up?12:0),col,{dr:2.6+tr*0.5,w:2+tr*0.5,flat:up?0.35:1});
+    if(tr>=3){await finisher(sd,T,col);FX.dim=0;}else impact(sd,T,tr,col);
+    if(mv.has('drain'))drainFx(A,T);await sleep(60);return;
+  }
   if(tr>=2){   // 光線
     sfx('hit');
     await tween(280+tr*90,p=>{const q=Math.min(1,p*1.7),ex=A.x+(T.x-A.x)*q,ey=A.y+(T.y-A.y)*q;
@@ -4008,6 +4117,7 @@ async function altSpecFx(B,sd,A,T,tr,mv){
     }
     impact(sd,T,tr,col);
   }
+  if(mv.has('drain'))drainFx(A,T);
   await sleep(60);
 }
 async function moveFx(B,sd,mv){
@@ -4026,7 +4136,9 @@ async function moveFx(B,sd,mv){
 'use strict';
 /* ================= battle.js : バトル（計算式は原作第3世代に準拠） ================= */
 let BT=null;
-const newStg=()=>({atk:0,def:0,spa:0,spd:0,spe:0,acc:0,eva:0,conf:0,flinch:false});
+const newStg=()=>({atk:0,def:0,spa:0,spd:0,spe:0,acc:0,eva:0,conf:0,flinch:false,prot:false,protN:0,seed:false,rech:false,focus:false});
+const WX_JP={sun:'日ざし',rain:'雨',sand:'砂あらし',hail:'あられ'},WX_ON={sun:'日ざしが 強くなった！',rain:'雨が ふりはじめた！',sand:'砂あらしが ふきはじめた！',hail:'あられが ふりはじめた！'},
+  WX_OFF={sun:'日ざしが もとに もどった。',rain:'雨が やんだ。',sand:'砂あらしが おさまった。',hail:'あられが やんだ。'};
 const stgMul=n=>n>=0?(2+n)/2:2/(2-n);
 const accMul=n=>{n=clamp(n,-6,6);return n>=0?(3+n)/3:3/(3-n);};
 const bmon=(B,s)=>s?B.foes[B.fi]:S.party[B.pi];
@@ -4045,8 +4157,11 @@ function effStat(B,s,i){
 function calcDamage(B,s,mv,crit,eff){
   const a=bmon(B,s),d=bmon(B,1-s),asp=SP[a.sp];
   const A=mv.phys?effStat(B,s,1):effStat(B,s,3),D=mv.phys?effStat(B,1-s,2):effStat(B,1-s,4);
-  let dmg=Math.floor(Math.floor(Math.floor(2*a.lv/5+2)*mv.pow*A/D)/50)+2;
-  if(crit)dmg*=2;
+  let pw=mv.pow;if(mv.has('pinch')&&a.hp*3<=maxHP(a))pw*=2;if(mv.has('hex')&&d.st)pw*=2;
+  let dmg=Math.floor(Math.floor(Math.floor(2*a.lv/5+2)*pw*A/D)/50)+2;
+  if(crit)dmg*=2;else if(B.wall[1-s][mv.phys?0:1]>0)dmg=Math.floor(dmg/2);          // 光の壁（急所には きかない）
+  if(B.weather==='sun'){if(mv.type===1)dmg=Math.floor(dmg*1.5);else if(mv.type===2)dmg=Math.floor(dmg/2);}
+  else if(B.weather==='rain'){if(mv.type===2)dmg=Math.floor(dmg*1.5);else if(mv.type===1)dmg=Math.floor(dmg/2);}
   if(mv.type>=0){
     if(asp.types.indexOf(mv.type)>=0)dmg=Math.floor(dmg*1.5);
     dmg=Math.floor(dmg*eff);
@@ -4104,6 +4219,28 @@ async function applyEffects(B,sd,mv,isStatus,selfOnly){
       const u=bmon(B,sd),mx=maxHP(u);
       if(u.hp>=mx)await say('しかし HPは まんたんだ！');
       else{u.hp=Math.min(mx,u.hp+Math.floor(mx/2));sfx('heal');healFx(sd);await hpAnim(B,sd);await say(bname(B,sd)+'の たいりょくが 回復した！');}
+    }else if(e.k==='protect'){
+      const st=bstg(B,sd);if(ri(1<<Math.min(3,st.protN))===0){st.prot=true;st.protN++;await say(bname(B,sd)+'は 守りの かまえに 入った！');}else{st.protN=0;await say('しかし うまく きまらなかった！');}
+    }else if(e.k==='seed'){
+      const ts=bstg(B,1-sd),tm=bmon(B,1-sd);if(selfOnly||tm.hp<=0)continue;
+      if(ts.seed||SP[tm.sp].types.indexOf(4)>=0)await say('しかし こうかが なかった！');else{ts.seed=true;await say(bname(B,1-sd)+'に タネを うえつけた！');}
+    }else if(e.k==='wx'){
+      if(B.weather===e.w)await say('しかし 天気は 変わらなかった！');else{B.weather=e.w;B.wT=5;flashFx(e.w==='sun'?'255,210,90':e.w==='rain'?'90,130,220':e.w==='sand'?'220,180,110':'220,240,255',0.4);await say(WX_ON[e.w]);}
+    }else if(e.k==='wall'){
+      if(B.wall[sd][e.c]>0)await say('しかし すでに 壁が ある！');else{B.wall[sd][e.c]=5;const T=fxPos(sd);ring(T.x,T.y,e.c?'200,160,255':'255,220,140',{dr:3,w:3,life:22,max:22});await say((sd?'相手':'味方')+'は '+(e.c?'特殊':'物理')+'に 強い 光の壁に つつまれた！');}
+    }else if(e.k==='haze'){
+      for(const s2 of [0,1]){const st=bstg(B,s2);for(const k of ['atk','def','spa','spd','spe','acc','eva'])st[k]=0;}await say('すべての 能力の変化が もとに もどった！');
+    }else if(e.k==='belly'){
+      const u=bmon(B,sd),mx=maxHP(u),st=bstg(B,sd);
+      if(u.hp*2<=mx||st.atk>=6)await say('しかし うまく きまらなかった！');else{u.hp-=Math.floor(mx/2);await hpAnim(B,sd);st.atk=6;stageFx(sd,'atk',true);sfx('lvup');await say(bname(B,sd)+'は 体力を けずって こうげきを 最大まで 高めた！');}
+    }else if(e.k==='cure'){
+      const u=bmon(B,sd);if(!u.st)await say('しかし こうかが なかった！');else{u.st=null;healFx(sd);sfx('heal');await say(bname(B,sd)+'の 状態異常が なおった！');}
+    }else if(e.k==='rest'){
+      const u=bmon(B,sd),mx=maxHP(u);if(u.hp>=mx)await say('しかし HPは まんたんだ！');else{u.hp=mx;u.st='slp';u.sc=2;sfx('heal');healFx(sd);await hpAnim(B,sd);await say(bname(B,sd)+'は ねむって 元気に なった！');}
+    }else if(e.k==='split'){
+      const u=bmon(B,sd),t=bmon(B,1-sd);if(selfOnly||t.hp<=0)continue;const av=Math.floor((u.hp+t.hp)/2);u.hp=Math.min(maxHP(u),av);t.hp=Math.min(maxHP(t),av);await hpAnim(B,sd);await hpAnim(B,1-sd);await say('おたがいの 体力を 分けあった！');
+    }else if(e.k==='focus'){
+      const st=bstg(B,sd);if(st.focus)await say('しかし こうかが なかった！');else{st.focus=true;await say(bname(B,sd)+'は ねらいを さだめた！');}
     }
   }
 }
@@ -4113,7 +4250,8 @@ function accCheck(B,sd,mv){
 }
 async function useMove(B,sd,idx){
   const u=bmon(B,sd),t=bmon(B,1-sd),us=bstg(B,sd),un=bname(B,sd),tn=bname(B,1-sd);
-  if(us.flinch){us.flinch=false;await say(un+'は ひるんで うごけない！');return;}
+  if(us.flinch){us.flinch=false;us.rech=false;await say(un+'は ひるんで うごけない！');return;}
+  if(us.rech){us.rech=false;await say(un+'は はんどうで うごけない！');return;}
   if(u.st==='slp'){if(u.sc>0){u.sc--;await say(un+'は ぐうぐう ねむっている。');return;}u.st=null;await say(un+'は 目を さました！');}
   if(u.st==='frz'){if(ri(5)===0){u.st=null;await say(un+'の こおりが とけた！');}else{await say(un+'は こおって うごけない！');return;}}
   if(u.st==='par'&&ri(4)===0){await say(un+'は しびれて うごけない！');return;}
@@ -4132,26 +4270,39 @@ async function useMove(B,sd,idx){
   const mv=idx<0?STRUGGLE:MOVES[u.mv[idx].id];
   if(idx>=0)u.mv[idx].pp=Math.max(0,u.mv[idx].pp-1);
   await say(un+'の '+mv.name+'！');
+  const ts=bstg(B,1-sd);if(!mv.has('protect'))us.protN=0;
   if(mv.pow===0){
-    const onFoe=mv.eff.some(e=>e.k==='st'||(e.k==='stage'&&e.who==='foe'));
+    const onFoe=mv.eff.some(e=>e.k==='st'||(e.k==='stage'&&e.who==='foe')||e.k==='seed'||e.k==='split');
+    if(onFoe&&ts.prot){await say(tn+'は 身を まもった！');return;}
     if(onFoe&&mv.acc>0&&!accCheck(B,sd,mv)){await say('しかし '+tn+'には あたらなかった！');return;}
     await moveFx(B,sd,mv);
     await applyEffects(B,sd,mv,true,false);return;
   }
   if(t.hp<=0)return;
+  if(ts.prot){await say(tn+'は 身を まもった！');return;}
   if(mv.acc>0&&!accCheck(B,sd,mv)){await say('しかし こうげきは はずれた！');return;}
   let eff=mv.type>=0?typeEff(mv.type,SP[t.sp].types):1;const ab=abilOf(t);
   if(mv.type===8&&ab===2)eff=0;
   if((mv.type===2&&ab===9)||(mv.type===3&&ab===10)||(mv.type===1&&ab===11)){
     const mx=maxHP(t);t.hp=Math.min(mx,t.hp+Math.floor(mx/4));healFx(1-sd);await hpAnim(B,1-sd);await say(tn+'は 「'+ABIL[ab].n+'」で 技を すいとった！');return;}
   if(eff===0){await say(tn+'には まったく きかない！');return;}
-  let crit=false;if(ab!==15){let cr=mv.crit?8:16;if(abilOf(u)===17)cr/=2;crit=ri(cr)===0;}
-  let dmg=calcDamage(B,sd,mv,crit,eff),sturdy=false;
-  if(ab===6&&t.hp===maxHP(t)&&dmg>=t.hp){dmg=t.hp-1;sturdy=true;}
-  dmg=Math.min(dmg,t.hp);
-  await moveFx(B,sd,mv);
-  if(crit){const T=fxPos(1-sd);P({s:'star',x:T.x,y:T.y,r:10,dr:1.4,life:10,add:true});flashFx('255,255,255',0.35);}
-  await hitAnim(B,1-sd,eff);t.hp-=dmg;await hpAnim(B,1-sd);
+  const fxd=mv.eff.find(e=>e.k==='fixed');
+  if(fxd||mv.has('level')||mv.has('halve')){     // 決まった量のダメージ（能力や相性の倍率を 受けない）
+    const d0=Math.min(t.hp,fxd?fxd.n:mv.has('level')?u.lv:Math.max(1,Math.floor(t.hp/2)));
+    await moveFx(B,sd,mv);await hitAnim(B,1-sd,1);t.hp-=d0;await hpAnim(B,1-sd);await applyEffects(B,sd,mv,false,t.hp<=0);return;
+  }
+  const hits=mv.has('multi')?[2,2,3,3,4,5][ri(6)]:mv.has('twice')?2:1;
+  let dmg=0,nh=0,crit=false,sturdy=false;
+  for(let h=0;h<hits&&t.hp>0;h++){
+    let c1=false;if(ab!==15){let cr=mv.crit?8:16;if(us.focus)cr/=2;if(abilOf(u)===17)cr/=2;c1=ri(Math.max(1,Math.floor(cr)))===0;}
+    let d1=calcDamage(B,sd,mv,c1,eff);
+    if(ab===6&&t.hp===maxHP(t)&&d1>=t.hp){d1=t.hp-1;sturdy=true;}
+    d1=Math.min(d1,t.hp);
+    if(h===0)await moveFx(B,sd,mv);else{const T=fxPos(1-sd);burst('star',T.x+rnd(-9,9),T.y+rnd(-9,9),4,2.2,{r0:2,r1:4,l0:8,l1:14,add:true});slash(T.x+rnd(-8,8),T.y+rnd(-8,8),rnd(-1,2.4),20,'255,250,220',2.6);}
+    if(c1){const T=fxPos(1-sd);P({s:'star',x:T.x,y:T.y,r:10,dr:1.4,life:10,add:true});flashFx('255,255,255',0.35);crit=true;}
+    await hitAnim(B,1-sd,eff);t.hp-=d1;await hpAnim(B,1-sd);dmg+=d1;nh++;
+  }
+  if(hits>1)await say(nh+'回 あたった！');
   if(crit)await say('急所を とらえた！');
   if(eff>1)await say('こうかは てきめんだ！');else if(eff<1)await say('あまり きいていない…');
   if(sturdy)await say(tn+'は 「不屈」で もちこたえた！');
@@ -4160,6 +4311,9 @@ async function useMove(B,sd,idx){
     if(e.k==='drain'&&u.hp>0&&u.hp<maxHP(u)){u.hp=Math.min(maxHP(u),u.hp+Math.max(1,Math.floor(dmg/2)));healFx(sd);await hpAnim(B,sd);await say(tn+'から たいりょくを すいとった！');}
   }
   await applyEffects(B,sd,mv,false,t.hp<=0);
+  if(mv.has('rech')&&u.hp>0)us.rech=true;
+  if(mv.has('coin')&&sd===0){B.coins+=u.lv*4;await say('お金が あたりに ちらばった！');}
+  if(mv.has('boom')&&u.hp>0){u.hp=0;await hpAnim(B,sd);await say(un+'は 力を 使いはたした！');}
   if(t.hp>0&&u.hp>0&&mv.phys&&ri(10)<3){if(ab===3)await inflict(B,sd,'par');else if(ab===4)await inflict(B,sd,'psn');else if(ab===5)await inflict(B,sd,'brn');}
 }
 function aiPick(B){
@@ -4172,7 +4326,9 @@ function aiPick(B){
     const m=MOVES[f.mv[i].id];let sc;
     if(m.pow>0){
       let eff=typeEff(m.type,SP[me.sp].types);if(m.type===8&&abilOf(me)===2)eff=0;
-      sc=m.pow*eff*(SP[f.sp].types.indexOf(m.type)>=0?1.5:1)*(m.acc||100)/100*(m.phys?effStat(B,1,1):effStat(B,1,3))/100;
+      let pw=m.pow;if(pw===1)pw=m.has('halve')?(me.hp*2>maxHP(me)?70:25):m.has('level')?f.lv*1.1:45;
+      if(m.has('multi'))pw*=3;if(m.has('twice'))pw*=2;if(m.has('rech'))pw*=0.62;if(m.has('boom'))pw*=f.hp*3<maxHP(f)?0.8:0.03;if(m.has('pinch')&&f.hp*3<=maxHP(f))pw*=2;if(m.has('hex')&&me.st)pw*=2;
+      sc=pw*eff*(SP[f.sp].types.indexOf(m.type)>=0?1.5:1)*(m.acc||100)/100*(m.phys?effStat(B,1,1):effStat(B,1,3))/100;
     }else{
       sc=22;const e=m.eff[0];
       if(e){
@@ -4180,6 +4336,8 @@ function aiPick(B){
         if(e.k==='st'&&e.st==='cnf'&&B.ps.conf)sc=0;
         if(e.k==='stage'){const s=e.who==='self'?B.fs:B.ps;if(Math.abs(s[e.stat])>=2)sc=2;}
         if(e.k==='heal')sc=f.hp<maxHP(f)/2?80:0;
+        if(e.k==='protect')sc=9;if(e.k==='seed')sc=B.ps.seed||SP[me.sp].types.indexOf(4)>=0?0:34;if(e.k==='wx')sc=B.weather===e.w?0:16;if(e.k==='wall')sc=B.wall[1][e.c]>0?0:24;if(e.k==='haze')sc=4;
+        if(e.k==='belly')sc=f.hp*2>maxHP(f)&&B.fs.atk<3?26:0;if(e.k==='cure')sc=f.st?60:0;if(e.k==='rest')sc=f.hp*5<maxHP(f)*2?70:0;if(e.k==='split')sc=f.hp*2<me.hp?55:0;if(e.k==='focus')sc=B.fs.focus?0:14;
       }
     }
     sc*=0.8+Math.random()*0.4;if(sc>bs){bs=sc;best=i;}
@@ -4244,7 +4402,7 @@ async function teachMove(m,id){
   if(m.mv.length<4){m.mv.push({id,pp:mv.pp});sfx('get');await sayW(n+'は あたらしく '+mv.name+'を おぼえた！');return true;}
   await sayW(n+'は あたらしく '+mv.name+'を おぼえたい…。しかし 技は 4つまでしか おぼえられない。');
   for(;;){
-    const bg=msgBox('どの技を わすれさせる？\n（「'+mv.name+'」'+TK[mv.type]+'・'+CAT_JP[mv.cat]+' 威力'+(mv.pow||'―')+'）');
+    const bg=msgBox('どの技を わすれさせる？\n（「'+mv.name+'」'+TK[mv.type]+'・'+CAT_JP[mv.cat]+' 威力'+powTxt(mv)+(moveNote(mv)?' '+moveNote(mv):'')+'）');
     const items=m.mv.map(v=>({label:MOVES[v.id].name,right:TK[MOVES[v.id].type]+' '+(MOVES[v.id].pow||'―')}));
     items.push({label:'おぼえるのを やめる'});
     const c=await menu(items,{x:LW-150,y:LH-MSG_H-80,w:146,cancel:true});popW(bg);
@@ -4271,14 +4429,20 @@ async function handleFaints(B){
 }
 async function endTurn(B){
   for(const s of [0,1]){
-    const m=bmon(B,s),st=bstg(B,s),n=bname(B,s);st.flinch=false;
+    const m=bmon(B,s),st=bstg(B,s),n=bname(B,s);st.flinch=false;st.prot=false;
     if(m.hp<=0)continue;
+    if(st.seed){const o=bmon(B,1-s),d=Math.min(m.hp,Math.max(1,Math.floor(maxHP(m)/8)));m.hp-=d;FX.lit[s]=1;sfx('weak');await hpAnim(B,s);
+      if(o.hp>0&&o.hp<maxHP(o)){o.hp=Math.min(maxHP(o),o.hp+d);healFx(1-s);await hpAnim(B,1-s);}await say(n+'は タネに 体力を うばわれた！');if(m.hp<=0)continue;}
+    if(B.weather==='sand'||B.weather==='hail'){const ty=SP[m.sp].types,safe=B.weather==='sand'?(ty.indexOf(8)>=0||ty.indexOf(12)>=0||ty.indexOf(16)>=0):ty.indexOf(5)>=0;
+      if(!safe){m.hp=Math.max(0,m.hp-Math.max(1,Math.floor(maxHP(m)/16)));FX.lit[s]=1;await hpAnim(B,s);await say(n+'は '+WX_JP[B.weather]+'に うたれた！');if(m.hp<=0)continue;}}
     if(m.st==='psn'||m.st==='brn'){statusFx(s,m.st);FX.lit[s]=1;sfx('weak');m.hp=Math.max(0,m.hp-Math.max(1,Math.floor(maxHP(m)/8)));await hpAnim(B,s);await say(n+'は '+STATUS_JP[m.st]+'の ダメージを うけた！');if(m.hp<=0)continue;}
     const ab=abilOf(m);
     if(ab===16&&m.hp<maxHP(m)){m.hp=Math.min(maxHP(m),m.hp+Math.max(1,Math.floor(maxHP(m)/16)));healFx(s);await hpAnim(B,s);}
     if(ab===7&&st.spe<6){st.spe++;await say(n+'は 「追い風」で すばやさが 上がった！');}
     if(ab===13&&m.st&&ri(3)===0){m.st=null;await say(n+'は 「みそぎ」で 状態異常が 治った！');}
   }
+  if(B.weather&&--B.wT<=0){await say(WX_OFF[B.weather]);B.weather=null;}
+  for(const s of [0,1])for(const c of [0,1])if(B.wall[s][c]>0&&--B.wall[s][c]===0)await say((s?'相手':'味方')+'の '+(c?'特殊':'物理')+'の 壁が 消えた！');
   await handleFaints(B);
 }
 async function tryCatch(B,id){
@@ -4329,8 +4493,9 @@ async function chooseAction(B){
       const items=me.mv.map(v=>({label:MOVES[v.id].name,dis:v.pp<=0}));
       B.line='';
       const i=await menu(items,{x:0,y:LH-MSG_H+8,w:LW,cols:2,idx:B.lastMove||0,fg:j=>{
-        const v=me.mv[j],m=MOVES[v.id],fo=bmon(B,1),wx=LW-152;win(wx,LH-MSG_H-36,152,38);typeTag(m.type,wx+6,LH-MSG_H-30);catTag(m.cat,wx+22,LH-MSG_H-30,true);
-        tx('威力'+(m.pow||'―'),wx+50,LH-MSG_H-29,'#2a2233',9);tx('PP '+v.pp+'/'+m.pp,LW-8,LH-MSG_H-29,v.pp?'#2a2233':'#d04030',9,'right');
+        const v=me.mv[j],m=MOVES[v.id],fo=bmon(B,1),wx=LW-152,nt=moveNote(m);if(nt){win(wx,LH-MSG_H-50,152,18);tx(nt.length>21?nt.slice(0,20)+'…':nt,wx+6,LH-MSG_H-46,'#5a4a2a',nt.length>17?7:8);}
+        win(wx,LH-MSG_H-36,152,38);typeTag(m.type,wx+6,LH-MSG_H-30);catTag(m.cat,wx+22,LH-MSG_H-30,true);
+        tx('威力'+powTxt(m),wx+50,LH-MSG_H-29,'#2a2233',9);tx('PP '+v.pp+'/'+m.pp,LW-8,LH-MSG_H-29,v.pp?'#2a2233':'#d04030',9,'right');
         if(m.pow>0&&fo){let e=typeEff(m.type,SP[fo.sp].types);if(m.type===8&&abilOf(fo)===2&&S.caught[fo.sp])e=0;   // 相性のめやす
           tx(e===0?'× こうかが ない':e>1?'◎ こうかは ばつぐん':e<1?'△ いまひとつ':'○ ふつうに きく',wx+6,LH-MSG_H-15,e===0?'#8a8690':e>1?'#d0502a':e<1?'#5a6a9a':'#2a2233',9);}
         else tx('― へんか技（ダメージなし）',wx+6,LH-MSG_H-15,'#5a5560',9);
@@ -4350,7 +4515,7 @@ async function chooseAction(B){
 }
 async function battle(o){
   const B={o,wild:!!o.wild,foes:o.wild?[o.wild]:o.trainer.team,fi:0,pi:S.party.findIndex(m=>m.hp>0),ps:newStg(),fs:newStg(),runTry:0,
-    parts:new Set(),result:null,line:'',env:battleEnv(o),hpShow:[0,0],foeDown:false,
+    parts:new Set(),result:null,line:'',env:battleEnv(o),hpShow:[0,0],foeDown:false,weather:null,wT:0,wall:[[0,0],[0,0]],coins:0,
     fx:{foeX:120,meX:-120,foeA:1,meA:1,foeY:0,meY:0,foeHide:0,meHide:0,seal:null,glow:0,pulse:0,trX:null,plX:null}};
   B.parts.add(B.pi);B.hpShow=[bmon(B,0).hp,bmon(B,1).hp];fxClear();
   sfx('alert');
@@ -4409,6 +4574,7 @@ async function battle(o){
     const tr=o.trainer;await sayW(tr.name+'との 勝負に 勝った！');
     if(tr.money){S.money+=tr.money;await sayW('賞金として '+tr.money+'ゴールドを 手に入れた！');}
   }
+  if(B.coins&&B.result!=='lose'){S.money+=B.coins;await sayW('ちらばった お金 '+B.coins+'ゴールドを ひろった！');}
   let caught=null;
   if(B.result==='caught')caught=bmon(B,1);
   await fadeTo(1,220);
@@ -4444,13 +4610,20 @@ function drawLive(g,m,x,y,sc,back,al,sx,lit){
 }
 
 /* ---------- バトル画面 ---------- */
+function drawWeather(g,w){
+  const t=G.t,W=LW+32,H=LH+32;
+  if(w==='sun'){g.fillStyle='rgba(255,196,70,0.14)';g.fillRect(-16,-16,W,H);g.fillStyle='rgba(255,236,160,0.16)';g.beginPath();g.arc(LW-30,10,46+Math.sin(t/18)*3,0,6.3);g.fill();}
+  else if(w==='rain'){g.fillStyle='rgba(40,60,110,0.2)';g.fillRect(-16,-16,W,H);g.strokeStyle='rgba(205,228,255,0.55)';g.lineWidth=0.6;g.beginPath();for(let i=0;i<46;i++){const x=(i*53+t*5)%(LW+40)-20,y=(i*97+t*9)%(LH-46);g.moveTo(x,y);g.lineTo(x-3,y+8);}g.stroke();}
+  else if(w==='sand'){g.fillStyle='rgba(200,160,90,0.22)';g.fillRect(-16,-16,W,H);g.strokeStyle='rgba(244,220,165,0.5)';g.lineWidth=0.7;g.beginPath();for(let i=0;i<40;i++){const x=(i*71+t*7)%(LW+40)-20,y=(i*37+(t>>1))%(LH-46);g.moveTo(x,y);g.lineTo(x+9,y+1.5);}g.stroke();}
+  else if(w==='hail'){g.fillStyle='rgba(200,225,245,0.15)';g.fillRect(-16,-16,W,H);g.fillStyle='rgba(255,255,255,0.88)';for(let i=0;i<34;i++){const x=(i*61+t*2)%(LW+20)-10,y=(i*89+t*4)%(LH-46);g.fillRect(x,y,1.7,1.7);}}
+}
 function drawBattlePix(){
   const B=BT;if(!B)return;const g=wctx,env=B.env;
   g.save();if(FX.shake)g.translate(rnd(-FX.shake,FX.shake),rnd(-FX.shake,FX.shake));
   if(FX.zoom>1){g.translate(FX.zc.x,FX.zc.y);g.scale(FX.zoom,FX.zoom);g.translate(-FX.zc.x,-FX.zc.y);}
   // 背景：戦っている場所に合わせた一枚絵＋動く部分
   g.lineJoin='round';g.lineCap='round';
-  g.drawImage(battleBG(env),-16,-16,LW+32,LH+32);battleAnim(g,env,false);battleTint(g,env);
+  g.drawImage(battleBG(env),-16,-16,LW+32,LH+32);battleAnim(g,env,false);battleTint(g,env);if(B.weather)drawWeather(g,B.weather);
   if(FX.dim>0){g.fillStyle='rgba(12,6,34,'+FX.dim+')';g.fillRect(-16,-16,LW+32,LH+32);}
   const f=B.foes[B.fi],me=S.party[B.pi],fx=B.fx;
   const dm=(m,x,y,sc,back,al,sx,lit)=>drawLive(g,m,x,y,sc,back,al,sx,lit);
@@ -4476,6 +4649,7 @@ function drawBattlePix(){
 }
 function drawBattleUI(){
   const B=BT;if(!B)return;const f=B.fx.trX!=null?null:B.foes[B.fi],me=B.fx.plX!=null?null:S.party[B.pi];
+  if(B.weather){ctx.fillStyle='rgba(20,16,32,0.62)';ctx.fillRect(130,8,62,12);tx(WX_JP[B.weather]+'　のこり'+B.wT,161,9.6,'#fff',8,'center');}
   if(f){
     win(6,8,118,46);tx(SP[f.sp].name+(f.shiny?'✦':''),12,13,'#2a2233',10);tx('Lv'+f.lv,118,13,'#2a2233',9,'right');
     SP[f.sp].types.forEach((t,j)=>typeTag(t,12+j*16,37));
@@ -4563,7 +4737,7 @@ function drawSummary(m){
   m.mv.forEach((v,i)=>{
     const mv=MOVES[v.id],x=10+(i%2)*114,y=154+Math.floor(i/2)*25;
     typeTag(mv.type,x,y);catTag(mv.cat,x,y+12.2);tx(mv.name,x+17,y+1,'#2a2233',mv.name.length>8?9:10);
-    tx(CAT_JP[mv.cat]+' 威力'+(mv.pow||'―')+' PP'+v.pp+'/'+mv.pp,x+17,y+13.5,'#5a5560',8);
+    tx(CAT_JP[mv.cat]+' 威力'+powTxt(mv)+' PP'+v.pp+'/'+mv.pp,x+17,y+13.5,'#5a5560',8);
   });
 }
 function summaryScreen(idx,list){
@@ -4689,12 +4863,12 @@ async function shopMenu(){
     if(c===0){
       let idx=0;
       for(;;){
-        const st=shopStock(badgeCount());
-        const i=await menu(st.map(id=>({label:ITEMS[id].n,right:ITEMS[id].p+'G',dis:S.money<ITEMS[id].p})),{x:4,y:2,w:232,rows:9,idx,title:'かう　　　所持金 '+S.money+'G',
+        const st=shopStock(badgeCount()).concat(tmStock(G.map.id.split(':')[0])),own=id=>ITEMS[id].k==='tm'&&S.bag[id];
+        const i=await menu(st.map(id=>({label:ITEMS[id].n,right:own(id)?'もっている':ITEMS[id].p+'G',dis:S.money<ITEMS[id].p||!!own(id)})),{x:4,y:2,w:232,rows:9,idx,title:'かう　　　所持金 '+S.money+'G',
           bg:()=>screenBG(),fg:j=>{win(0,LH-MSG_H,LW,MSG_H);tx(ITEMS[st[j]].d,10,LH-MSG_H+8,'#2a2233',10);tx('もっている数：'+(S.bag[st[j]]||0),10,LH-MSG_H+24,'#5a5560',9);}});
         if(i<0)break;idx=i;const id=st[i],p=ITEMS[id].p;
         const bg2=pushBG(()=>{screenBG();win(0,LH-MSG_H,LW,MSG_H);tx(ITEMS[id].n+'を いくつ 買いますか？',10,LH-MSG_H+8,'#2a2233',10);tx('↑↓で1こ　←→で10こ',10,LH-MSG_H+24,'#5a5560',9);});
-        const n=await pickNumber(Math.min(99,Math.floor(S.money/p)),k=>k*p+'G');popW(bg2);
+        const n=ITEMS[id].k==='tm'?1:await pickNumber(Math.min(99,Math.floor(S.money/p)),k=>k*p+'G');popW(bg2);
         if(n>0){S.money-=n*p;bagAdd(id,n);sfx('get');await msg(ITEMS[id].n+'を '+n+'こ 買った！ まいどあり！');}
       }
     }else if(c===1){
