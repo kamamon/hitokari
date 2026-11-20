@@ -35,6 +35,14 @@ html,body{margin:0;height:100%;background:#181420;overflow:hidden;overscroll-beh
 #bM{left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);border-radius:16px;width:96px;height:34px;background:#3c3754;font-size:13px;letter-spacing:1px}
 #bC{display:none;left:calc(50% + 62px);bottom:max(10px,env(safe-area-inset-bottom));border-radius:16px;width:72px;height:34px;background:#3c6a54;font-size:12px}
 .btn.on{filter:brightness(1.45)}
+/* 素材集の ボタンの絵（十字・決定・もどる） */
+#dpad{background:url(ui/dpad.webp) center/86% no-repeat,radial-gradient(circle,#3c3754 0%,#2a2540 70%,#211d33 100%)}
+#dpad .ar{display:none}
+#knob{background:rgba(255,240,200,.18);border-color:rgba(240,200,110,.55)}
+#bA{background:url(ui/btn_a.webp) center/112% no-repeat,#c8503a;font-size:0;border-color:transparent}
+#bB{background:url(ui/btn_b.webp) center/112% no-repeat,#2a3a6a;font-size:0;border-color:transparent}
+#bA::after,#bB::after{position:absolute;right:2%;bottom:0;font-size:13px;color:#fff;text-shadow:0 1px 2px #000}
+#bA::after{content:'A'}#bB::after{content:'B'}
 body.land #wrap{flex-direction:row;justify-content:center;padding-top:0}
 body.land #pad{position:absolute;left:0;top:0;right:0;bottom:0;max-width:none;pointer-events:none}
 body.land #dpad{left:1.5%;top:auto;bottom:5%;transform:none;width:min(24vw,170px);height:min(24vw,170px);pointer-events:auto;opacity:.75}
@@ -507,6 +515,7 @@ function drawSpeaker(id,y,text){      // y=メッセージ枠の上はし
   ctx.restore();
   const role=p.role,wn=Math.max(64,Math.min(184,(nm.length+role.length)*8.2+22));
   win(2,y-15,wn,16);tx(nm,8,y-11,'#2a2233',9);tx(role,12+nm.length*9.2,y-10,'#8a5a2a',role.length>12?6.5:7.5);
+  if((id>=65&&id<=68)||p.group===17)drawBadge(ctx,56,wn-2,y-18,16);      // 静環団の 紋
 }
 function metPerson(id){if(!S||!id||id===plPid())return;if(!S.met)S.met={};S.met[id]=1;}
 const metCount=()=>S&&S.met?countKeys(S.met):0;
@@ -5008,7 +5017,8 @@ function cardScreen(){
         tx('アニマ '+countKeys(S.caught)+'種　出会った人 '+metCount()+'人',20,66,'#2a2233',10);
         const t=Math.floor(S.time);tx('旅の時間　'+Math.floor(t/3600)+'時間 '+String(Math.floor(t/60)%60).padStart(2,'0')+'分',20,82,'#2a2233',10);
         tx('バッジ '+badgeCount()+'／50（'+[1,2,3,4,5].map(c=>badgeIn(c)).join('・')+'）'+(S.flags.champ?' ★':''),20,100,'#2a2233',10);
-        for(let k=1;k<=50;k++){const x=15+((k-1)%10)*21.2,y=113+Math.floor((k-1)/10)*16.4,t2=GYM_TYPES[k];      // バッジ50個（5つの圏×10）
+        for(let c=0;c<5;c++){if(!badgeIn(c+1))ctx.globalAlpha=0.3;drawBadge(ctx,50+c,11,113.6+c*16.4,14.2);ctx.globalAlpha=1;}      // 圏の紋
+        for(let k=1;k<=50;k++){const x=28+((k-1)%10)*20.1,y=113+Math.floor((k-1)/10)*16.4,t2=GYM_TYPES[k];      // バッジ50個（5つの圏×10）
           if(!S.badges[k])ctx.globalAlpha=0.2;
           if(!drawBadge(ctx,k-1,x,y,15.4)){ctx.fillStyle=S.badges[k]?TCOL[t2]:'#d8d4c8';ctx.beginPath();ctx.ellipse(x+7.7,y+7.7,6.6,6.6,0,0,6.3);ctx.fill();}
           ctx.globalAlpha=1;}
@@ -6010,6 +6020,7 @@ function drawWorldUI(){
     let x=(b.x+2)*16-G.camx+8,y=b.y*16-G.camy+9,r=9,fs=12;
     if(bldPic(m,b)){const B=bldBox(m,b);x=B.l-G.camx+9;y=B.t-G.camy+3;r=6.4;fs=9;}      // 絵の建物は 左上に 小さく
     if(x<-20||y<-20||x>LW+20||y>LH+20)continue;
+    if(b.kind==='league'&&drawBadge(ctx,55,x-8,y-2,16))continue;      // リーグは 紋
     ctx.fillStyle='rgba(20,16,32,0.6)';ctx.beginPath();ctx.ellipse(x,y+r*0.78,r,r,0,0,6.3);ctx.fill();
     tx(BLD_MARK[b.kind],x,y+(fs<12?0.6:0),'#fff',fs,'center');
   }
