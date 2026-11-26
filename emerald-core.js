@@ -27,5 +27,12 @@ const createHitokariUpgrade = function coreFactory(){
   function facilityResult(s,won){const p=progress(s);p.streak=won?p.streak+1:0;p.best=Math.max(p.best,p.streak);if(won)p.clears++;return p;}
   return {bond,progress,rematchReady,noteMatch,rematchLevel,encounterChance,repelBlocks,habitatWeight,validSave,damageScore,facilityResult};
 };
-const HitokariUpgrade = createHitokariUpgrade();
+const createNurseryUpgrade = function nurseryCore(){
+ const EGG_READY=256,EGG_HATCH=512;
+ function tickNursery(n,ok){for(const p of n.parents)p.steps=Math.min(20000,p.steps+1);if(n.egg){if(n.egg.held)n.egg.walk=Math.min(EGG_HATCH,n.egg.walk+1);}else if(ok&&n.parents.length===2)n.pairSteps=Math.min(EGG_READY,n.pairSteps+1);return n;}
+ function inheritIV(a,b,rand=Math.random){const v=Array.from({length:6},()=>Math.floor(rand()*32)),slots=[0,1,2,3,4,5];for(let i=0;i<3;i++){const k=slots.splice(Math.floor(rand()*slots.length),1)[0];v[k]=(rand()<0.5?a:b)[k];}return v;}
+ function earlyEvolution(m,base,rule,phase){if(!base)return false;if(m.lv>=base)return true;if(!rule||m.lv<Math.max(2,base-rule.early))return false;return (rule.bond===undefined||(Number.isFinite(m.bond)?m.bond:70)>=rule.bond)&&(rule.phase===undefined||rule.phase===phase);}
+ return{EGG_READY,EGG_HATCH,tickNursery,inheritIV,earlyEvolution};
+};
+const HitokariUpgrade = Object.assign(createHitokariUpgrade(),createNurseryUpgrade());
 if(typeof module==='object'&&module.exports)module.exports=HitokariUpgrade;
