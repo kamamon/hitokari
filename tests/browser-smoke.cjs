@@ -1,0 +1,14 @@
+'use strict';
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
+const base=process.cwd(),mime={'.html':'text/html; charset=utf-8','.js':'text/javascript','.webp':'image/webp','.png':'image/png'};
+const server=http.createServer((req,res)=>{const name=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(/^\/+/, '')||'index.html';const file=path.resolve(base,name);if(!file.startsWith(base+path.sep)){res.writeHead(403);res.end();return;}fs.readFile(file,(e,data)=>{if(e){res.writeHead(404);res.end();return;}res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');res.end(data);});});
+(async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;try{
+ browser=await chromium.launch({headless:true});const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[];page.on('pageerror',e=>errors.push(String(e)));await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>typeof G!=='undefined'&&UI.length>0);assert.equal(await page.title(),'アニマ・クロニクル');
+ const result=await page.evaluate(()=>{
+   const data=newSave('test'); const home=homeSpot();Object.assign(data,home);data.party=Array.from({length:6},()=>makeMon(STARTERS[0],5));data.starter=1;data.flags.dex=1;S=data;startFromSave();const valid=saveGame(),count=S.party.length;drawTrainingDetails(S.party[0]);for(let i=0;i<count;i++)drawPartySlot(S.party[i],i,i===0);
+   const former=localStorage.getItem(SAVE_KEY);S.money+=50;const saved=saveGame();const backup=localStorage.getItem(BACKUP_KEY);localStorage.setItem(SAVE_KEY,'broken');const recovered=loadSave();localStorage.setItem(SAVE_KEY,former);return{valid,saved,count,backup:backup===former,recovered:recovered&&recovered.money,formerMoney:JSON.parse(former).money,elite:eliteTeam(0).length};
+ });assert.equal(result.valid,true);assert.equal(result.saved,true);assert.equal(result.count,6);assert.equal(result.backup,true);assert.equal(result.recovered,result.formerMoney);assert.equal(result.elite,6);
+ await page.setViewportSize({width:844,height:390});await page.waitForTimeout(500);assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('land')),true);assert.deepEqual(errors,[]);
+ console.log('browser boot, six slots, save backup, elite roster and landscape checks passed');
+ }finally{if(browser)await browser.close();server.close();}
+})().catch(e=>{console.error(e);process.exitCode=1;});
