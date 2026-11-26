@@ -67,6 +67,7 @@ body.land #bC{left:auto;right:calc(2% + 104px);bottom:auto;top:3%}
 </div>
 <div id="io"><div id="ioInfo"></div><textarea id="ioText" spellcheck="false"></textarea><button id="ioCopy">コピーする</button><button id="ioLoad">読みこむ</button><button id="ioClose">とじる</button></div>
 <script src="emerald-core.js"></script>
+<script src="audio-engine.js"></script>
 <script>
 /* ソラネ地方の人物2000・道具200（tools/parse_sorane.py → gen_sorane.py）。絵は chr/C0001.webp など */
 const PEOPLE_KEY=[["綴森 ハクノ","アニマ博士"],["晴路 ソウ","主人公・男"],["晴路 アオ","主人公・女"],["飛鳥 リオト","幼なじみのライバル"],["名取 コトネア","研究を志すライバル"],["遠野 ナギル","旅慣れたライバル"],["紙野 メモリ","博士の調査助手"],["織部 イトミ","仕立て工房の案内人"],["道具屋 ツクル","道具開発の相棒"],["芽久保 イトハ","ジムリーダー"],["百瀬 ハルク","ジムリーダー"],["露原 ネイロ","ジムリーダー"],["琥野 セキト","ジムリーダー"],["虹井 マユカ","ジムリーダー"],["風巻 ソウリ","ジムリーダー"],["雨宮 ネムジ","ジムリーダー"],["白部 リツカ","ジムリーダー"],["夢代 トワリ","ジムリーダー"],["暁野 ガレン","ジムリーダー"],["汐瀬 ミオリ","ジムリーダー"],["渦井 クラウ","ジムリーダー"],["珊瑚田 ニイナ","ジムリーダー"],["音見 タクト","ジムリーダー"],["滴森 コノエ","ジムリーダー"],["蛍野 アキセ","ジムリーダー"],["月城 シュウガ","ジムリーダー"],["村雨 リキョウ","ジムリーダー"],["凪野 ツバト","ジムリーダー"],["真珠野 オリエ","ジムリーダー"],["火輪 センジ","ジムリーダー"],["大金 レント","ジムリーダー"],["砂上 ヒナギ","ジムリーダー"],["黒良 ゴウト","ジムリーダー"],["稲妻 チヨリ","ジムリーダー"],["岩戸 アラム","ジムリーダー"],["竜石 サライ","ジムリーダー"],["湯森 ユキト","ジムリーダー"],["赤錆 カナメ","ジムリーダー"],["天露 フユラ","ジムリーダー"],["星辺 ユラノ","ジムリーダー"],["雪渡 トキエ","ジムリーダー"],["森林 イツキナ","ジムリーダー"],["影笠 ミツユ","ジムリーダー"],["眠里 ウズネ","ジムリーダー"],["羽雪 ライハ","ジムリーダー"],["白銀 トウマル","ジムリーダー"],["花間 エリネ","ジムリーダー"],["鹿角 ミノルカ","ジムリーダー"],["夢織 セラト","ジムリーダー"],["空橋 リンセ","ジムリーダー"],["白爪 ガクヤ","ジムリーダー"],["影坊 ナツメル","ジムリーダー"],["月読 オトセ","ジムリーダー"],["岩根 ジュエン","ジムリーダー"],["菖蒲 カイリネ","ジムリーダー"],["虫音 シキノ","ジムリーダー"],["火山場 ロクア","ジムリーダー"],["依代 ミクリ","ジムリーダー"],["天界 セイラオ","ジムリーダー"],["大地堂 ガクエン","四天王・地脈"],["海原 ミナサ","四天王・潮流"],["天鳥 ライゼン","四天王・天候"],["記原 シオネ","四天王・記憶"],["巡野 アステル","チャンピオン"],["無地野 レムナ","静環団の代表"],["時雨 ユノカ","静環団・観測幹部"],["鉄見 ガドル","静環団・構造幹部"],["眠野 モイラ","静環団・記録幹部"],["路白 シノク","静環団の元調査員"],["晴路 アサヨ","主人公の家族・保護者"],["晴路 ユウジン","主人公の家族・地図職人"],["飛鳥 トメオ","幼なじみの祖父"],["芽吹 ミイナ","主人公の妹分"],["白井 セネル","巡環診療所の主任"],["高森 バルク","広域レンジャー隊長"],["波間 シエナ","海底探査船の船長"],["風読 コウリ","飛行船の機関士"],["石守 ラング","地底案内人"],["星詠 ツズリ","天文台の館長"],["月舟 ノクタ","月影の海の語り部"],["朝凪 ヒオリ","夜明けの観測者"],["根守 ヴィオ","原初の谷の世話人"],["繭崎 イロア","虹膜洞窟の研究員"],["土還 キノア","古い森の土壌学者"],["夢津 ルミエ","夢の海の案内役"],["銀記 オルノ","記憶回廊の司書"],["分岐 サトリ","境界に現れる旅人"],["円庭 マキオ","リーグ委員長"],["写野 フレア","旅の写真記者"],["継橋 ハルマ","復旧工事のまとめ役"],["宿里 ユリエ","巡回宿の女将"],["古市 レキオ","移動古道具屋"],["音海 リセト","合奏祭の進行役"],["手島 ユノル","静環団の新人"],["星環 モナカ","巡環図鑑の編集者"],["風港 エルド","遠方から来た交換使節"],["小径 チカル","迷子の道案内人"],["輪木 サナラ","五圏連絡所の調整役"],["古灯 クニル","旧巡回路の灯守"],["道守 シキエ","世界巡回のベテラン"]];
@@ -2174,7 +2175,16 @@ function sfx(n){
     if(d[4])o.frequency.linearRampToValueAtTime(Math.max(40,d[0]+d[4]),t+d[1]);
     g.gain.setValueAtTime(d[3],t);g.gain.linearRampToValueAtTime(0,t+d[1]);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d[1]+0.02);}catch(e){}
 }
-function initAudio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;}}
+let MUSIC=null;
+function initAudio(){try{if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();MUSIC=SoraneAudio.create(AC);}if(AC.state!=='running')AC.resume().catch(()=>{});}catch(e){AC=null;MUSIC=null;}}
+function currentCue(){
+  if(G.scene==='title')return'title';
+  if(G.scene==='battle'&&BT){if(BT.result==='win'||BT.result==='caught')return'victory';if(BT.o.legend||BT.o.facility||BT.env.kind==='dojo'||BT.env.kind==='league')return'boss';return BT.wild?'wild':'trainer';}
+  const m=G.map;if(!m)return'title';if(m.indoor)return'indoor';if(m.pal==='cave')return'cave';if(G.pl.surf||m.cell&&m.cell.kind==='sea')return'sea';return m.cell&&m.cell.kind==='town'?'town':'road';
+}
+function audioTick(){if(MUSIC&&AC){const o=S&&S.opts||{};try{MUSIC.tick(currentCue(),Number.isFinite(o.musicVol)?o.musicVol/100:0.4,o.music!==0&&!document.hidden);}catch(e){MUSIC.stop();MUSIC=null;console.warn('music',e);}}}
+function fieldWeather(m){return m?SoraneAudio.naturalWeather(m,hashStr('climate:'+m.id)):null;}
+function reducedFx(){return !!(S&&S.opts&&S.opts.reduceFx)||typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;}
 
 /* ---------- 描画の基本 ---------- */
 function setFont(px,bold){ctx.font=(bold===false?'':'bold ')+px+'px '+FONT;}
@@ -2385,7 +2395,7 @@ function resize(){
 
 /* ---------- メインループ ---------- */
 function step(){
-  G.t++;inputTick();fxTick();if((G.t&31)===0)syncBikeBtn();
+  G.t++;inputTick();fxTick();if((G.t&3)===0)audioTick();if((G.t&31)===0)syncBikeBtn();
   for(let i=timers.length-1;i>=0;i--){const t=timers[i];if(t.step)t.step();if(--t.n<=0){timers.splice(i,1);t.res();}}
   const top=UI[UI.length-1];
   if(top){let k;while((k=pressQ.shift())){const w=UI[UI.length-1];if(w&&w.key)w.key(k);}const w2=UI[UI.length-1];if(w2&&w2.update)w2.update();}
@@ -3537,8 +3547,8 @@ function bolt(x0,y0,x1,y1,col,w,life){
   FX.lines.push({k:'bolt',pts,col,w:w||2,life:life||7,max:life||7});
 }
 function beam(x0,y0,x1,y1,col,w,life){FX.lines.push({k:'beam',x0,y0,x1,y1,col,w,life,max:life});}
-const shakeFx=n=>{FX.shake=Math.max(FX.shake,n);};
-const flashFx=(col,a)=>{FX.flash={col,a};};
+const shakeFx=n=>{if(!reducedFx())FX.shake=Math.max(FX.shake,n);};
+const flashFx=(col,a)=>{FX.flash={col,a:reducedFx()?Math.min(0.12,a):a};};
 function fxTick(){
   const ps=FX.parts;
   for(let i=ps.length-1;i>=0;i--){
@@ -4162,7 +4172,7 @@ async function applyEffects(B,sd,mv,isStatus,selfOnly){
       const ts=bstg(B,1-sd),tm=bmon(B,1-sd);if(selfOnly||tm.hp<=0)continue;
       if(ts.seed||SP[tm.sp].types.indexOf(4)>=0)await say('しかし こうかが なかった！');else{ts.seed=true;await say(bname(B,1-sd)+'に タネを うえつけた！');}
     }else if(e.k==='wx'){
-      if(B.weather===e.w)await say('しかし 天気は 変わらなかった！');else{B.weather=e.w;B.wT=5;flashFx(e.w==='sun'?'255,210,90':e.w==='rain'?'90,130,220':e.w==='sand'?'220,180,110':'220,240,255',0.4);await say(WX_ON[e.w]);}
+      if(B.weather===e.w)await say('しかし 天気は 変わらなかった！');else{B.weather=e.w;B.naturalWX=false;B.wT=5;flashFx(e.w==='sun'?'255,210,90':e.w==='rain'?'90,130,220':e.w==='sand'?'220,180,110':'220,240,255',0.4);await say(WX_ON[e.w]);}
     }else if(e.k==='wall'){
       if(B.wall[sd][e.c]>0)await say('しかし すでに 壁が ある！');else{B.wall[sd][e.c]=5;const T=fxPos(sd);ring(T.x,T.y,e.c?'200,160,255':'255,220,140',{dr:3,w:3,life:22,max:22});await say((sd?'相手':'味方')+'は '+(e.c?'特殊':'物理')+'に 強い 光の壁に つつまれた！');}
     }else if(e.k==='haze'){
@@ -4403,7 +4413,7 @@ async function endTurn(B){
     if(ab===7&&st.spe<6){st.spe++;await say(n+'は 「追い風」で すばやさが 上がった！');}
     if(ab===13&&m.st&&ri(3)===0){m.st=null;await say(n+'は 「みそぎ」で 状態異常が 治った！');}
   }
-  if(B.weather&&--B.wT<=0){await say(WX_OFF[B.weather]);B.weather=null;}
+  if(B.weather&&!B.naturalWX&&--B.wT<=0){await say(WX_OFF[B.weather]);B.weather=null;}
   for(const s of [0,1])for(const c of [0,1])if(B.wall[s][c]>0&&--B.wall[s][c]===0)await say((s?'相手':'味方')+'の '+(c?'特殊':'物理')+'の 壁が 消えた！');
   await handleFaints(B);
 }
@@ -4482,11 +4492,12 @@ async function battle(o){
   const B={o,wild:!!o.wild,foes:o.wild?[o.wild]:o.trainer.team,fi:0,pi:S.party.findIndex(m=>m.hp>0),ps:newStg(),fs:newStg(),runTry:0,
     parts:new Set(),result:null,line:'',env:battleEnv(o),hpShow:[0,0],foeDown:false,weather:null,wT:0,wall:[[0,0],[0,0]],coins:0,
     fx:{foeX:120,meX:-120,foeA:1,meA:1,foeY:0,meY:0,foeHide:0,meHide:0,seal:null,glow:0,pulse:0,trX:null,plX:null}};
+  B.weather=o.facility?null:fieldWeather(G.map);B.naturalWX=!!B.weather;
   for(const k in S.bag)if(ITEMS[k]&&ITEMS[k].k==='seal')itemPic(ITEMS[k].img);
   for(const m of S.party){monPreload(m.sp);monPreload(SP[m.sp].next);}for(const m of B.foes)monPreload(m.sp);      // 原画を 先に読んでおく
   B.parts.add(B.pi);B.hpShow=[bmon(B,0).hp,bmon(B,1).hp];fxClear();
   sfx('alert');
-  for(let i=0;i<3;i++){await fadeTo(0.7,70);await fadeTo(0,70);}
+  if(!reducedFx())for(let i=0;i<3;i++){await fadeTo(0.7,70);await fadeTo(0,70);}
   await fadeTo(1,160);
   BT=B;G.scene='battle';markSeen(bmon(B,1).sp);
   // 原作と同じ流れ：主人公の後ろ姿と相手（野生のアニマ／トレーナー）が登場 → アニマをくりだす
@@ -4506,6 +4517,7 @@ async function battle(o){
   await tween(260,p=>{fx.meX=-120*(1-p);});ring(66,132,'255,255,255',{flat:0.3,dr:2.6,w:2});if(bmon(B,0).shiny)sparkleFx(66,104,18);
   await s2;
   await entryAbility(B,1);await entryAbility(B,0);
+  if(B.naturalWX)await say('この 地域では '+WX_JP[B.weather]+'が 戦いに 影響する！');
   while(!B.result){
     const act=await chooseAction(B);B.line='';
     const me=bmon(B,0);
@@ -4621,7 +4633,7 @@ function drawBattlePix(){
 }
 function drawBattleUI(){
   const B=BT;if(!B)return;const f=B.fx.trX!=null?null:B.foes[B.fi],me=B.fx.plX!=null?null:S.party[B.pi];
-  if(B.weather){ctx.fillStyle='rgba(20,16,32,0.62)';ctx.fillRect(128,8,66,12);const wi=drawUIcon(ctx,UICON[B.weather],129,7.6,12.5);tx(WX_JP[B.weather]+'　のこり'+B.wT,wi?167:161,9.6,'#fff',8,'center');}
+  if(B.weather){ctx.fillStyle='rgba(20,16,32,0.62)';ctx.fillRect(128,8,66,12);const wi=drawUIcon(ctx,UICON[B.weather],129,7.6,12.5);tx(WX_JP[B.weather]+(B.naturalWX?'　地形':'　のこり'+B.wT),wi?167:161,9.6,'#fff',8,'center');}
   if(f){
     win(6,8,118,46);tx(SP[f.sp].name+(f.shiny?'✦':''),12,13,'#2a2233',10);tx('Lv'+f.lv,118,13,'#2a2233',9,'right');
     SP[f.sp].types.forEach((t,j)=>typeTag(t,12+j*16,37));
@@ -5087,9 +5099,9 @@ async function optionsMenu(){
   let idx=0;
   for(;;){
     const o=S.opts,on=v=>v!==0;
-    const c=await menu([{label:'おと',right:o.snd?'あり':'なし'},{label:'文字の速さ',right:o.fast?'はやい':'ふつう'},{label:'連れ歩き',right:on(o.follow)?'あり':'なし'},
+    const c=await menu([{label:'効果音',right:o.snd?'あり':'なし'},{label:'文字の速さ',right:o.fast?'はやい':'ふつう'},{label:'連れ歩き',right:on(o.follow)?'あり':'なし'},
       {label:'けいけんち',right:on(o.share)?'みんなに分ける':'戦った子だけ'},{label:'昼と夜',right:on(o.dn)?'時計にあわせる':'いつも昼'},{label:'オートセーブ',right:on(o.auto)?'あり':'なし'},
-      {label:'セーブを 書き出す'},{label:'セーブを 読みこむ'},{label:'もどる'}],{x:20,y:20,w:200,title:'せってい',idx});
+      {label:'セーブを 書き出す'},{label:'セーブを 読みこむ'},{label:'BGM',right:on(o.music)?'あり':'なし'},{label:'BGM音量',right:(o.musicVol??40)+'%'},{label:'演出',right:reducedFx()?'ひかえめ':'ふつう'},{label:'もどる'}],{x:20,y:4,w:200,title:'せってい',idx,rows:11});
     idx=Math.max(0,c);
     if(c===0){o.snd=o.snd?0:1;SND=!!o.snd;}
     else if(c===1)o.fast=o.fast?0:1;
@@ -5099,6 +5111,9 @@ async function optionsMenu(){
     else if(c===5)o.auto=on(o.auto)?0:1;
     else if(c===6){saveGame();await ioPanel('export');}
     else if(c===7){const d=await ioPanel('import');if(d&&await confirmYN('いまの 記録を 読みこんだ 記録に 置きかえますか？')){if(!persistGameSave(d)){await msg('保存できませんでした。空き容量を たしかめてください。');continue;}S=d;await msg('セーブを 読みこんだ！');startFromSave();return'close';}}
+    else if(c===8)o.music=on(o.music)?0:1;
+    else if(c===9){const i=await menu(['20%','40%','60%','80%','100%'],{x:55,y:44,w:130,title:'BGM音量'});if(i>=0)o.musicVol=(i+1)*20;}
+    else if(c===10)o.reduceFx=o.reduceFx?0:1;
     else return;
   }
 }
@@ -5760,11 +5775,11 @@ function peopleList(ids,title){
 const SAVE_KEY='sorane_save_v1',RIVAL='リオト';
 const BACKUP_KEY=SAVE_KEY+'_backup_v1';
 const fillName=s=>s.replace(/\{n\}/g,S.name);
-function newSave(name){return{v:4,pc:2,met:{},rot:{},rec:{},wear:{},own:{},name,map:'',x:0,y:0,dir:2,surf:false,party:[],box:[],bag:{},money:3000,badges:{},flags:{},seen:{},caught:{},heal:null,visited:{},steps:0,repel:0,time:0,opts:{snd:1,fast:0,follow:1,share:1,dn:1,auto:1},starter:0,rival:0,bikeOn:0};}
+function newSave(name){return{v:4,pc:2,met:{},rot:{},rec:{},wear:{},own:{},name,map:'',x:0,y:0,dir:2,surf:false,party:[],box:[],bag:{},money:3000,badges:{},flags:{},seen:{},caught:{},heal:null,visited:{},steps:0,repel:0,time:0,opts:{snd:1,fast:0,follow:1,share:1,dn:1,auto:1,music:1,musicVol:40,reduceFx:0},starter:0,rival:0,bikeOn:0};}
 function saveGame(){if(!S||!G.map||facilityActive)return false;const p=G.pl;S.map=G.map.id;S.x=p.x;S.y=p.y;S.dir=p.dir;S.surf=p.surf;S.fly=p.fly?1:0;return persistGameSave(S);}
 function loadSave(){for(const k of [SAVE_KEY,BACKUP_KEY]){try{const d=JSON.parse(localStorage.getItem(k));if(isValidGameSave(d))return d;}catch(e){}}return null;}
 function startFromSave(){   // 古いきろくにも 新しい項目を おぎなう
-  S.opts=Object.assign({snd:1,fast:0,follow:1,share:1,dn:1,auto:1},S.opts||{});if(!S.pc)S.pc=2;S.met=S.met||{};S.rot=S.rot||{};S.rec=S.rec||{};S.wear=S.wear||{};S.own=S.own||{};
+  S.opts=Object.assign({snd:1,fast:0,follow:1,share:1,dn:1,auto:1,music:S.opts&&S.opts.snd===0?0:1,musicVol:40,reduceFx:0},S.opts||{});if(!S.pc)S.pc=2;S.met=S.met||{};S.rot=S.rot||{};S.rec=S.rec||{};S.wear=S.wear||{};S.own=S.own||{};
   if(S.badges&&S.badges[1]&&!S.bag.k_bike)S.bag.k_bike=1;
   S.party=S.party.filter(m=>SP[m.sp]);S.box=(S.box||[]).filter(m=>SP[m.sp]);HitokariUpgrade.progress(S);const nursery=nurseryFor();for(const m of S.party.concat(S.box,nursery.parents.map(p=>p.mon),nursery.egg?[nursery.egg.mon]:[]))HitokariUpgrade.bond(m);S.v=4;
   charInvalidate();SND=!!S.opts.snd;UI.length=0;G.scene='world';loadMap(S.map,S.x,S.y,S.dir);G.pl.surf=!!S.surf;if(S.fly&&S.bag.k_fly&&!noFlyMap(G.map)){G.pl.fly=true;G.pl.alt=1;G.pl.surf=false;}G.fade=0;syncBikeBtn();}
@@ -6062,7 +6077,14 @@ function drawWorldPix(){
     if(!drawMount(g,'fly',p.dir,x+8,y+5-h))drawChar(g,'pl',p.dir,0,x,y-6-h);
     if(a>0.9&&!p.moving&&landable(p.x,p.y)){const k=0.5+0.5*Math.sin(G.t/7);g.strokeStyle='rgba(255,255,255,'+(0.45+0.35*k)+')';g.lineWidth=0.8;g.beginPath();g.ellipse(x+8,y+13,6+k*1.5,2.4+k*0.6,0,0,6.3);g.stroke();}      // 降りられる しるし
   }
-  drawAmbient(g,m,camx,camy);drawDayNight(g,m,camx,camy);
+  drawAmbient(g,m,camx,camy);drawDayNight(g,m,camx,camy);drawFieldClimate(g,m);
+}
+function drawFieldClimate(g,m){
+  const w=fieldWeather(m);if(!w)return;
+  if(w==='rain'){g.fillStyle='rgba(50,75,115,.09)';g.fillRect(0,0,LW,LH);if(!reducedFx()){g.strokeStyle='rgba(205,226,255,.48)';g.lineWidth=.55;g.beginPath();for(let i=0;i<26;i++){const x=(i*53+G.t*3)%(LW+40)-20,y=(i*97+G.t*6)%(LH+20)-10;g.moveTo(x,y);g.lineTo(x-3,y+8);}g.stroke();}}
+  else if(w==='sand'){g.fillStyle='rgba(220,178,105,.12)';g.fillRect(0,0,LW,LH);}
+  else if(w==='hail'){g.fillStyle='rgba(198,220,245,.075)';g.fillRect(0,0,LW,LH);}
+  else if(w==='sun'){g.fillStyle='rgba(246,185,86,.09)';g.fillRect(0,0,LW,LH);}
 }
 function drawWorldUI(){
   const m=G.map;if(!m)return;
@@ -6075,6 +6097,7 @@ function drawWorldUI(){
     ctx.fillStyle='rgba(20,16,32,0.6)';ctx.beginPath();ctx.ellipse(x,y+r*0.78,r,r,0,0,6.3);ctx.fill();
     tx(BLD_MARK[b.kind],x,y+(fs<12?0.6:0),'#fff',fs,'center');
   }
+  const w=fieldWeather(m);if(w&&!UI.length){ctx.fillStyle='rgba(20,28,48,.65)';ctx.fillRect(173,5,63,16);tx(WX_JP[w],229,9,'#fff',8,'right');drawUIcon(ctx,UICON[w],175,6,12);}
   if(G.banner&&G.banner.t>0&&!UI.length){
     const a=Math.min(1,G.banner.t/20);ctx.globalAlpha=a;
     setFont(10);const w=Math.max(70,ctx.measureText(G.banner.text).width+20);
