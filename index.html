@@ -89,9 +89,9 @@ const BOOK_LEG=[[1201,"星明かりだけが届く空の裂け目","星々が進
 
 'use strict';
 /* ================= core.js : 乱数・タイプ・技・特性・道具 ================= */
-const VERSION='1.0';
+const VERSION='1.1';
 const SHINY_RATE=8192;           // 色違いの確率 1/8192（原作準拠）
-const PARTY_MAX=4;               // 手持ちは4匹まで
+const PARTY_MAX=6;               // 手持ちは6匹まで
 
 function hashStr(s){let h=2166136261>>>0;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 function RNG(seed){
@@ -996,7 +996,7 @@ function wildPick(cell,kind,bonus){
   const list=kind==='water'?cell.water:cell.land;if(!list||!list.length)return null;
   let fam;
   if(kind!=='water'&&cell.rare!=null&&ri(50)===0)fam=FAMS[cell.rare];
-  else{const ws=list.map((_,i)=>ENC_W[i]||2);let s=0;for(const w of ws)s+=w;let x=Math.random()*s,i=0;for(;i<ws.length-1;i++){x-=ws[i];if(x<0)break;}fam=FAMS[list[i]];}
+  else{const ws=encounterWeights(list,dayPhase());let s=0;for(const w of ws)s+=w;let x=Math.random()*s,i=0;for(;i<ws.length-1;i++){x-=ws[i];if(x<0)break;}fam=FAMS[list[i]];}
   const lv=clamp(cell.lv+(bonus||0)+rr(-1,1),2,90);
   return{sp:formAt(fam,lv,Math.random),lv};
 }
@@ -1043,7 +1043,7 @@ function genTrainer(r,cell,tid,o){
     money:lv*r.range(20,36),los:o.los||3,x:0,y:0,dir:2};
 }
 function gymTeam(k){
-  const t=GYM_TYPES[k],ace=gymAce(k),n=ace<16?2:ace<34?3:4,r=RNG('gym'+k);
+  const t=GYM_TYPES[k],ace=gymAce(k),n=ace<16?2:ace<34?3:ace<50?4:5,r=RNG('gym'+k);
   let cand=FAMS.filter(f=>!f.legend&&!f.starter&&(f.t1===t||(f.t2===t&&f.t2From===0)));
   r.shuffle(cand);cand.sort((a,b)=>(b.book?9:b.n)-(a.book?9:a.n));cand=cand.slice(0,Math.max(n,5));r.shuffle(cand);
   const team=[];for(let i=0;i<n;i++){const l=ace-(n-1-i);team.push({sp:formAt(cand[i%cand.length],l),lv:l});}
@@ -1053,12 +1053,12 @@ const ELITE=[[60,[8,12],62],[61,[2,5],63],[62,[3,9],64],[63,[10,16],65]];      /
 function eliteTeam(i){
   const e=ELITE[i],r=RNG('elite'+i);
   let cand=FAMS.filter(f=>!f.legend&&!f.starter&&(f.n>=4||f.book>0)&&(e[1].indexOf(f.t1)>=0||e[1].indexOf(f.t2)>=0));r.shuffle(cand);
-  const team=[];for(let j=0;j<4;j++){const l=e[2]-(3-j);team.push({sp:formAt(cand[j%cand.length],l),lv:l});}
+  const team=[];for(let j=0;j<5;j++){const l=e[2]-(4-j);team.push({sp:formAt(cand[j%cand.length],l),lv:l});}
   return team;
 }
 function champTeam(){
   const r=RNG('champ');const cand=FAMS.filter(f=>!f.legend&&!f.starter&&f.n===3).sort((a,b)=>b.bstN-a.bstN).slice(0,40);r.shuffle(cand);
-  const seen=[],team=[];for(const f of cand){if(seen.indexOf(f.t1)>=0)continue;seen.push(f.t1);team.push({sp:formAt(f,99),lv:66+team.length});if(team.length===4)break;}
+  const seen=[],team=[];for(const f of cand){if(seen.indexOf(f.t1)>=0)continue;seen.push(f.t1);team.push({sp:formAt(f,99),lv:66+team.length});if(team.length===6)break;}
   return team;
 }
 const CAPS_T=['I0052','I0053','I0054','I0055','I0056','I0057','I0058','I0059','I0060','I0061','I0062','I0063','I0064','I0065','I0066','I0067','I0068','I0070','I0072','I0073','I0074'];
@@ -4086,7 +4086,7 @@ function effStat(B,s,i){
   if(i===5&&m.st==='par')v=Math.floor(v/4);
   return Math.max(1,v);
 }
-function calcDamage(B,s,mv,crit,eff){
+function calcDamage(B,s,mv,crit,eff,roll=85+ri(16)){
   const a=bmon(B,s),d=bmon(B,1-s),asp=SP[a.sp];
   const A=mv.phys?effStat(B,s,1):effStat(B,s,3),D=mv.phys?effStat(B,1-s,2):effStat(B,1-s,4);
   let pw=mv.pow;if(mv.has('pinch')&&a.hp*3<=maxHP(a))pw*=2;if(mv.has('hex')&&d.st)pw*=2;
@@ -4101,7 +4101,7 @@ function calcDamage(B,s,mv,crit,eff){
     if(abilOf(d)===8&&(mv.type===1||mv.type===5))dmg=Math.floor(dmg/2);
   }
   {const h=heldOf(a);if(h.t===mv.type)dmg=Math.floor(dmg*1.15);if(h.all)dmg=Math.floor(dmg*h.all);}      // 持たせた道具
-  return Math.max(1,Math.floor(dmg*(85+ri(16))/100));
+  return Math.max(1,Math.floor(dmg*roll/100));
 }
 async function hpAnim(B,s){const from=B.hpShow[s],to=bmon(B,s).hp;if(from===to)return;await tween(Math.min(600,160+Math.abs(from-to)*12),p=>{B.hpShow[s]=from+(to-from)*p;});B.hpShow[s]=to;}
 async function hitAnim(B,s,eff){
@@ -4255,31 +4255,59 @@ async function useMove(B,sd,idx){
   if(mv.has('boom')&&u.hp>0){u.hp=0;await hpAnim(B,sd);await say(un+'は 力を 使いはたした！');}
   if(t.hp>0&&u.hp>0&&mv.phys&&ri(10)<3){if(ab===3)await inflict(B,sd,'par');else if(ab===4)await inflict(B,sd,'psn');else if(ab===5)await inflict(B,sd,'brn');}
 }
+// Predict damage without consuming combat RNG.
+function aiDamageForecast(B,mv){
+  const f=bmon(B,1),me=bmon(B,0),ab=abilOf(me);
+  if(!mv.pow)return 0;
+  let eff=mv.type>=0?typeEff(mv.type,SP[me.sp].types):1;
+  if((mv.type===8&&ab===2)||(mv.type===2&&ab===9)||(mv.type===3&&ab===10)||(mv.type===1&&ab===11))eff=0;
+  if(!eff)return 0;
+  const fixed=mv.eff.find(e=>e.k==='fixed');
+  let d=fixed?fixed.n:mv.has('level')?f.lv:mv.has('halve')?Math.max(1,Math.floor(me.hp/2)):calcDamage(B,1,mv,false,eff,93);
+  if(mv.has('multi'))d*=19/6;if(mv.has('twice'))d*=2;
+  return d;
+}
 function aiPick(B){
   const f=bmon(B,1),me=bmon(B,0),list=[];
   f.mv.forEach((v,i)=>{if(v.pp>0)list.push(i);});
   if(!list.length)return -1;
   if(B.wild&&!B.o.smart)return pick(list);
-  let best=list[0],bs=-1;
+  let best=list[0],bs=-Infinity;
+  const myFrac=f.hp/maxHP(f),enemyFrac=me.hp/maxHP(me);
   for(const i of list){
-    const m=MOVES[f.mv[i].id];let sc;
+    const m=MOVES[f.mv[i].id];let sc=0;
+    const hit=m.acc>0?clamp(m.acc*accMul(B.fs.acc-B.ps.eva)*(abilOf(f)===14?1.2:1)/100,0,1):1;
     if(m.pow>0){
-      let eff=typeEff(m.type,SP[me.sp].types);if(m.type===8&&abilOf(me)===2)eff=0;
-      let pw=m.pow;if(pw===1)pw=m.has('halve')?(me.hp*2>maxHP(me)?70:25):m.has('level')?f.lv*1.1:45;
-      if(m.has('multi'))pw*=3;if(m.has('twice'))pw*=2;if(m.has('rech'))pw*=0.62;if(m.has('boom'))pw*=f.hp*3<maxHP(f)?0.8:0.03;if(m.has('pinch')&&f.hp*3<=maxHP(f))pw*=2;if(m.has('hex')&&me.st)pw*=2;
-      sc=pw*eff*(SP[f.sp].types.indexOf(m.type)>=0?1.5:1)*(m.acc||100)/100*(m.phys?effStat(B,1,1):effStat(B,1,3))/100;
-    }else{
-      sc=22;const e=m.eff[0];
-      if(e){
-        if(e.k==='st'&&e.st!=='cnf'&&me.st)sc=0;
-        if(e.k==='st'&&e.st==='cnf'&&B.ps.conf)sc=0;
-        if(e.k==='stage'){const s=e.who==='self'?B.fs:B.ps;if(Math.abs(s[e.stat])>=2)sc=2;}
-        if(e.k==='heal')sc=f.hp<maxHP(f)/2?80:0;
-        if(e.k==='protect')sc=9;if(e.k==='seed')sc=B.ps.seed||SP[me.sp].types.indexOf(4)>=0?0:34;if(e.k==='wx')sc=B.weather===e.w?0:16;if(e.k==='wall')sc=B.wall[1][e.c]>0?0:24;if(e.k==='haze')sc=4;
-        if(e.k==='belly')sc=f.hp*2>maxHP(f)&&B.fs.atk<3?26:0;if(e.k==='cure')sc=f.st?60:0;if(e.k==='rest')sc=f.hp*5<maxHP(f)*2?70:0;if(e.k==='split')sc=f.hp*2<me.hp?55:0;if(e.k==='focus')sc=B.fs.focus?0:14;
+      const dmg=aiDamageForecast(B,m);
+      if(dmg<=0)sc=-100;else{
+        sc=100*Math.min(dmg,me.hp)/maxHP(me)*hit;
+        if(dmg>=me.hp)sc+=42*hit+(m.prio>0?12:0);
+        if(m.has('rech'))sc*=dmg>=me.hp?1:0.62;
+        if(m.has('boom'))sc*=myFrac<0.3?0.85:0.08;
+        if(m.has('drain')&&myFrac<0.6)sc+=8;
+        if(m.has('recoil')&&myFrac<0.25&&dmg<me.hp)sc*=0.55;
       }
+    }else{
+      const e=m.eff[0];sc=8;
+      if(e){
+        if(e.k==='st')sc=e.st==='cnf'?(B.ps.conf?0:19):me.st?0:enemyFrac>0.45?24:8;
+        if(e.k==='stage'){const st=e.who==='self'?B.fs:B.ps;sc=Math.abs(st[e.stat]||0)>=3?0:enemyFrac>0.3?21:7;}
+        if(e.k==='heal')sc=myFrac<0.4?66:myFrac<0.65?27:0;
+        if(e.k==='protect')sc=B.fs.protN?0:4;
+        if(e.k==='seed')sc=B.ps.seed||SP[me.sp].types.includes(4)?0:enemyFrac>0.5?29:9;
+        if(e.k==='wx')sc=B.weather===e.w?0:15;
+        if(e.k==='wall')sc=B.wall[1][e.c]>0?0:22;
+        if(e.k==='haze')sc=4;
+        if(e.k==='belly')sc=myFrac>0.65&&B.fs.atk<3?25:0;
+        if(e.k==='cure')sc=f.st?55:0;
+        if(e.k==='rest')sc=myFrac<0.32?59:0;
+        if(e.k==='split')sc=f.hp*2<me.hp?48:0;
+        if(e.k==='focus')sc=B.fs.focus?0:16;
+      }
+      sc*=hit;
     }
-    sc*=0.8+Math.random()*0.4;if(sc>bs){bs=sc;best=i;}
+    sc+=Math.random()*2;
+    if(sc>bs){bs=sc;best=i;}
   }
   return best;
 }
@@ -4287,7 +4315,7 @@ async function entryAbility(B,s){
   if(abilOf(bmon(B,s))===1&&bmon(B,1-s).hp>0){await say(bname(B,s)+'の 「威圧」！');await boost(B,1-s,'atk',-1);}
 }
 async function sendFoe(B){
-  const f=bmon(B,1);B.fs=newStg();B.hpShow[1]=f.hp;B.fx.foeA=1;B.fx.foeY=0;B.fx.foeX=120;markSeen(f.sp);
+  const f=bmon(B,1);B.fs=newStg();B.hpShow[1]=f.hp;B.fx.foeA=1;B.fx.foeY=0;B.fx.foeX=120;if(!B.o.facility)markSeen(f.sp);
   await say(B.o.trainer.name+'は '+SP[f.sp].name+'を くりだした！');
   await tween(260,p=>{B.fx.foeX=120*(1-p);});
   ring(188,74,'255,255,255',{flat:0.3,dr:2.4,w:2});
@@ -4302,6 +4330,7 @@ async function sendMe(B,i){
   await entryAbility(B,0);
 }
 async function giveExp(B){
+  if(B.o.facility)return;
   const foe=bmon(B,1),sp=SP[foe.sp];
   const ps=[...B.parts].filter(i=>S.party[i]&&S.party[i].hp>0);
   // 戦いに出なかった手持ちにも 半分ずつ 入る（せっていで 切りかえ）
@@ -4443,6 +4472,7 @@ async function chooseAction(B){
         if(m.pow>0)tx(m.cat?'とくこう→とくぼう':'こうげき→ぼうぎょ',LW-8,LH-MSG_H-14,'#8a8690',7,'right');}});
       if(i>=0){B.lastMove=i;return{t:'move',i};}
     }else if(c===1){
+      if(B.o.facility){await say('試練では バッグの 道具を 使えない。');continue;}
       const r=await bagScreen({battle:B});
       if(r)return r;
     }else if(c===2){
@@ -4455,6 +4485,7 @@ async function chooseAction(B){
   }
 }
 async function battle(o){
+  if(!S.party.some(m=>m.hp>0))return 'lose';
   const spk=SPEAKER;SPEAKER=0;
   const B={o,wild:!!o.wild,foes:o.wild?[o.wild]:o.trainer.team,fi:0,pi:S.party.findIndex(m=>m.hp>0),ps:newStg(),fs:newStg(),runTry:0,
     parts:new Set(),result:null,line:'',env:battleEnv(o),hpShow:[0,0],foeDown:false,weather:null,wT:0,wall:[[0,0],[0,0]],coins:0,
@@ -4465,7 +4496,7 @@ async function battle(o){
   sfx('alert');
   for(let i=0;i<3;i++){await fadeTo(0.7,70);await fadeTo(0,70);}
   await fadeTo(1,160);
-  BT=B;G.scene='battle';markSeen(bmon(B,1).sp);
+  BT=B;G.scene='battle';if(!o.facility)markSeen(bmon(B,1).sp);
   // 原作と同じ流れ：主人公の後ろ姿と相手（野生のアニマ／トレーナー）が登場 → アニマをくりだす
   const f0=bmon(B,1),fx=B.fx;
   fx.plX=-130;fx.meHide=1;if(!B.wild){fx.trX=130;fx.foeHide=1;}
@@ -4518,13 +4549,13 @@ async function battle(o){
     const tr=o.trainer;await sayW(tr.name+'との 勝負に 勝った！');
     if(tr.money){S.money+=tr.money;await sayW('賞金として '+tr.money+'ゴールドを 手に入れた！');}
   }
-  if(B.coins&&B.result!=='lose'){S.money+=B.coins;await sayW('ちらばった お金 '+B.coins+'ゴールドを ひろった！');}
+  if(B.coins&&B.result!=='lose'&&!o.facility){S.money+=B.coins;await sayW('ちらばった お金 '+B.coins+'ゴールドを ひろった！');}
   let caught=null;
   if(B.result==='caught')caught=bmon(B,1);
   await fadeTo(1,220);
   G.scene='world';BT=null;fxClear();
   if(caught)await addMon(caught,true);
-  if(B.result!=='lose')await checkEvolutions();
+  if(B.result!=='lose'&&!o.facility)await checkEvolutions();
   await fadeTo(0,220);
   SPEAKER=spk;
   return B.result;
@@ -4650,14 +4681,26 @@ function drawPartySlot(m,i,sel,note){
   SP[m.sp].types.forEach((t,j)=>typeTag(t,(fr?192:196)+j*16,y+(fr?23.5:24)));
   if(note)tx(note,46,fr?y+28.5:y+31,'#5a5560',fr?7:8);
 }
+// Four rows per 240x208 screen; page through all six members.
+function partyPage(idx){return Math.floor(idx/4)*4;}
+function drawPartyPage(idx,title,note){
+  const start=partyPage(idx);
+  screenBG(title);
+  tx((start/4+1)+'/'+Math.max(1,Math.ceil(S.party.length/4))+'　'+S.party.length+'/'+PARTY_MAX+'匹',LW-5,2,'#f6e8b8',9,'right');
+  S.party.slice(start,start+4).forEach((m,j)=>drawPartySlot(m,j,start+j===idx,note?note(m):null));
+  if(S.party.length>4)tx('← → ページ',LW-8,LH-9,'#f6e8b8',8,'right');
+}
 // 手持ちから1匹えらぶ。戻り値は番号（キャンセル -1）
 function partyPick(opt){
   opt=opt||{};
   return new Promise(res=>{
-    const w={i:opt.idx||0,
+    if(!S.party.length){res(-1);return;}
+    const w={i:clamp(opt.idx||0,0,S.party.length-1),
       key(k){
         const n=S.party.length;
         if(k==='up')this.i=(this.i+n-1)%n;else if(k==='down')this.i=(this.i+1)%n;
+        else if(k==='left'&&n>4)this.i=this.i>=4?this.i-4:Math.min(n-1,this.i+4);
+        else if(k==='right'&&n>4)this.i=this.i<4?Math.min(n-1,this.i+4):this.i-4;
         else if(k==='a'){
           const m=S.party[this.i];
           if(opt.battle&&(m.hp<=0||this.i===opt.battle.pi)){sfx('bump');return;}
@@ -4667,8 +4710,7 @@ function partyPick(opt){
         sfx('sel');
       },
       draw(){
-        screenBG(opt.title||(opt.force?'つぎの アニマを えらぼう':'アニマ'));
-        S.party.forEach((m,i)=>drawPartySlot(m,i,i===this.i,opt.note?opt.note(m):null));
+        drawPartyPage(this.i,opt.title||(opt.force?'つぎの アニマを えらぼう':'アニマ'),opt.note);
       }};
     UI.push(w);
   });
@@ -4714,7 +4756,7 @@ async function partyScreen(){
   let idx=0;
   for(;;){
     const i=await partyPick({idx});if(i<0)return;idx=i;
-    const bg=pushBG(()=>{screenBG('アニマ');S.party.forEach((m,j)=>drawPartySlot(m,j,j===i));});
+    const bg=pushBG(()=>drawPartyPage(i,'アニマ'));
     const hm=S.party[i],opts=['つよさを見る','ならびかえ'];if(hm.item)opts.push('持ち物を はずす');opts.push('もどる');
     const c0=await menu(opts,{x:LW-108,y:LH-76,w:104}),c=opts[c0]==='持ち物を はずす'?9:opts[c0]==='もどる'?-1:c0;
     popW(bg);
@@ -5037,7 +5079,7 @@ function ioPanel(mode){
     const close=v=>{el.style.display='none';res(v);};
     document.getElementById('ioClose').onclick=()=>close(null);
     document.getElementById('ioCopy').onclick=()=>{ta.select();try{navigator.clipboard.writeText(ta.value);}catch(e){try{document.execCommand('copy');}catch(_){}}info.textContent='コピーしました。';};
-    document.getElementById('ioLoad').onclick=()=>{try{const d=JSON.parse(decodeURIComponent(escape(atob(ta.value.trim()))));if(!d||!d.party||!d.map)throw 0;close(d);}catch(e){info.textContent='読みこめませんでした。文字が 欠けていないか たしかめてください。';}};
+    document.getElementById('ioLoad').onclick=()=>{try{const d=JSON.parse(decodeURIComponent(escape(atob(ta.value.trim()))));if(!validSave(d))throw 0;close(d);}catch(e){info.textContent='読みこめませんでした。文字が 欠けていないか たしかめてください。';}};
   });
 }
 async function optionsMenu(){
@@ -5055,7 +5097,7 @@ async function optionsMenu(){
     else if(c===4)o.dn=on(o.dn)?0:1;
     else if(c===5)o.auto=on(o.auto)?0:1;
     else if(c===6){saveGame();await ioPanel('export');}
-    else if(c===7){const d=await ioPanel('import');if(d){S=d;localStorage.setItem(SAVE_KEY,JSON.stringify(S));await msg('セーブを 読みこんだ！');startFromSave();return'close';}}
+    else if(c===7){const d=await ioPanel('import');if(d&&await confirmYN('いまの きろくを 入れかえますか？')){if(!storeSave(d)){await msg('保存できなかった。今の きろくは そのままだよ。');continue;}S=d;await msg('セーブを 読みこんだ！');startFromSave();return'close';}}
     else return;
   }
 }
@@ -5070,9 +5112,11 @@ async function openMenu(){
     if(hasItem('k_bike'))items.push([riding()?'自転車を おりる':'自転車に のる',async()=>{await toggleBike();return'close';}]);
     if(hasItem('k_fly'))items.push([G.pl.fly?'地上に おりる':'空を とぶ',async()=>{const r=await flyStart();return r?'close':null;}]);
     if(hasItem('k_map'))items.push(['地図',mapScreen]);
-    items.push(['相性表',typeChartScreen],['きせかえ',wearScreen],[S.name,cardScreen],['きろくする',async()=>{saveGame();sfx('get');await msg('ここまでの 旅を きろくした！');}],['せってい',optionsMenu],['とじる',null]);
+    if(S.flags.dex)items.push(['旅の手帳',journeyScreen]);
+    if(S.flags.champ)items.push(['巡環試練',facilityMenu]);
+    items.push(['相性表',typeChartScreen],['きせかえ',wearScreen],[S.name,cardScreen],['きろくする',async()=>{if(saveGame()){sfx('get');await msg('ここまでの 旅を きろくした！');}else await msg('きろくに 失敗した。せっていから セーブを 書き出してね。');}],['せってい',optionsMenu],['とじる',null]);
     const MIC={'巡環図鑑':30,'アニマ':31,'もちもの':32,'あずかり牧場':36,'地図':34,'相性表':35,'きせかえ':33,'きろくする':37,'せってい':38,'自転車に のる':39,'自転車を おりる':39};
-    const i=await menu(items.map(a=>({label:a[0],ic:MIC[a[0]]})),{x:LW-118,y:4,w:114,idx});
+    const i=await menu(items.map(a=>({label:a[0],ic:MIC[a[0]]})),{x:LW-118,y:4,w:114,idx,rows:12});
     if(i<0||!items[i][1])return;idx=i;
     const r=await items[i][1]();
     if(r==='close')return;
@@ -5377,7 +5421,7 @@ async function talk(o){
    case'guard':await gateTalk(o);break;
    case'trainer':{
      const grunt=o.grunt,nm=o.cls+'の '+o.name;
-     if(o.beaten){await msg('「'+lineOf(grunt?GR_POST:TR_POST,o)+'」');break;}
+     if(o.beaten){if(!grunt&&badgeCount()>=2)await rematchBattle('road:'+mid+':'+o.tid,nm,o.team,o.spr,o.money,200);else await msg('「'+lineOf(grunt?GR_POST:TR_POST,o)+'」');break;}
      await msg('「'+lineOf(grunt?GR_PRE:TR_PRE,o)+'」');
      const r=await battle({trainer:{name:nm,team:mkTeam(o.team,Math.min(28,6+Math.floor(o.team[0].lv/3))),money:o.money,spr:o.spr}});
      if(r==='lose'){await blackout();break;}
@@ -5481,7 +5525,7 @@ async function milestones(){      // バッジの数に応じて ツクルから
 }
 async function gymBattle(o){
   const k=o.gym,t=GYM_TYPES[k],L=gymLeader(k),g=pGiven(9+k),c=circOf(k);
-  if(S.badges[k]){await msg(g+'「きみなら きっと リーグまで たどりつける。相棒との 時間を 大切にね。」');return;}
+  if(S.badges[k]){if(badgeCount()>=10||S.flags.champ)await rematchBattle('gym:'+k,'ジムリーダーの '+L,gymTeam(k),pSpr(9+k),gymAce(k)*100,400);else await msg(g+'「きみなら きっと リーグまで たどりつける。相棒との 時間を 大切にね。」');return;}
   await msg(GYM_TOWN[k]+'ジム リーダー '+L+'\n'+g+'「'+(GYM_SAY[k]||GYM_SAY2[k%GYM_SAY2.length])+'」');
   const r=await battle({trainer:{name:'ジムリーダーの '+L,team:mkTeam(gymTeam(k),Math.min(31,14+Math.floor(k/3))),money:gymAce(k)*100,spr:pSpr(9+k)}});
   if(r==='lose'){await blackout();return;}
@@ -5656,7 +5700,7 @@ async function profTalk(){
 async function ending(){
   await msg('ここは 記録の間。\n'+S.name+'と アニマたちの 名が 巡環リーグに きざまれた！');
   const bg=pushBG(()=>{ctx.fillStyle='#141020';ctx.fillRect(0,0,LW,LH);tx('チャンピオン '+S.name,120,14,'#f6e8b8',14,'center');
-    S.party.forEach((m,i)=>{const x=24+i*52;drawMonUI(m.sp,m.shiny,x,50+Math.sin(G.t/14+i)*4,48);tx(monName(m),x+24,104,'#fff',8,'center');tx('Lv'+m.lv,x+24,116,'#c8c0d8',8,'center');});
+    S.party.forEach((m,i)=>{const x=40+(i%3)*80,y=25+Math.floor(i/3)*62;drawMonUI(m.sp,m.shiny,x-20,y+Math.sin(G.t/14+i)*2,40);tx(monName(m),x,y+41,'#fff',8,'center');tx('Lv'+m.lv,x,y+51,'#c8c0d8',8,'center');});
     win(0,LH-MSG_H,LW,MSG_H);});
   sfx('lvup');
   await msg('こうして '+S.name+'は ソラネ地方の 新たな チャンピオンと なった。');
@@ -5713,11 +5757,40 @@ function peopleList(ids,title){
 /* ================= game.js : フィールド・イベント・ストーリー ================= */
 const SAVE_KEY='sorane_save_v1',RIVAL='リオト';
 const fillName=s=>s.replace(/\{n\}/g,S.name);
-function newSave(name){return{v:3,pc:2,met:{},rot:{},rec:{},wear:{},own:{},name,map:'',x:0,y:0,dir:2,surf:false,party:[],box:[],bag:{},money:3000,badges:{},flags:{},seen:{},caught:{},heal:null,visited:{},steps:0,repel:0,time:0,opts:{snd:1,fast:0,follow:1,share:1,dn:1,auto:1},starter:0,rival:0,bikeOn:0};}
-function saveGame(){if(!S||!G.map)return;const p=G.pl;S.map=G.map.id;S.x=p.x;S.y=p.y;S.dir=p.dir;S.surf=p.surf;S.fly=p.fly?1:0;try{localStorage.setItem(SAVE_KEY,JSON.stringify(S));}catch(e){}}
-function loadSave(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));if(d&&d.party&&d.map)return d;}catch(e){}return null;}
+function newSave(name){return{v:4,pc:2,met:{},rot:{},rec:{},wear:{},own:{},name,map:'',x:0,y:0,dir:2,surf:false,party:[],box:[],bag:{},money:3000,badges:{},flags:{},seen:{},caught:{},heal:null,visited:{},steps:0,repel:0,time:0,opts:{snd:1,fast:0,follow:1,share:1,dn:1,auto:1},starter:0,rival:0,bikeOn:0};}
+const SAVE_BACKUP_KEY=SAVE_KEY+'_backup';
+const isRecord=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
+function validMon(m){
+  return isRecord(m)&&Number.isInteger(m.sp)&&!!SP[m.sp]&&Number.isInteger(m.lv)&&m.lv>=1&&m.lv<=100&&Number.isFinite(m.hp)&&m.hp>=0&&Number.isFinite(m.exp)&&m.exp>=0&&
+    Number.isInteger(m.nat)&&m.nat>=0&&m.nat<25&&Array.isArray(m.iv)&&m.iv.length===6&&m.iv.every(v=>Number.isInteger(v)&&v>=0&&v<=31)&&
+    Array.isArray(m.ev)&&m.ev.length===6&&m.ev.every(v=>Number.isInteger(v)&&v>=0&&v<=252)&&Array.isArray(m.mv)&&m.mv.length<=4&&m.mv.every(v=>isRecord(v)&&Number.isInteger(v.id)&&!!MOVES[v.id]&&Number.isInteger(v.pp)&&v.pp>=0&&v.pp<=MOVES[v.id].pp);
+}
+function validSave(d){
+  return isRecord(d)&&(d.v===3||d.v===4)&&typeof d.name==='string'&&typeof d.map==='string'&&d.map.length>0&&d.map.length<100&&
+    Number.isInteger(d.x)&&Number.isInteger(d.y)&&Number.isInteger(d.dir)&&d.dir>=0&&d.dir<4&&
+    Array.isArray(d.party)&&d.party.length<=PARTY_MAX&&d.party.every(validMon)&&Array.isArray(d.box)&&d.box.every(validMon)&&
+    ['bag','badges','flags','seen','caught','visited'].every(k=>isRecord(d[k]))&&Number.isFinite(d.money)&&d.money>=0;
+}
+function parseSave(raw){try{const d=JSON.parse(raw);return validSave(d)?d:null;}catch(_){return null;}}
+function storeSave(d){
+  if(!validSave(d))return false;
+  try{
+    const raw=JSON.stringify(d),previous=localStorage.getItem(SAVE_KEY);
+    if(previous===raw)return true;
+    if(parseSave(previous)){try{localStorage.setItem(SAVE_BACKUP_KEY,previous);}catch(_){}}
+    localStorage.setItem(SAVE_KEY,raw);return true;
+  }catch(_){return false;}
+}
+function saveGame(){
+  if(!S||!G.map||G.facilityActive)return false;
+  const p=G.pl;S.v=4;S.map=G.map.id;S.x=p.x;S.y=p.y;S.dir=p.dir;S.surf=p.surf;S.fly=p.fly?1:0;
+  return storeSave(S);
+}
+function loadSave(){
+  try{return parseSave(localStorage.getItem(SAVE_KEY))||parseSave(localStorage.getItem(SAVE_BACKUP_KEY));}catch(_){return null;}
+}
 function startFromSave(){   // 古いきろくにも 新しい項目を おぎなう
-  S.opts=Object.assign({snd:1,fast:0,follow:1,share:1,dn:1,auto:1},S.opts||{});if(!S.pc)S.pc=2;S.met=S.met||{};S.rot=S.rot||{};S.rec=S.rec||{};S.wear=S.wear||{};S.own=S.own||{};
+  S.v=4;journeyState();S.opts=Object.assign({snd:1,fast:0,follow:1,share:1,dn:1,auto:1},S.opts||{});if(!S.pc)S.pc=2;S.met=S.met||{};S.rot=S.rot||{};S.rec=S.rec||{};S.wear=S.wear||{};S.own=S.own||{};
   if(S.badges&&S.badges[1]&&!S.bag.k_bike)S.bag.k_bike=1;
   S.party=S.party.filter(m=>SP[m.sp]);S.box=(S.box||[]).filter(m=>SP[m.sp]);
   charInvalidate();SND=!!S.opts.snd;UI.length=0;G.scene='world';loadMap(S.map,S.x,S.y,S.dir);G.pl.surf=!!S.surf;if(S.fly&&S.bag.k_fly&&!noFlyMap(G.map)){G.pl.fly=true;G.pl.alt=1;G.pl.surf=false;}G.fade=0;syncBikeBtn();}
@@ -5748,7 +5821,7 @@ function activeObjs(m){
 }
 function loadMap(id,x,y,dir){
   let m;try{m=getMap(id);}catch(e){console.error(e);m=null;}
-  if(!m){const h=homeSpot();m=getMap(h.map);x=h.x;y=h.y;}
+  if(!m||!Number.isInteger(x)||!Number.isInteger(y)||x<0||y<0||x>=m.W||y>=m.H){const h=homeSpot();m=getMap(h.map);x=h.x;y=h.y;}
   if(m.cell)for(const L of [m.cell.land,m.cell.water])if(L)for(const fid of L)if(FAMS[fid])FAMS[fid].ids.forEach(monPreload);      // この場所に出る子の 原画を 先に読む
   if(S&&S.party)for(const q of S.party)monPreload(q.sp);
   if(m.cell&&m.cell.kind==='town'&&G.cellKey!==undefined&&G.cellKey!==m.cell.key&&S){S.rot=S.rot||{};S.rot[m.cell.key]=(S.rot[m.cell.key]||0)+1;}      // 町に 入りなおすたびに 顔ぶれが かわる
@@ -5833,6 +5906,7 @@ function onStep(){
 }
 function waterFallback(cell){let best=null,bd=1e9;for(const a of WORLD.areas){if(!a.water.length)continue;const d=Math.abs(a.prog-cell.prog);if(d<bd){bd=d;best=a;}}return best?wildPick(best,'water',0):null;}
 async function doWild(w,opt){
+  recordSighting(w.sp,G.map&&G.map.cell);
   const wf=famOf(SP[w.sp]);
   const r=await battle(Object.assign({wild:tuneIV(makeMon(w.sp,w.lv),wf.one||wf.starter?'rare':'wild')},opt||{}));
   if(r==='lose')await blackout();
@@ -6092,6 +6166,156 @@ async function newGame(){
   await msg('（十字パッドか 画面を なぞって 移動。Aで 話す・しらべる。Bを おしながらで 走る。MENUで メニュー）');
   G.busy=false;
   saveGame();
+}
+
+/* ================= v1.1: journal, rematches, trials ================= */
+function journeyState(){
+  if(!isRecord(S.journey))S.journey={};
+  const j=S.journey;
+  if(!isRecord(j.sights))j.sights={};
+  if(!isRecord(j.rematch))j.rematch={};
+  if(!isRecord(j.trials))j.trials={};
+  const t=j.trials;
+  if(!Number.isSafeInteger(t.points)||t.points<0)t.points=0;
+  if(!isRecord(t.best))t.best={};
+  return j;
+}
+function encounterWeights(list,phase){
+  const active=phase===3?[13,15,7]:phase===1?[4,9,11]:phase===2?[1,8,12]:[0,3,6];
+  return list.map((fid,i)=>{
+    const f=FAMS[fid],base=ENC_W[i]||2;
+    return f&&(active.includes(f.t1)||active.includes(f.t2))?base*1.6:base;
+  });
+}
+function recordSighting(sp,cell){
+  if(!cell||!SP[sp]||!S)return;
+  const j=journeyState();
+  if(!isRecord(j.sights[cell.key]))j.sights[cell.key]={};
+  const old=j.sights[cell.key][sp];
+  j.sights[cell.key][sp]=Math.min(999999,(Number.isSafeInteger(old)&&old>0?old:0)+1);
+}
+function habitatAreas(sp){
+  const f=famOf(SP[sp]);
+  return WORLD.areas.filter(c=>S.visited[c.key]&&((c.land||[]).includes(f.id)||(c.water||[]).includes(f.id)||c.rare===f.id));
+}
+async function journalHabitats(){
+  const known=Object.keys(S.seen).map(Number).filter(id=>SP[id]).sort((a,b)=>a-b);
+  if(!known.length){await msg('まだ 観察した アニマが いない。');return;}
+  let idx=0;
+  for(;;){
+    const i=await menu(known.map(id=>({label:SP[id].name,right:'No.'+id})),{x:4,y:4,w:232,rows:11,title:'生息地を 調べる',idx,bg:()=>screenBG()});
+    if(i<0)return;idx=i;
+    const sp=known[i],j=journeyState(),actual=Object.keys(j.sights).filter(k=>j.sights[k]&&j.sights[k][sp]&&CELLS[k]);
+    const candidates=habitatAreas(sp).filter(c=>!actual.includes(c.key));
+    const rows=actual.map(k=>({label:CELLS[k].name,right:'観察済'})).concat(candidates.map(c=>({label:c.name,right:'系統候補'})));
+    if(!rows.length){await msg('訪れた 場所には まだ 記録が ない。');continue;}
+    await menu(rows,{x:4,y:4,w:232,rows:11,title:SP[sp].name+'の 生息地',bg:()=>screenBG()});
+  }
+}
+async function journalLocal(){
+  const cell=G.map&&G.map.cell;
+  if(!cell){await msg('ここでは 野生の 観察記録が ない。');return;}
+  const sightings=journeyState().sights[cell.key]||{},ids=Object.keys(sightings).map(Number).filter(id=>SP[id]).sort((a,b)=>a-b);
+  const phase=['昼','朝','夕方','夜'][dayPhase()];
+  if(!ids.length){await msg(cell.name+'（'+phase+'）\nまだ 野生の アニマを 観察していない。');return;}
+  await menu(ids.map(id=>({label:SP[id].name,right:'×'+sightings[id]})),{x:4,y:4,w:232,rows:11,title:'観察記録・'+phase,bg:()=>screenBG()});
+}
+async function journeyScreen(){
+  for(;;){
+    const i=await menu(['冒険の 目標','この場所の 観察記録','生息地を 調べる','再戦の 記録','もどる'],{x:4,y:8,w:232,title:'旅の手帳',bg:()=>screenBG()});
+    if(i<0||i===4)return;
+    if(i===0){
+      await msg('巡環リーグへの 道\n'+CIRCUITS[1]+' '+badgeIn(1)+'/2　'+CIRCUITS[2]+' '+badgeIn(2)+'/2');
+      await msg(CIRCUITS[3]+' '+badgeIn(3)+'/2　'+CIRCUITS[4]+' '+badgeIn(4)+'/2\n'+CIRCUITS[5]+' '+badgeIn(5)+'/2');
+      await msg(S.flags.champ?'チャンピオン達成！ 巡環試練に 挑戦しよう。':leagueOK()?'五圏の 条件を 達成！ 巡環リーグへ 向かおう。':'各圏で 2つの バッジを 集めよう。');
+      await msg('アニマ '+countKeys(S.caught)+' / '+N_SPECIES+' 種\nジム '+badgeCount()+' / 50　人物 '+metCount()+' / '+N_PEOPLE);
+      if(S.flags.lore)await msg('守護獣の 記録：'+Object.keys(LEG_Q).filter(n=>legMet(Number(n))).length+' / 12');
+    }else if(i===1)await journalLocal();
+    else if(i===2)await journalHabitats();
+    else{
+      const a=Object.entries(journeyState().rematch).filter(([k,v])=>v&&v.count>0);
+      await msg('再戦した 相手 '+a.length+'人\n勝利 '+a.reduce((n,[k,v])=>n+v.count,0)+' 回。道の 相手は バッジ2個、ジムは10個から。');
+    }
+  }
+}
+function rematchLevelList(list,wins,badges){
+  const gain=Math.min(12,2+2*Math.max(0,wins)+Math.floor(badges/10));
+  return list.map(t=>{const lv=Math.max(t.lv,Math.min(100,t.lv+gain));return{sp:formAt(famOf(SP[t.sp]),lv),lv};});
+}
+async function rematchBattle(key,name,list,spr,money,cooldown){
+  const j=journeyState(),r=j.rematch[key]||{count:0,last:-Infinity},steps=Number(S.steps)||0;
+  if(Number.isFinite(r.last)&&steps-r.last<cooldown){await msg('まだ 特訓の とちゅうだ。あと '+(cooldown-(steps-r.last))+'歩ほど 旅を してから また 会おう。');return;}
+  if(!await confirmYN(name+'と 再戦する？'))return;
+  const n=Number.isSafeInteger(r.count)?r.count:0;
+  const team=mkTeam(rematchLevelList(list,n,badgeCount()),Math.min(31,18+n*2));
+  const result=await battle({trainer:{name,team,money:Math.floor(money*1.25),spr}});
+  if(result==='lose'){await blackout();return;}
+  if(result==='win'){j.rematch[key]={count:n+1,last:Number(S.steps)||0};await msg('再戦の 記録が 旅の手帳に のこった！');saveGame();}
+}
+const TRIAL_RULES=[{id:'standard',name:'連勝の塔',description:'Lv50・3対3・7連戦。勝利ごとに全回復。'},{id:'endurance',name:'踏破の回廊',description:'Lv50・3対3・7連戦。HPとPPは持ち越し。'}];
+function trialTeam(indices){
+  return indices.map(i=>{
+    const m=JSON.parse(JSON.stringify(S.party[i]));
+    m.lv=50;m.exp=expFor(SP[m.sp],50);healMon(m);return m;
+  });
+}
+async function selectTrialTeam(){
+  const ids=[];
+  while(ids.length<3){
+    const used=ids.map(i=>S.party[i].sp);
+    const i=await menu(S.party.map((m,j)=>({label:monName(m),right:ids.includes(j)?'選出':('Lv'+m.lv),dis:used.includes(m.sp)})),{x:4,y:8,w:232,title:'選出 '+(ids.length+1)+'/3　同種不可',bg:()=>screenBG()});
+    if(i<0)return null;ids.push(i);
+  }
+  return ids;
+}
+function trialOpponent(rule,round,seed){
+  const r=RNG('trial:'+rule.id+':'+seed+':'+round);
+  const list=trainerTeam(r,52,50,3,null).map(t=>({sp:formAt(famOf(SP[t.sp]),50),lv:50}));
+  return mkTeam(list,Math.min(31,16+round*2));
+}
+async function playTrial(rule){
+  if(new Set(S.party.map(m=>m.sp)).size<3){await msg('異なる 3種の アニマを 手持ちに そろえよう。');return;}
+  await msg(rule.description+'\nバッグ禁止。手持ちや 持ち物は 試練後に 元に もどる。');
+  const chosen=await selectTrialTeam();if(!chosen)return;
+  const original=S.party,temporary=trialTeam(chosen),j=journeyState(),seed=ri(1000000000);
+  let wins=0,normal=false;
+  G.facilityActive=true;S.party=temporary;
+  try{
+    for(let round=1;round<=7;round++){
+      if(round>1&&rule.id==='standard')temporary.forEach(healMon);
+      await msg(rule.name+'　第'+round+'戦 / 7');
+      const result=await battle({facility:true,trainer:{name:round===7?'試練の番人':'試練の挑戦者 '+round,team:trialOpponent(rule,round,seed),money:0,spr:pSpr(64)}});
+      if(result!=='win')break;
+      wins++;
+      if(wins<7&&!(await confirmYN('ただいま '+wins+'連勝。つぎの 戦いへ 進む？')))break;
+    }
+    normal=true;
+  }finally{
+    S.party=original;G.facilityActive=false;folReset();
+    if(!normal){G.scene='world';BT=null;fxClear();G.fade=0;}
+  }
+  const earned=wins+(wins===7?3:0);
+  j.trials.best[rule.id]=Math.max(Number(j.trials.best[rule.id])||0,wins);
+  j.trials.points+=earned;saveGame();
+  await msg(rule.name+'：'+wins+'勝\n試練ポイント '+earned+'P 獲得！'+(wins===7?'\n七連勝の 証を きざんだ！':''));
+}
+async function trialRewards(){
+  const t=journeyState().trials,stock=[['heal2',2],['revive',4],['fuda2',5]].filter(a=>ITEMS[a[0]]);
+  for(;;){
+    const i=await menu(stock.map(([id,p])=>({label:ITEMS[id].n,right:p+'P',dis:t.points<p})),{x:4,y:8,w:232,title:'交換所　'+t.points+'P',bg:()=>screenBG()});
+    if(i<0)return;
+    const [id,p]=stock[i];if(t.points>=p&&await confirmYN(ITEMS[id].n+'と 交換する？')){t.points-=p;bagAdd(id);saveGame();await msg('交換した！');}
+  }
+}
+async function facilityMenu(){
+  if(!S.flags.champ)return;
+  if(G.map.id.slice(0,2)==='lg'||G.pl.fly||G.pl.surf){await msg('地上の 安全な 場所で 試練に 挑戦しよう。');return;}
+  for(;;){
+    const t=journeyState().trials;
+    const i=await menu(TRIAL_RULES.map(r=>({label:r.name,right:(t.best[r.id]||0)+'/7'})).concat([{label:'ポイント交換',right:t.points+'P'},'もどる']),{x:4,y:8,w:232,title:'巡環試練',bg:()=>screenBG()});
+    if(i<0||i===3)return;
+    if(i===2)await trialRewards();else await playTrial(TRIAL_RULES[i]);
+  }
 }
 
 /* ---------- 起動 ---------- */
