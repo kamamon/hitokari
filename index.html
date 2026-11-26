@@ -4686,9 +4686,8 @@ function partyPage(idx){return Math.floor(idx/4)*4;}
 function drawPartyPage(idx,title,note){
   const start=partyPage(idx);
   screenBG(title);
-  tx((start/4+1)+'/'+Math.max(1,Math.ceil(S.party.length/4))+'　'+S.party.length+'/'+PARTY_MAX+'匹',LW-5,2,'#f6e8b8',9,'right');
+  tx((S.party.length>4?'←→ ':'')+(start/4+1)+'/'+Math.max(1,Math.ceil(S.party.length/4))+'　'+S.party.length+'/'+PARTY_MAX+'匹',LW-5,2,'#f6e8b8',9,'right');
   S.party.slice(start,start+4).forEach((m,j)=>drawPartySlot(m,j,start+j===idx,note?note(m):null));
-  if(S.party.length>4)tx('← → ページ',LW-8,LH-9,'#f6e8b8',8,'right');
 }
 // 手持ちから1匹えらぶ。戻り値は番号（キャンセル -1）
 function partyPick(opt){
@@ -4741,14 +4740,32 @@ function drawSummary(m){
     tx(CAT_JP[mv.cat]+' 威力'+powTxt(mv)+' PP'+v.pp+'/'+mv.pp,x+17,y+13.5,'#5a5560',8);
   });
 }
-function summaryScreen(idx,list){
+function trainingRows(m){return STN.map((name,i)=>({name,base:SP[m.sp].base[i],iv:m.iv[i],ev:m.ev[i],value:stat(m,i)}));}
+function drawTraining(m){
+  screenBG('育成データ　'+monName(m));
+  win(4,18,232,28);tx('せいかく：'+natName(m.nat),10,24,'#2a2233',10);tx('Lv'+m.lv,230,24,'#2a2233',10,'right');
+  tx('個体値 0～31 ／ 努力値 0～252',10,36,'#5a5560',8);
+  win(4,50,232,120);
+  const xs=[90,124,159,228];
+  ['種族','個体','努力','実数'].forEach((n,i)=>tx(n,xs[i],56,'#5a5560',9,'right'));
+  trainingRows(m).forEach((r,i)=>{
+    const y=71+i*15,up=Math.floor(m.nat/5),dn=m.nat%5,col=i>0&&up!==dn&&i-1===up?'#c8402a':i>0&&up!==dn&&i-1===dn?'#2a60c8':'#2a2233';
+    tx(r.name,10,y,col,9);[r.base,r.iv,r.ev,r.value].forEach((v,j)=>tx(''+v,xs[j],y,'#2a2233',9,'right'));
+    bar(168,y+3,32,4,r.ev/252,'#71b792');
+  });
+  win(4,174,232,30);const ev=m.ev.reduce((a,b)=>a+b,0);
+  tx('努力値 合計 '+ev+'/510',10,179,'#2a2233',10);
+  bar(10,192,144,5,clamp(ev/510,0,1),'#71b792');
+  tx('←→ 切替 B 戻る',230,193,'#5a5560',8,'right');
+}
+function summaryScreen(idx,list,training=false){
   return new Promise(res=>{
     let i=idx;
     const w={key(k){
         if(k==='left'||k==='up'){i=(i+list.length-1)%list.length;sfx('sel');}
         else if(k==='right'||k==='down'){i=(i+1)%list.length;sfx('sel');}
         else if(k==='a'||k==='b'){sfx('cancel');popW(w);res();}},
-      draw(){drawSummary(list[i]);}};
+      draw(){if(training)drawTraining(list[i]);else drawSummary(list[i]);}};
     UI.push(w);
   });
 }
@@ -4757,11 +4774,12 @@ async function partyScreen(){
   for(;;){
     const i=await partyPick({idx});if(i<0)return;idx=i;
     const bg=pushBG(()=>drawPartyPage(i,'アニマ'));
-    const hm=S.party[i],opts=['つよさを見る','ならびかえ'];if(hm.item)opts.push('持ち物を はずす');opts.push('もどる');
-    const c0=await menu(opts,{x:LW-108,y:LH-76,w:104}),c=opts[c0]==='持ち物を はずす'?9:opts[c0]==='もどる'?-1:c0;
+    const hm=S.party[i],opts=['つよさを見る','ならびかえ','育成データ'];if(hm.item)opts.push('持ち物を はずす');opts.push('もどる');
+    const c0=await menu(opts,{x:LW-108,y:LH-92,w:104}),c=opts[c0]==='持ち物を はずす'?9:opts[c0]==='もどる'?-1:c0;
     popW(bg);
     if(c===9){bagAdd(hm.item);await msg(monName(hm)+'から '+ITEMS[hm.item].n+'を はずした。');delete hm.item;}
     else if(c===0)await summaryScreen(i,S.party);
+    else if(c===2)await summaryScreen(i,S.party,true);
     else if(c===1){
       const j=await partyPick({idx:i,title:'どこと いれかえる？'});
       if(j>=0&&j!==i){const t=S.party[i];S.party[i]=S.party[j];S.party[j]=t;idx=j;}
