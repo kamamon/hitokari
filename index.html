@@ -1112,7 +1112,7 @@ const TALK=[
  'Bボタンを押しながら歩くと 走れるよ。','画面をなぞっても 歩けるって知ってた？','タイプの相性は とても大事。メニューの「相性表」で たしかめよう。',
  '水辺では つりざおで アニマが釣れることがある。','強い技ほど 使える回数が少ない。診療所で休めば 元にもどるよ。',
  'やけどは こうげきが下がり、まひは すばやさが下がるんだ。','技の書は 何回でも使える。アニマに 新しい技を教えよう。','技には 物理・特殊・変化が ある。物理は こうげきと ぼうぎょ、特殊は とくこうと とくぼうで 力くらべだ。',
- '会った人は 「人物図鑑」に 記される。ソラネ地方には 2000人が くらしているそうだ。','町の人には 何度も たずねてみるといい。','仕立て屋では 地区ごとに ちがう 衣装を 売っているよ。',
+ '会った人は 「人物図鑑」に 記される。ソラネ地方には 2000人が くらしているそうだ。','町の人は 来るたびに 顔ぶれが 変わる。何度も たずねてみるといい。','仕立て屋では 地区ごとに ちがう 衣装を 売っているよ。',
  'わたしの アニマは 生まれたときから いっしょなの。','きょうは いい天気だねえ。','旅の人かい？ ゆっくりしていきな。'];
 function gymHint(k){
   const t=GYM_TYPES[k],weak=[];for(let a=0;a<NT;a++)if(typeEff(a,[t])>1)weak.push(TK[a]);
@@ -5093,7 +5093,7 @@ async function optionsMenu(){
     else if(c===4)o.dn=on(o.dn)?0:1;
     else if(c===5)o.auto=on(o.auto)?0:1;
     else if(c===6){saveGame();await ioPanel('export');}
-    else if(c===7){const d=await ioPanel('import');if(d){if(!persistGameSave(d)){await msg('保存できませんでした。空き容量を たしかめてください。');continue;}S=d;await msg('セーブを 読みこんだ！');startFromSave();return'close';}}
+    else if(c===7){const d=await ioPanel('import');if(d&&await confirmYN('いまの 記録を 読みこんだ 記録に 置きかえますか？')){if(!persistGameSave(d)){await msg('保存できませんでした。空き容量を たしかめてください。');continue;}S=d;await msg('セーブを 読みこんだ！');startFromSave();return'close';}}
     else return;
   }
 }
@@ -5792,7 +5792,7 @@ function loadMap(id,x,y,dir){
   if(!m){const h=homeSpot();m=getMap(h.map);x=h.x;y=h.y;}
   if(m.cell)for(const L of [m.cell.land,m.cell.water])if(L)for(const fid of L)if(FAMS[fid])FAMS[fid].ids.forEach(monPreload);      // この場所に出る子の 原画を 先に読む
   if(S&&S.party)for(const q of S.party)monPreload(q.sp);
-  if(m.cell&&m.cell.kind==='town'&&G.cellKey!==undefined&&G.cellKey!==m.cell.key&&S){S.rot=S.rot||{};if(S.rot[m.cell.key]===undefined)S.rot[m.cell.key]=0;}      // 町の 住民は 固定する（過去の記録と人物を保つ）
+  if(m.cell&&m.cell.kind==='town'&&G.cellKey!==undefined&&G.cellKey!==m.cell.key&&S){S.rot=S.rot||{};S.rot[m.cell.key]=(S.rot[m.cell.key]||0)+1;}      // 人物図鑑2000人を維持するため、住民の巡回を維持
   G.cellKey=m.cell?m.cell.key:null;chrPreload('pl');
   G.map=m;const p=G.pl;p.x=x;p.y=y;if(dir!=null)p.dir=dir;p.moving=false;p.prog=0;p.turn=0;p.idle=9;
   if(m.t[y*m.W+x]!==T.WATER)p.surf=false;
@@ -6140,7 +6140,8 @@ async function newGame(){
 /* ================= Emerald quality upgrade: original Sorane systems ================= */
 let facilityActive=false;
 function isValidGameSave(d){
-  return HitokariUpgrade.validSave(d,id=>Number.isInteger(id)&&!!SP[id],id=>Number.isInteger(id)&&!!MOVES[id],PARTY_MAX);
+  if(!HitokariUpgrade.validSave(d,id=>Number.isInteger(id)&&!!SP[id],id=>Number.isInteger(id)&&!!MOVES[id],PARTY_MAX))return false;
+  return /^lg[1-6]$/.test(d.map)||Object.prototype.hasOwnProperty.call(CELLS,d.map.split(':')[0]);
 }
 function persistGameSave(d){
   if(!isValidGameSave(d))return false;
@@ -6163,7 +6164,7 @@ function rematchTeam(base,key,types,minCount){
   const ace=HitokariUpgrade.rematchLevel(Math.max(...base.map(m=>m.lv)),strongestLevel(),wins);
   const n=Math.min(6,Math.max(base.length,minCount)+(wins>=2?1:0));
   const cand=famCand(50,types),r=RNG('rematch:'+key+':'+wins),team=[],used=new Set();
-  for(let i=0;i<n;i++){const old=base[i],f=old?famOf(SP[old.sp]):r.pick(cand.filter(f=>!used.has(f.id)).length?cand.filter(f=>!used.has(f.id)):cand);used.add(f.id);const lv=Math.max(2,ace-n+1+i);team.push({sp:formAt(f,lv),lv});}
+  for(let i=0;i<n;i++){const old=base[i],available=cand.filter(f=>!used.has(f.id)),f=old?famOf(SP[old.sp]):r.pick(available.length?available:cand);used.add(f.id);const lv=Math.max(2,ace-n+1+i);team.push({sp:formAt(f,lv),lv});}
   return team;
 }
 async function trainerRematch(o){
@@ -6189,7 +6190,7 @@ async function journeyJournal(){
   for(;;){
     const c=await menu(['旅の 進みぐあい','ジム再戦の 記録','この場所の 生息情報','修練場の 記録','もどる'],{x:10,y:27,w:220,title:'旅の手帳',bg:()=>screenBG()});
     if(c<0||c===4)return;
-    if(c===0){const goals=[1,2,3,4,5].map(i=>CIRCUITS[i]+' '+badgeIn(i)+'/2').join('\n');await msg('勝利 '+p.wins+'　捕獲 '+p.captures+'　敗北 '+p.losses+'\n（記録は 改修版から）');await msg('リーグまでの 目標\n'+goals);await msg('歩数 '+S.steps+'　再戦勝利 '+Object.values(p.rematches).reduce((n,r)=>n+(r.wins||0),0));}
+    if(c===0){const goals=[1,2,3,4,5].map(i=>CIRCUITS[i]+' '+Math.min(2,badgeIn(i))+'/2').join('\n');await msg('勝利 '+p.wins+'　捕獲 '+p.captures+'　敗北 '+p.losses+'\n（記録は 改修版から）');await msg('リーグまでの 目標\n'+goals);await msg('歩数 '+S.steps+'　再戦勝利 '+Object.values(p.rematches).reduce((n,r)=>n+(r.wins||0),0));}
     if(c===1){const ids=Array.from({length:50},(_,i)=>i+1).filter(k=>S.badges[k]);if(!ids.length){await msg('まだ バッジは ない。');continue;}await menu(ids.map(k=>({label:GYM_TOWN[k],right:badgeCount()>=4&&HitokariUpgrade.rematchReady(S,'g:'+k,512)?'再戦可':'準備中'})),{x:4,y:2,w:232,rows:12,title:'ジム　Bで 戻る',bg:()=>screenBG(),fg:j=>{const k=ids[j],v=p.rematches['g:'+k];win(4,181,232,27);tx('再戦勝利 '+(v&&v.wins||0)+'回　必要: バッジ4個・512歩',10,189,'#5a5560',8);}});}
     if(c===2){const cell=G.map.cell,ids=cell?[...new Set([...(cell.land||[]),...(cell.water||[])])]:[];if(!ids.length){await msg('この場所には 野生の 足あとが ない。');continue;}await menu(ids.map(f=>{const id=FAMS[f].ids[0];return{label:S.seen[id]?SP[id].name:'？？？？？',right:cell.water.includes(f)?'水辺':'陸地'};}),{x:8,y:8,w:224,rows:11,title:'生息情報（発見済みのみ表示）',bg:()=>screenBG()});}
     if(c===3)await msg('巡環修練場\n連続優勝 '+p.streak+'　最高 '+p.best+'\n優勝回数 '+p.clears+'（殿堂入り後）');
@@ -6230,7 +6231,7 @@ async function facilityMenu(){
     }
   }finally{
     S.party=real;S.seen=seen;facilityActive=false;SPEAKER=speaker;
-    if(BT){BT=null;fxClear();G.scene='world';G.fade=0;}
+    if(BT){BT=null;fxClear();UI.length=0;G.scene='world';G.fade=0;}
     folReset();
   }
   if(completed){const result=HitokariUpgrade.facilityResult(S,won);await msg(won?'3連戦を 制覇！　連続優勝 '+result.streak+'回！':'修練 終了。つぎは もっと さきへ！');saveGame();}
