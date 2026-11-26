@@ -23,7 +23,7 @@ const createSoraneAudio=function musicFactory(){
   }
   function create(ac){
     let current=null,master=null,next=0,index=0,volume=-1;
-    function stop(){if(!master)return;const old=master,t=ac.currentTime;try{old.gain.cancelScheduledValues(t);old.gain.setTargetAtTime(0,t,0.035);}catch(_){}master=null;current=null;}
+    function stop(){if(!master)return;const old=master,t=ac.currentTime;try{old.gain.cancelScheduledValues(t);old.gain.setTargetAtTime(0,t,0.035);setTimeout(()=>{try{old.disconnect();}catch(_){}},250);}catch(_){}master=null;current=null;}
     function tick(cue,vol=0.4,enabled=true){
       if(!enabled||!cue||ac.state!=='running'){stop();return;}
       const t=ac.currentTime;

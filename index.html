@@ -2176,7 +2176,7 @@ function sfx(n){
     g.gain.setValueAtTime(d[3],t);g.gain.linearRampToValueAtTime(0,t+d[1]);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d[1]+0.02);}catch(e){}
 }
 let MUSIC=null;
-function initAudio(){try{if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();MUSIC=SoraneAudio.create(AC);}if(AC.state==='suspended')AC.resume().catch(()=>{});}catch(e){AC=null;MUSIC=null;}}
+function initAudio(){try{if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();MUSIC=SoraneAudio.create(AC);}if(AC.state!=='running')AC.resume().catch(()=>{});}catch(e){AC=null;MUSIC=null;}}
 function currentCue(){
   if(G.scene==='title')return'title';
   if(G.scene==='battle'&&BT){if(BT.result==='win'||BT.result==='caught')return'victory';if(BT.o.legend||BT.o.facility||BT.env.kind==='dojo'||BT.env.kind==='league')return'boss';return BT.wild?'wild':'trainer';}
@@ -5779,7 +5779,7 @@ function newSave(name){return{v:4,pc:2,met:{},rot:{},rec:{},wear:{},own:{},name,
 function saveGame(){if(!S||!G.map||facilityActive)return false;const p=G.pl;S.map=G.map.id;S.x=p.x;S.y=p.y;S.dir=p.dir;S.surf=p.surf;S.fly=p.fly?1:0;return persistGameSave(S);}
 function loadSave(){for(const k of [SAVE_KEY,BACKUP_KEY]){try{const d=JSON.parse(localStorage.getItem(k));if(isValidGameSave(d))return d;}catch(e){}}return null;}
 function startFromSave(){   // 古いきろくにも 新しい項目を おぎなう
-  S.opts=Object.assign({snd:1,fast:0,follow:1,share:1,dn:1,auto:1,music:1,musicVol:40,reduceFx:0},S.opts||{});if(!S.pc)S.pc=2;S.met=S.met||{};S.rot=S.rot||{};S.rec=S.rec||{};S.wear=S.wear||{};S.own=S.own||{};
+  S.opts=Object.assign({snd:1,fast:0,follow:1,share:1,dn:1,auto:1,music:S.opts&&S.opts.snd===0?0:1,musicVol:40,reduceFx:0},S.opts||{});if(!S.pc)S.pc=2;S.met=S.met||{};S.rot=S.rot||{};S.rec=S.rec||{};S.wear=S.wear||{};S.own=S.own||{};
   if(S.badges&&S.badges[1]&&!S.bag.k_bike)S.bag.k_bike=1;
   S.party=S.party.filter(m=>SP[m.sp]);S.box=(S.box||[]).filter(m=>SP[m.sp]);HitokariUpgrade.progress(S);const nursery=nurseryFor();for(const m of S.party.concat(S.box,nursery.parents.map(p=>p.mon),nursery.egg?[nursery.egg.mon]:[]))HitokariUpgrade.bond(m);S.v=4;
   charInvalidate();SND=!!S.opts.snd;UI.length=0;G.scene='world';loadMap(S.map,S.x,S.y,S.dir);G.pl.surf=!!S.surf;if(S.fly&&S.bag.k_fly&&!noFlyMap(G.map)){G.pl.fly=true;G.pl.alt=1;G.pl.surf=false;}G.fade=0;syncBikeBtn();}
