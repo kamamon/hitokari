@@ -766,10 +766,11 @@ function dexText(sp){
 }
 
 /* ---------- 個体 ---------- */
+function abilityOptions(sp){const f=famOf(sp),base=sp.abil;if(f.legend||f.one||f.starter)return [base];const choices=ABIL_BY_TYPE[f.t1].filter(n=>n!==base);return choices.length?[base,choices[hashStr('ability:'+f.id)%choices.length]]:[base];}
 function makeMon(spId,lv,opt){
   opt=opt||{};const sp=SP[spId];
   const m={sp:spId,lv,exp:expFor(sp,lv),iv:[0,0,0,0,0,0].map(()=>opt.iv!=null?opt.iv:ri(32)),ev:[0,0,0,0,0,0],
-    nat:opt.nat!=null?opt.nat:ri(25),bond:70,shiny:opt.shiny!=null?opt.shiny:ri(SHINY_RATE)===0,mv:[],hp:0,st:null,sc:0};
+    nat:opt.nat!=null?opt.nat:ri(25),bond:70,ability:opt.ability!=null&&abilityOptions(sp).includes(opt.ability)?opt.ability:abilityOptions(sp)[chance(0.25)&&abilityOptions(sp).length>1?1:0],shiny:opt.shiny!=null?opt.shiny:ri(SHINY_RATE)===0,mv:[],hp:0,st:null,sc:0};
   m.mv=movesAt(sp,lv).map(id=>({id,pp:MOVES[id].pp}));
   m.hp=maxHP(m);
   return m;
@@ -794,7 +795,7 @@ function stat(m,i){
 }
 const maxHP=m=>stat(m,0);
 const monName=m=>m.nick||SP[m.sp].name;
-const abilOf=m=>SP[m.sp].abil;
+const abilOf=m=>abilityOptions(SP[m.sp]).includes(m.ability)?m.ability:SP[m.sp].abil;
 function healMon(m){m.hp=maxHP(m);m.st=null;m.sc=0;for(const v of m.mv)v.pp=MOVES[v.id].pp;}
 
 'use strict';
@@ -4706,8 +4707,8 @@ function drawSummary(m){
   sp.types.forEach((t,j)=>typeTag(t,88+j*16,24));
   tx(TKANA[sp.types[0]]+(sp.types[1]!=null?'・'+TKANA[sp.types[1]]:''),124,25,'#5a5560',9);
   tx('せいかく　'+natName(m.nat),88,40,'#2a2233',9);tx('個体値 '+IV_GRADE(m),230,41,'#8a5a2a',8,'right');
-  tx('とくせい　'+ABIL[sp.abil].n,88,53,'#2a2233',9);if(m.item&&ITEMS[m.item])tx('持ち物 '+ITEMS[m.item].n,230,54,'#8a5a2a',7,'right');
-  wrapText(ABIL[sp.abil].d,17.5).slice(0,2).forEach((l,i)=>tx(l,88,66+i*10,'#5a5560',8));
+  tx('とくせい　'+ABIL[abilOf(m)].n,88,53,'#2a2233',9);if(m.item&&ITEMS[m.item])tx('持ち物 '+ITEMS[m.item].n,230,54,'#8a5a2a',7,'right');
+  wrapText(ABIL[abilOf(m)].d,17.5).slice(0,2).forEach((l,i)=>tx(l,88,66+i*10,'#5a5560',8));
   win(4,94,232,52);
   for(let i=0;i<6;i++){
     const x=10+(i%3)*76,y=100+Math.floor(i/3)*14;
@@ -4716,7 +4717,7 @@ function drawSummary(m){
   }
   const nx=m.lv>=100?0:expFor(sp,m.lv+1)-m.exp;
   tx(m.lv>=100?'レベルは さいこうだ':'つぎのレベルまで あと '+nx,10,129,'#5a5560',9);
-  if(sp.evoLv)tx('Lv'+sp.evoLv+'で 進化',230,129,'#8a5a2a',9,'right');
+  if(sp.evoLv)tx('Lv'+sp.evoLv+(evolutionRule(sp)?' または条件':'で 進化'),230,129,'#8a5a2a',8,'right');
   win(4,148,232,58);
   m.mv.forEach((v,i)=>{
     const mv=MOVES[v.id],x=10+(i%2)*114,y=154+Math.floor(i/2)*25;
@@ -4778,10 +4779,14 @@ async function evolveMon(m){
   popW(w);
   return true;
 }
+// 生態と関連する早期進化。通常レベル進化は維持。
+const EARLY_EVOLUTION={7:{early:5,bond:190,phase:3},9:{early:5,phase:3},11:{early:4,bond:180},12:{early:4,bond:180},13:{early:5,phase:3},15:{early:5,phase:3},46:{early:4,phase:1},49:{early:4,phase:0}};
+function evolutionRule(sp){return sp.stage===0?EARLY_EVOLUTION[sp.id]||null:null;}
+function canEvolve(m){const sp=SP[m.sp];return !!sp.next&&HitokariUpgrade.earlyEvolution(m,sp.evoLv,evolutionRule(sp),dayPhase());}
 async function checkEvolutions(){
   for(const m of S.party.slice()){
     let guard=0;
-    while(SP[m.sp].evoLv&&m.lv>=SP[m.sp].evoLv&&!heldOf(m).noevo&&guard++<5){if(!(await evolveMon(m)))break;}
+    while(canEvolve(m)&&!heldOf(m).noevo&&guard++<5){if(!(await evolveMon(m)))break;}
   }
 }
 
@@ -4937,7 +4942,7 @@ function dexDetail(id){
         win(110,18,126,104);tx(sp.name,118,26,'#2a2233',11);
         sp.types.forEach((t,j)=>typeTag(t,118+j*16,44));
         tx(got?'なかまにした':'見つけた',118,62,got?'#c8402a':'#5a5560',9);
-        if(got){tx(sp.legend?'伝説のアニマ':'進化 '+(sp.stage+1)+'／'+sp.forms+'段階',118,76,'#5a5560',9);if(sp.evoLv)tx('Lv'+sp.evoLv+'で 進化',118,90,'#8a5a2a',9);tx('とくせい '+ABIL[sp.abil].n,118,104,'#5a5560',9);}
+        if(got){tx(sp.legend?'伝説のアニマ':'進化 '+(sp.stage+1)+'／'+sp.forms+'段階',118,76,'#5a5560',9);if(sp.evoLv)tx('Lv'+sp.evoLv+'で 進化',118,90,'#8a5a2a',9);tx(abilityOptions(sp).length===2?'とくせい 2種':'とくせい '+ABIL[sp.abil].n,118,104,'#5a5560',9);}
         win(4,124,232,80);
         wrapText(got?dexText(sp):'くわしいことは まだ わからない。なかまにすると 記される。',21).slice(0,5).forEach((l,i)=>tx(l,12,132+i*14,'#2a2233',10));
       }};
@@ -5102,6 +5107,7 @@ async function openMenu(){
   for(;;){
     const items=[];
     if(S.flags.dex)items.push(['巡環図鑑',dexMenu],['旅の手帳',journeyJournal]);
+    if(badgeCount()>=2)items.push(['育成牧場',nurseryMenu]);
     if(S.flags.champ)items.push(['巡環修練場',facilityMenu]);
     if(S.party.length)items.push(['アニマ',partyScreen]);
     items.push(['もちもの',bagScreen]);
@@ -5754,13 +5760,13 @@ function peopleList(ids,title){
 const SAVE_KEY='sorane_save_v1',RIVAL='リオト';
 const BACKUP_KEY=SAVE_KEY+'_backup_v1';
 const fillName=s=>s.replace(/\{n\}/g,S.name);
-function newSave(name){return{v:3,pc:2,met:{},rot:{},rec:{},wear:{},own:{},name,map:'',x:0,y:0,dir:2,surf:false,party:[],box:[],bag:{},money:3000,badges:{},flags:{},seen:{},caught:{},heal:null,visited:{},steps:0,repel:0,time:0,opts:{snd:1,fast:0,follow:1,share:1,dn:1,auto:1},starter:0,rival:0,bikeOn:0};}
+function newSave(name){return{v:4,pc:2,met:{},rot:{},rec:{},wear:{},own:{},name,map:'',x:0,y:0,dir:2,surf:false,party:[],box:[],bag:{},money:3000,badges:{},flags:{},seen:{},caught:{},heal:null,visited:{},steps:0,repel:0,time:0,opts:{snd:1,fast:0,follow:1,share:1,dn:1,auto:1},starter:0,rival:0,bikeOn:0};}
 function saveGame(){if(!S||!G.map||facilityActive)return false;const p=G.pl;S.map=G.map.id;S.x=p.x;S.y=p.y;S.dir=p.dir;S.surf=p.surf;S.fly=p.fly?1:0;return persistGameSave(S);}
 function loadSave(){for(const k of [SAVE_KEY,BACKUP_KEY]){try{const d=JSON.parse(localStorage.getItem(k));if(isValidGameSave(d))return d;}catch(e){}}return null;}
 function startFromSave(){   // 古いきろくにも 新しい項目を おぎなう
   S.opts=Object.assign({snd:1,fast:0,follow:1,share:1,dn:1,auto:1},S.opts||{});if(!S.pc)S.pc=2;S.met=S.met||{};S.rot=S.rot||{};S.rec=S.rec||{};S.wear=S.wear||{};S.own=S.own||{};
   if(S.badges&&S.badges[1]&&!S.bag.k_bike)S.bag.k_bike=1;
-  S.party=S.party.filter(m=>SP[m.sp]);S.box=(S.box||[]).filter(m=>SP[m.sp]);HitokariUpgrade.progress(S);for(const m of S.party.concat(S.box))HitokariUpgrade.bond(m);S.v=4;
+  S.party=S.party.filter(m=>SP[m.sp]);S.box=(S.box||[]).filter(m=>SP[m.sp]);HitokariUpgrade.progress(S);const nursery=nurseryFor();for(const m of S.party.concat(S.box,nursery.parents.map(p=>p.mon),nursery.egg?[nursery.egg.mon]:[]))HitokariUpgrade.bond(m);S.v=4;
   charInvalidate();SND=!!S.opts.snd;UI.length=0;G.scene='world';loadMap(S.map,S.x,S.y,S.dir);G.pl.surf=!!S.surf;if(S.fly&&S.bag.k_fly&&!noFlyMap(G.map)){G.pl.fly=true;G.pl.alt=1;G.pl.surf=false;}G.fade=0;syncBikeBtn();}
 function run(fn){G.busy=true;Promise.resolve().then(fn).catch(e=>{console.error(e);}).then(()=>{G.busy=false;});}
 
@@ -5860,12 +5866,14 @@ function seenBy(){
 function onStep(){
   const p=G.pl,m=G.map,v=m.t[p.y*m.W+p.x];
   S.steps++;if(p.fly)return;
+  nurseryAdvance();
   if(S.steps%128===0)for(const a of S.party)if(a.hp>0)HitokariUpgrade.bond(a,1);      // 空の上では 野生にも トレーナーにも 出会わない
   folArrive();if(p.surf&&v!==T.WATER){p.surf=false;folReset();}
   scnStep(m,p.x,p.y,p.dir,p.spd>2);
   const w=m.warps[p.x+','+p.y];
   if(w&&(v===T.DOOR||v===T.MAT||v===T.LADDER)){run(()=>doWarp(w));return;}
   const tr=seenBy();if(tr){run(()=>trainerEncounter(tr));return;}
+  const n=nurseryFor();if(n.egg&&n.egg.held&&n.egg.walk>=HitokariUpgrade.EGG_HATCH){run(hatchNurseryEgg);return;}
   const repel=S.repel||0;if(repel>0){S.repel--;if(S.repel===0){run(async()=>{await msg('まよけのポプリの 効き目が きれた。');const n=ITEM_ORDER.find(id=>S.bag[id]>0&&ITEMS[id].k==='repel');if(n&&await confirmYN('もう一つ 使いますか？'))await useItem(n,{});});return;}}
   if(m.enc&&m.cell&&S.party.length){
     let kind=null,rate=m.enc.rate;
@@ -6141,7 +6149,13 @@ async function newGame(){
 let facilityActive=false;
 function isValidGameSave(d){
   if(!HitokariUpgrade.validSave(d,id=>Number.isInteger(id)&&!!SP[id],id=>Number.isInteger(id)&&!!MOVES[id],PARTY_MAX))return false;
-  return /^lg[1-6]$/.test(d.map)||Object.prototype.hasOwnProperty.call(CELLS,d.map.split(':')[0]);
+  if(!(/^lg[1-6]$/.test(d.map)||Object.prototype.hasOwnProperty.call(CELLS,d.map.split(':')[0])))return false;
+  const n=d.upgrade&&d.upgrade.nursery;if(n===undefined)return true;
+  if(!n||!Array.isArray(n.parents)||n.parents.length>2||!Number.isInteger(n.pairSteps)||n.pairSteps<0||n.pairSteps>HitokariUpgrade.EGG_READY)return false;
+  if(n.parents.some(p=>!p||!Number.isInteger(p.steps)||p.steps<0||p.steps>20000||!p.mon))return false;
+  if(n.egg!==null&&(!n.egg||!n.egg.mon||typeof n.egg.held!=='boolean'||!Number.isInteger(n.egg.walk)||n.egg.walk<0||n.egg.walk>HitokariUpgrade.EGG_HATCH))return false;
+  const extra=n.parents.map(p=>p.mon);if(n.egg)extra.push(n.egg.mon);
+  return HitokariUpgrade.validSave({...d,box:(d.box||[]).concat(extra)},id=>Number.isInteger(id)&&!!SP[id],id=>Number.isInteger(id)&&!!MOVES[id],PARTY_MAX);
 }
 function persistGameSave(d){
   if(!isValidGameSave(d))return false;
@@ -6156,7 +6170,7 @@ function drawTrainingDetails(m){
   win(4,18,232,36);tx('なつき度 '+HitokariUpgrade.bond(m)+' / 255',12,24,'#2a2233',10);bar(12,41,216,5,m.bond/255,'#dbad58');
   win(4,56,232,115);tx('能力',12,63,'#5a5560',9);tx('個体値',142,63,'#5a5560',9,'right');tx('努力値',222,63,'#5a5560',9,'right');
   STN.forEach((n,i)=>{const y=80+i*14;tx(n,12,y,'#2a2233',9);tx(m.iv[i]+' / 31',142,y,'#2a2233',9,'right');tx(m.ev[i]+' / 252',222,y,'#2a2233',9,'right');});
-  win(4,173,232,31);tx('努力値合計 '+m.ev.reduce((a,b)=>a+b,0)+' / 510',12,179,'#2a2233',9);tx('←→ 個体変更　A:つよさ　B:戻る',12,191,'#5a5560',8);
+  win(4,173,232,31);tx('努力値合計 '+m.ev.reduce((a,b)=>a+b,0)+' / 510',12,179,'#2a2233',9);const rule=evolutionRule(SP[m.sp]);if(rule)tx('条件進化 Lv'+Math.max(2,SP[m.sp].evoLv-rule.early),227,179,'#9a562a',8,'right');tx(rule?('条件: '+(rule.bond?'絆'+rule.bond+' ':'')+(rule.phase!==undefined?['昼','朝','夕','夜'][rule.phase]:'')+'　A:詳細切替'):'←→ 個体変更　A:つよさ　B:戻る',12,191,'#5a5560',8);
 }
 function strongestLevel(){return Math.max(1,...S.party.map(m=>m.lv));}
 function rematchTeam(base,key,types,minCount){
@@ -6194,6 +6208,50 @@ async function journeyJournal(){
     if(c===1){const ids=Array.from({length:50},(_,i)=>i+1).filter(k=>S.badges[k]);if(!ids.length){await msg('まだ バッジは ない。');continue;}await menu(ids.map(k=>({label:GYM_TOWN[k],right:badgeCount()>=4&&HitokariUpgrade.rematchReady(S,'g:'+k,512)?'再戦可':'準備中'})),{x:4,y:2,w:232,rows:12,title:'ジム　Bで 戻る',bg:()=>screenBG(),fg:j=>{const k=ids[j],v=p.rematches['g:'+k];win(4,181,232,27);tx('再戦勝利 '+(v&&v.wins||0)+'回　必要: バッジ4個・512歩',10,189,'#5a5560',8);}});}
     if(c===2){const cell=G.map.cell,ids=cell?[...new Set([...(cell.land||[]),...(cell.water||[])])]:[];if(!ids.length){await msg('この場所には 野生の 足あとが ない。');continue;}await menu(ids.map(f=>{const id=FAMS[f].ids[0];return{label:S.seen[id]?SP[id].name:'？？？？？',right:cell.water.includes(f)?'水辺':'陸地'};}),{x:8,y:8,w:224,rows:11,title:'生息情報（発見済みのみ表示）',bg:()=>screenBG()});}
     if(c===3)await msg('巡環修練場\n連続優勝 '+p.streak+'　最高 '+p.best+'\n優勝回数 '+p.clears+'（殿堂入り後）');
+  }
+}
+// 牧場と卵: 元の親のデータを保管し、卵は手持ちと別枠で1個。
+function nurseryFor(){const p=HitokariUpgrade.progress(S);if(!p.nursery)p.nursery={parents:[],pairSteps:0,egg:null};return p.nursery;}
+function nurseryCompatible(n){if(n.parents.length!==2)return false;const a=famOf(SP[n.parents[0].mon.sp]),b=famOf(SP[n.parents[1].mon.sp]);return a.id===b.id&&!a.legend&&!a.one;}
+function makeNurseryEgg(a,b){const f=famOf(SP[a.sp]);const m=makeMon(f.ids[0],5,{nat:chance(0.5)?pick([a.nat,b.nat]):ri(25),ability:chance(0.6)?abilOf(pick([a,b])):undefined});m.iv=HitokariUpgrade.inheritIV(a.iv,b.iv);healMon(m);return m;}
+function nurseryAdvance(){if(!S.flags.dex)return;const n=nurseryFor(),ok=nurseryCompatible(n);HitokariUpgrade.tickNursery(n,ok);if(ok&&!n.egg&&n.pairSteps>=HitokariUpgrade.EGG_READY){n.egg={mon:makeNurseryEgg(n.parents[0].mon,n.parents[1].mon),held:false,walk:0};n.pairSteps=0;}}
+async function hatchNurseryEgg(){
+  const n=nurseryFor(),egg=n.egg;if(!egg||!egg.held||egg.walk<HitokariUpgrade.EGG_HATCH)return;
+  sfx('get');await msg('……おや？ たまごが ゆれている！');
+  const bg=pushBG(()=>{screenBG('新しい いのち');const m=egg.mon;win(50,30,140,110,'#e8f0f8');drawMonUI(m.sp,m.shiny,72,34,96);});
+  await msg(SP[egg.mon.sp].name+'が たまごから かえった！');popW(bg);await addMon(egg.mon,true);n.egg=null;saveGame();
+}
+async function nurseryMenu(){
+  if(badgeCount()<2){await msg('バッジを 2個 集めたら 育成牧場を 利用できる。');return;}
+  if(G.map.id.slice(0,2)==='lg'||G.pl.fly){await msg('ここからは 育成牧場に 連絡できない。');return;}
+  const n=nurseryFor();
+  for(;;){
+    const c=await menu(['預けた 相棒・たまご','牧場から 相棒を 預ける','相棒を 牧場に 戻す','たまごを 受け取る','つかいかた','もどる'],{x:8,y:30,w:224,title:'育成牧場',bg:()=>screenBG()});
+    if(c<0||c===5)return;
+    if(c===0){
+      const names=n.parents.map(p=>monName(p.mon)+' '+p.steps+'EXP').join('、')||'なし';
+      const state=n.egg?(n.egg.held?'孵化まで あと '+(HitokariUpgrade.EGG_HATCH-n.egg.walk)+'歩':'受取可能'):nurseryCompatible(n)?'発見まで あと '+(HitokariUpgrade.EGG_READY-n.pairSteps)+'歩':'まだ なし';
+      await msg('預けた 相棒 '+n.parents.length+'/2\n'+names);await msg('たまご：'+state);
+    }else if(c===1){
+      if(n.parents.length>=2){await msg('2匹までしか 預けられない。');continue;}
+      const i=await boxPick('どの 相棒を 預ける？');if(i<0)continue;
+      const m=S.box[i],f=famOf(SP[m.sp]);if(f.legend||f.one){await msg('この アニマは 育成牧場で つがいに できない。');continue;}
+      if(n.parents.length&&famOf(SP[n.parents[0].mon.sp]).id!==f.id){await msg('同じ 進化系統の 相棒を 選んでね。');continue;}
+      if(!(await confirmYN(monName(m)+'を 育成牧場に 預けますか？')))continue;
+      n.parents.push({mon:S.box.splice(i,1)[0],steps:0});n.pairSteps=0;saveGame();await msg('大切に おあずかりします。');
+    }else if(c===2){
+      if(!n.parents.length){await msg('預けている 相棒は いない。');continue;}
+      const i=await menu(n.parents.map(p=>({label:monName(p.mon),right:p.steps+'EXP'})),{x:8,y:45,w:224,title:'引き取る 相棒',bg:()=>screenBG()});if(i<0)continue;
+      const p=n.parents[i],m=p.mon,old=m.lv;m.exp=Math.max(m.exp,Math.min(expFor(SP[m.sp],100),m.exp+p.steps));
+      while(m.lv<100&&m.exp>=expFor(SP[m.sp],m.lv+1)){m.lv++;HitokariUpgrade.bond(m,1);for(const [lv,id] of famOf(SP[m.sp]).learn)if(lv===m.lv&&m.mv.length<4&&!m.mv.some(v=>v.id===id))m.mv.push({id,pp:MOVES[id].pp});}
+      n.parents.splice(i,1);n.pairSteps=0;healMon(m);S.box.push(m);saveGame();await msg(monName(m)+'は 牧場に 戻った。'+(old!==m.lv?' Lv'+old+' → '+m.lv:''));
+    }else if(c===3){
+      if(!n.egg){await msg('まだ たまごは 見つかっていない。');continue;}
+      if(n.egg.held){await msg('もう たまごを 持っている。');continue;}
+      n.egg.held=true;saveGame();await msg('たまごを 受け取った！ 512歩 ほど 旅をしよう。');
+    }else{
+      await msg('同じ 進化系統の 2匹を あずかり牧場から 預けると、256歩で たまごが 見つかる。');await msg('受け取った たまごは 512歩で かえる。親から 能力や 性格、特性を 受けつぐことが ある。');await msg('預けた 相棒には 1歩ごとに 1EXP。進化は しない。技は 空きがあるときだけ 覚える。');
+    }
   }
 }
 const hiddenCache=new WeakMap();
