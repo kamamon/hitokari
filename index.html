@@ -4437,14 +4437,7 @@ async function tryCatch(B,id){
   await tween(600,p=>{B.fx.cap=p;if(Math.random()<0.6){const a=Math.random()*6.28,d=30*(1-p)+6;P({s:'glow:255,236,170',x:188+Math.cos(a)*d,y:56-22*p+Math.sin(a)*d,vx:-Math.cos(a)*1.1,vy:-Math.sin(a)*1.1-0.4,r:rnd(1,2.4),life:12,add:true});}});
   B.fx.cap=1;
   await tween(260,p=>{L.y=30+(82-30)*p*p;});sfx('bump');await tween(150,p=>{L.y=82-5*Math.sin(p*Math.PI);});
-  let shakes=0,ok=false;
-  if(v>=255){shakes=3;ok=true;}
-  else{
-    let a=Math.floor((3*M-2*f.hp)*sp.catch*v/(3*M));
-    a=Math.floor(a*(f.st==='slp'||f.st==='frz'?2:f.st?1.5:1));
-    if(a>=255){shakes=3;ok=true;}
-    else{const b=Math.floor(1048560/Math.sqrt(Math.sqrt(16711680/Math.max(1,a))));let n=0;for(;n<4;n++)if(ri(65536)>=b)break;ok=n===4;shakes=Math.min(3,n);}
-  }
+  const {shakes,ok}=captureRoll(B,f,it,v);
   // 灯が ゆらめくたびに カンテラが ゆれる
   for(let i=0;i<shakes;i++){
     await tween(520,p=>{L.rot=Math.sin(p*Math.PI*2)*0.36;L.lit=0.55+0.45*Math.abs(Math.sin(p*Math.PI*3));if(Math.random()<0.3)P({s:'glow:255,236,170',x:188+rnd(-9,9),y:80+rnd(-12,4),vy:-0.4,r:rnd(0.8,1.8),life:14,add:true});});
@@ -4496,6 +4489,7 @@ async function chooseAction(B){
 }
 async function battle(o){
   if(!S.party.some(m=>m.hp>0))return 'lose';
+  if(o.wilds&&o.wilds.length>=2){if(S.party.filter(m=>m.hp>0).length>=2)return doubleBattle(o);o={...o,wild:o.wilds[0],wilds:null};}
   if(o.double&&o.trainer&&o.trainer.team.filter(m=>m.hp>0).length>=2&&S.party.filter(m=>m.hp>0).length>=2)return doubleBattle(o);
   const spk=SPEAKER;SPEAKER=0;
   const B={o,wild:!!o.wild,foes:o.wild?[o.wild]:o.trainer.team,fi:0,pi:S.party.findIndex(m=>m.hp>0),ps:newStg(),fs:newStg(),runTry:0,
@@ -5870,18 +5864,20 @@ function worldTick(canInput){
   tryMove(d);
 }
 function clearLine(x,y){const m=G.map;if(x<0||y<0||x>=m.W||y>=m.H)return false;const v=m.t[y*m.W+x];return(v===T.WATER||!SOLID[v])&&!objAt(x,y);}
-function seenBy(){
-  const p=G.pl;
-  for(const o of G.objs){
-    if(o.k!=='npc')continue;
-    if(o.role==='story'){if(Math.abs(o.x-p.x)+Math.abs(o.y-p.y)===1)return o;continue;}
-    if((o.role!=='trainer'&&o.role!=='elite')||o.beaten)continue;
-    if(o.role==='elite'&&S.flags['s:lg'+o.n])continue;
-    const los=o.role==='trainer'?o.los:6;
-    for(let i=1;i<=los;i++){const x=o.x+DX[o.dir]*i,y=o.y+DY[o.dir]*i;if(x===p.x&&y===p.y)return o;if(!clearLine(x,y))break;}
-  }
-  return null;
+function trainerSightHits(){
+ const p=G.pl,hits=[];
+ for(const o of G.objs){
+  if(o.k!=='npc')continue;
+  if(o.role==='story'){if(Math.abs(o.x-p.x)+Math.abs(o.y-p.y)===1)return [o];continue;}
+  if((o.role!=='trainer'&&o.role!=='elite')||o.beaten)continue;
+  if(o.role==='elite'&&S.flags['s:lg'+o.n])continue;
+  const los=o.role==='trainer'?o.los:6;
+  for(let i=1;i<=los;i++){const x=o.x+DX[o.dir]*i,y=o.y+DY[o.dir]*i;if(x===p.x&&y===p.y){hits.push(o);break;}if(!clearLine(x,y))break;}
+ }
+ const special=hits.find(o=>o.role==='elite');if(special)return [special];
+ return hits.sort((a,b)=>Math.abs(a.x-p.x)+Math.abs(a.y-p.y)-Math.abs(b.x-p.x)-Math.abs(b.y-p.y)||a.tid-b.tid);
 }
+function seenBy(){return trainerSightHits()[0]||null;}
 function onStep(){
   const p=G.pl,m=G.map,v=m.t[p.y*m.W+p.x];
   S.steps++;if(p.fly)return;
@@ -5893,19 +5889,20 @@ function onStep(){
   const w=m.warps[p.x+','+p.y];
   if(w&&(v===T.DOOR||v===T.MAT||v===T.LADDER)){run(()=>doWarp(w));return;}
   if(expansionChapterReady(m)){run(()=>expansionChapter(m));return;}
-  const tr=seenBy();if(tr){run(()=>trainerEncounter(tr));return;}
+  const sight=trainerSightHits();if(sight.length){const tr=sight[0];if(sight.length>1&&sight[1].role==='trainer'&&tr.role==='trainer'&&S.party.filter(m=>m.hp>0).length>=2)run(()=>pairedTrainerEncounter(sight.slice(0,2)));else run(()=>trainerEncounter(tr));return;}
   const n=nurseryFor();if(n.egg&&n.egg.held&&n.egg.walk>=HitokariUpgrade.EGG_HATCH){run(hatchNurseryEgg);return;}
   const repel=S.repel||0;if(repel>0){S.repel--;if(S.repel===0){run(async()=>{await msg('まよけのポプリの 効き目が きれた。');const n=ITEM_ORDER.find(id=>S.bag[id]>0&&ITEMS[id].k==='repel');if(n&&await confirmYN('もう一つ 使いますか？'))await useItem(n,{});});return;}}
   if(m.enc&&m.cell&&S.party.length){
     let kind=null,rate=m.enc.rate;
     if(m.advArea==='undersea'&&(v===T.CFLOOR||v===T.TALL)){kind='water';rate=12;}else if(v===T.TALL||(v===T.CFLOOR&&m.pal==='cave'))kind='land';else if(v===T.WATER&&p.surf){kind='water';rate=10;}
-    const lead=S.party.find(a=>a.hp>0);if(kind&&lead&&chance(HitokariUpgrade.encounterChance(rate,abilOf(lead)))){const ec=m.advEnc||m.cell,wp=wildPick(ec,kind,m.enc.bonus||0)||(kind==='water'?waterFallback(ec):null);if(wp&&!HitokariUpgrade.repelBlocks(repel,wp.lv,lead.lv))run(()=>doWild(wp));}
+    const lead=S.party.find(a=>a.hp>0);if(kind&&lead&&chance(HitokariUpgrade.encounterChance(rate,abilOf(lead)))){const ec=m.advEnc||m.cell,wp=wildPick(ec,kind,m.enc.bonus||0)||(kind==='water'?waterFallback(ec):null);if(wp&&!HitokariUpgrade.repelBlocks(repel,wp.lv,lead.lv)){const partner=wildEncounterPartner(ec,kind,m.enc.bonus||0,repel,lead,wp);run(()=>doWild(wp,partner?{wildPartner:partner,water:kind==='water'}:{water:kind==='water'}));}}
   }
 }
 function waterFallback(cell){let best=null,bd=1e9;for(const a of WORLD.areas){if(!a.water.length)continue;const d=Math.abs(a.prog-cell.prog);if(d<bd){bd=d;best=a;}}return best?wildPick(best,'water',0):null;}
 async function doWild(w,opt){
-  const wf=famOf(SP[w.sp]);
-  const r=await battle(Object.assign({wild:tuneIV(makeMon(w.sp,w.lv),wf.one||wf.starter?'rare':'wild')},opt||{}));
+  const wf=famOf(SP[w.sp]),first=tuneIV(makeMon(w.sp,w.lv),wf.one||wf.starter?'rare':'wild'),o={wild:first,...(opt||{})};
+  if(o.wildPartner){const v=o.wildPartner,f=famOf(SP[v.sp]);o.wilds=[first,tuneIV(makeMon(v.sp,v.lv),f.one||f.starter?'rare':'wild')];}
+  const r=await battle(o);
   if(r==='lose')await blackout();
   return r;
 }

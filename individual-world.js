@@ -58,6 +58,7 @@ function applyIndividualFieldDesign(m){
  const d=fieldProfile(m.id);if(!d||m.individualDesign)return;m.individualDesign=d;const blocked=(x,y)=>occupied(m,x,y)||!!m.warps[expKey(x,y)]||!!expAt(m,x,y);
  for(const [x,y,t] of d[7])if(x>0&&y>0&&x<m.W-1&&y<m.H-1&&!blocked(x,y)&&[T.ROCK,T.TREE].includes(m.t[y*m.W+x]))expSet(m,x,y,t);
  if(d[9]){const [x,y,label]=d[9];if(x>0&&y>0&&x<m.W-1&&y<m.H-1&&!blocked(x,y)&&!SOLID[m.t[y*m.W+x]])expPut(m,x,y,{kind:'landmark',label:m.name+'・'+label,design:d[6]});}
+ addLinkedTrainerPair(m);
 }
 function landmarkRecords(){const p=HitokariUpgrade.progress(S);return p.landmarks||(p.landmarks={});}
 async function visitIndividualLandmark(m,o){const rec=landmarkRecords(),fresh=!rec[m.id];rec[m.id]=1;await msg(o.label+'。'+(fresh?'旅の 記録に 加わった！':'ここを 記録している。'));if(fresh){sfx('get');saveGame();}}
