@@ -102,7 +102,7 @@ const BOOK_LEG=[[1201,"星明かりだけが届く空の裂け目","星々が進
 
 'use strict';
 /* ================= core.js : 乱数・タイプ・技・特性・道具 ================= */
-const VERSION='1.5';
+const VERSION='1.6';
 const SHINY_RATE=8192;           // 色違いの確率 1/8192（原作準拠）
 const PARTY_MAX=6;               // 手持ちは6匹まで
 
@@ -1701,7 +1701,7 @@ function icons(){
   g.setTransform(1,0,0,1,0,0);
   ICONS=c;return c;
 }
-function clearGfxCache(){TILESETS={};ICONS=null;CHIBI.clear();scnReset();}
+function clearGfxCache(){TILESETS={};ICONS=null;CHIBI.clear();if(typeof AnimaSpriteEngine!=='undefined')AnimaSpriteEngine.clear();scnReset();}
 function drawTileAt(g,ts,id,fr,x,y){const s=16*K;g.drawImage(ts,id*s,fr*s,s,s,x,y,16,16);}
 function drawIcon(g,i,x,y,w,h){const s=16*K;g.drawImage(icons(),i*s,0,s,s,x,y,w||16,h||16);}
 
@@ -1760,7 +1760,7 @@ function monPic(no){
  const done=st=>()=>{P.st=st;for(const k of [...MONCACHE.keys()])if(k.indexOf(no+'|')===0)MONCACHE.delete(k);trimIndividualCaches();};
  P.img.onload=done(1);P.img.onerror=done(2);P.img.src=MON_PIC_DIR+('000'+no).slice(-4)+'.webp';trimIndividualCaches();return P;
 }
-function monPreload(spId){const sp=SP[spId];if(sp&&sp.book)monPic(sp.book);}
+function monPreload(spId){const sp=SP[spId];if(sp&&sp.book){monPic(sp.book);if(typeof MONBACK!=='undefined'&&MONBACK[sp.book])pic(MON_PIC_DIR+'b'+('000'+sp.book).slice(-4)+'.webp');}}
 // 後ろ姿の絵がある子（27種）は 自分の側で それを使う
 const MONBACK={},MONBACK_CV=new Map();for(const n of ASSET.MON_BACK)MONBACK[n]=1;
 function monBackCv(spId,shiny){
@@ -4008,7 +4008,7 @@ function stageFx(sd,key,up){
   if(up)for(let i=0;i<8;i++)P({s:'glow:'+c,x:A.x+rnd(-20,20),y:A.y+rnd(0,22),vy:-rnd(0.8,2),r:rnd(1.2,2.6),life:20,add:true});
 }
 function statusFx(sd,st){
-  const A=fxPos(sd);
+  const actor=animaBattleActor(sd);if(actor)startIndividualMotion(actor,'status');const A=fxPos(sd);
   if(st==='psn'){burst('bubble:170,80,220',A.x,A.y,11,1.3,{r0:1.6,r1:3.8,l0:18,l1:32,ay:-0.05});for(let i=0;i<4;i++)P({s:'smoke:140,60,190',x:A.x+rnd(-14,14),y:A.y+rnd(-8,10),vy:-0.4,r:rnd(6,9),life:22,a:0.5});}
   else if(st==='brn'){burst('flame',A.x,A.y+8,11,1.3,{ang:-1.57,spread:1,r0:2.5,r1:4.8,l0:14,l1:26,add:true,face:true});burst('glow:255,170,60',A.x,A.y,6,2,{r0:0.8,r1:1.8,add:true});}
   else if(st==='par')for(let i=0;i<8;i++)bolt(A.x+rnd(-20,20),A.y+rnd(-20,20),A.x+rnd(-20,20),A.y+rnd(-20,20),'255,236,110',1.2,8+i);
@@ -4016,7 +4016,7 @@ function statusFx(sd,st){
   else if(st==='frz'){for(let i=0;i<7;i++){const a=i/7*6.28;P({s:'shard',x:A.x+Math.cos(a)*10,y:A.y+Math.sin(a)*8,r:11,life:26,rot:a+1.57});}burst('glow:255,255,255',A.x,A.y,10,1.6,{r0:0.8,r1:1.8,add:true});ring(A.x,A.y,'190,240,255',{});}
   else if(st==='cnf')for(let i=0;i<6;i++){const a=i*1.05;P({s:'star',x:A.x+Math.cos(a)*15,y:A.y-24+Math.sin(a)*4,vx:-Math.sin(a)*0.9,vy:Math.cos(a)*0.25,r:3.2,life:32,vr:0.2});}
 }
-function healFx(sd){const A=fxPos(sd);for(let i=0;i<12;i++)P({s:i%3?'plus':'glow:140,255,160',x:A.x+rnd(-22,22),y:A.y+rnd(0,24),vy:-rnd(0.7,1.7),r:rnd(2.4,4.2),life:Math.round(rnd(20,34)),add:i%3===0});ring(A.x,A.y+18,'140,255,160',{flat:0.3,dr:2.2,w:2.5});LN({k:'pillar',x:A.x,y:A.y+22,w:16,h:70,col:'140,255,160',life:22});}
+function healFx(sd){const actor=animaBattleActor(sd);if(actor)startIndividualMotion(actor,'recover');const A=fxPos(sd);for(let i=0;i<12;i++)P({s:i%3?'plus':'glow:140,255,160',x:A.x+rnd(-22,22),y:A.y+rnd(0,24),vy:-rnd(0.7,1.7),r:rnd(2.4,4.2),life:Math.round(rnd(20,34)),add:i%3===0});ring(A.x,A.y+18,'140,255,160',{flat:0.3,dr:2.2,w:2.5});LN({k:'pillar',x:A.x,y:A.y+22,w:16,h:70,col:'140,255,160',life:22});}
 function sparkleFx(x,y,n,col){burst('glow:'+(col||'255,240,140'),x,y,n,2.2,{r0:1,r1:2.6,l0:16,l1:30,add:true,ay:-0.02,drag:0.95});burst('star',x,y,Math.ceil(n/3),1.6,{r0:2,r1:4,l0:12,l1:22,add:true});}
 const TCOL_RGB=TCOL.map(h=>{const n=parseInt(h.slice(1),16);return(n>>16&255)+','+(n>>8&255)+','+(n&255);});
 // 足した技の演出：物理は 飛びこんで斬る／特殊は 弾や光線を放つ。色と粒はタイプごと
@@ -4078,7 +4078,7 @@ async function altSpecFx(B,sd,A,T,tr,mv){
   await sleep(60);
 }
 async function moveFx(B,sd,mv){
-  startIndividualMotion(bmon(B,sd),mv.phys&&mv.pow?'attack':'cast');
+  startIndividualMotion(bmon(B,sd),mv.has('protect')?'guard':mv.has('heal')?'recover':mv.phys&&mv.pow?'attack':'cast');
   const A=fxPos(sd),T=fxPos(1-sd),tr=mv.pow>=110?3:mv.pow>=80?2:mv.pow>=60?1:0;
   if(mv.pow===0){
     enhancedSkillCue(A,T,mv,0);
@@ -4136,7 +4136,8 @@ async function hitAnim(B,s,eff){
   startIndividualMotion(bmon(B,s),'hit');sfx(eff>1?'hit2':eff<1?'weak':'hit');const k=s?'foeHide':'meHide',T=fxPos(s);
   if(eff>1){ring(T.x,T.y,'255,220,120',{dr:3.2,w:3,life:18,max:18});burst('star',T.x,T.y,6,2.6,{r0:3,r1:6,l0:10,l1:18,add:true});shakeFx(4);}
   FX.lit[s]=1;
-  for(let i=0;i<3;i++){B.fx[k]=1;await sleep(45);B.fx[k]=0;await sleep(45);}
+  // Visible recoil rather than blinking the entire illustration out of existence.
+  B.fx[k]=0;await sleep(reducedFx()?85:200);
 }
 async function faintAnim(B,s){
   startIndividualMotion(bmon(B,s),'faint');sfx('faint');const ky=s?'foeY':'meY',ka=s?'foeA':'meA',T=fxPos(s);
@@ -4149,7 +4150,7 @@ async function inflict(B,s,st,verbose){
   if(m.st){if(verbose)await say('しかし こうかが なかった！');return false;}
   if(abilOf(m)===18||(st==='brn'&&ty.indexOf(1)>=0)||(st==='frz'&&ty.indexOf(5)>=0)||(st==='psn'&&(ty.indexOf(7)>=0||ty.indexOf(16)>=0))){
     if(verbose)await say(n+'には こうかが ないようだ…');return false;}
-  m.st=st;if(st==='slp')m.sc=rr(1,3);
+  m.st=st;if(st==='slp')m.sc=rr(1,3);startIndividualMotion(m,'status');
   statusFx(s,st);sfx('weak');
   await say(n+({psn:'は どくを うけた！',brn:'は やけどを おった！',par:'は からだが しびれた！',slp:'は ねむってしまった！',frz:'は こおりついた！'})[st]);
   return true;
@@ -4180,9 +4181,9 @@ async function applyEffects(B,sd,mv,isStatus,selfOnly){
     }else if(e.k==='heal'){
       const side=B.supportAlly?1-sd:sd,u=bmon(B,side),mx=maxHP(u);
       if(u.hp>=mx)await say('しかし HPは まんたんだ！');
-      else{u.hp=Math.min(mx,u.hp+Math.floor(mx/2));sfx('heal');healFx(side);await hpAnim(B,side);await say(bname(B,side)+'の たいりょくが 回復した！');}
+      else{u.hp=Math.min(mx,u.hp+Math.floor(mx/2));startIndividualMotion(u,'recover');sfx('heal');healFx(side);await hpAnim(B,side);await say(bname(B,side)+'の たいりょくが 回復した！');}
     }else if(e.k==='protect'){
-      const st=bstg(B,sd);if(ri(1<<Math.min(3,st.protN))===0){st.prot=true;st.protN++;await say(bname(B,sd)+'は 守りの かまえに 入った！');}else{st.protN=0;await say('しかし うまく きまらなかった！');}
+      const st=bstg(B,sd);if(ri(1<<Math.min(3,st.protN))===0){st.prot=true;st.protN++;startIndividualMotion(bmon(B,sd),'guard');await say(bname(B,sd)+'は 守りの かまえに 入った！');}else{st.protN=0;await say('しかし うまく きまらなかった！');}
     }else if(e.k==='seed'){
       const ts=bstg(B,1-sd),tm=bmon(B,1-sd);if(selfOnly||tm.hp<=0)continue;
       if(ts.seed||SP[tm.sp].types.indexOf(4)>=0)await say('しかし こうかが なかった！');else{ts.seed=true;if(B.pairSlots)ts.seedFrom=B.pairSlots[sd];await say(bname(B,1-sd)+'に タネを うえつけた！');}
@@ -4215,7 +4216,7 @@ async function useMove(B,sd,idx){
   const u=bmon(B,sd),t=bmon(B,1-sd),us=bstg(B,sd),un=bname(B,sd),tn=bname(B,1-sd);
   if(!B.extra){
   if(us.flinch){us.flinch=false;us.rech=false;await say(un+'は ひるんで うごけない！');return;}
-  if(us.rech){us.rech=false;await say(un+'は はんどうで うごけない！');return;}
+  if(us.rech){us.rech=false;startIndividualMotion(u,'recoil');await say(un+'は はんどうで うごけない！');return;}
   if(u.st==='slp'){if(u.sc>0){u.sc--;await say(un+'は ぐうぐう ねむっている。');return;}u.st=null;await say(un+'は 目を さました！');}
   if(u.st==='frz'){if(ri(5)===0){u.st=null;await say(un+'の こおりが とけた！');}else{await say(un+'は こおって うごけない！');return;}}
   if(u.st==='par'&&ri(4)===0){await say(un+'は しびれて うごけない！');return;}
@@ -4245,7 +4246,7 @@ async function useMove(B,sd,idx){
   }
   if(t.hp<=0)return;
   if(ts.prot){await say(tn+'は 身を まもった！');return;}
-  if(mv.acc>0&&!accCheck(B,sd,mv)){await say('しかし こうげきは はずれた！');return;}
+  if(mv.acc>0&&!accCheck(B,sd,mv)){startIndividualMotion(u,mv.phys?'attack':'cast');startIndividualMotion(t,'alert');await say('しかし こうげきは はずれた！');return;}
   let eff=mv.type>=0?typeEff(mv.type,SP[t.sp].types):1;const ab=abilOf(t);
   if(mv.type===8&&ab===2)eff=0;
   if((mv.type===2&&ab===9)||(mv.type===3&&ab===10)||(mv.type===1&&ab===11)){
@@ -4378,7 +4379,7 @@ async function gainExp(m,amt,B,quiet){
   m.exp+=amt;if(!quiet)await say(monName(m)+'は '+amt+'の けいけんちを えた！');
   while(m.lv<100&&m.exp>=expFor(SP[m.sp],m.lv+1)){
     const oh=maxHP(m);m.lv++;HitokariUpgrade.bond(m,4);if(m.hp>0)m.hp+=maxHP(m)-oh;if(B)B.hpShow[0]=m.hp;
-    sfx('lvup');if(B){sparkleFx(66,104,16);for(let i=0;i<6;i++)P({s:'arrow:255,230,120',x:66+rnd(-22,22),y:rnd(110,130),vy:-rnd(1.4,2.4),r:rnd(3,4.6),life:24,add:true});}
+    startIndividualMotion(m,'levelup');sfx('lvup');if(B){sparkleFx(66,104,16);for(let i=0;i<6;i++)P({s:'arrow:255,230,120',x:66+rnd(-22,22),y:rnd(110,130),vy:-rnd(1.4,2.4),r:rnd(3,4.6),life:24,add:true});}
     await sayW(monName(m)+'は レベル'+m.lv+'に 上がった！');
     await learnMoves(m,m.lv);
   }
@@ -4677,7 +4678,7 @@ function slotBG(x,y,w,h,sel){
 }
 function drawPartySlot(m,i,sel,note){
   const y=17+i*30;win(4,y,232,29,sel?'#fff3c4':'#fbf7ea');
-  drawMonUI(m.sp,m.shiny,8,y+2,25);
+  if(sel)drawIndividualPreview(m.sp,8,y+2,25,m.shiny,m.st==='slp'?'sleep':'idle');else drawMonUI(m.sp,m.shiny,8,y+2,25);
   const name=monName(m)+(m.shiny?'✦':'');tx(name.length>10?name.slice(0,9)+'…':name,37,y+4,'#2a2233',9);
   tx('Lv'+m.lv,139,y+4,'#2a2233',8,'right');
   const mx=maxHP(m),hy=y+17;tx('HP',37,hy-1,'#c8703a',7);bar(51,hy+1,57,4,m.hp/mx,hpCol(m.hp/mx));
@@ -4713,7 +4714,7 @@ function partyPick(opt){
 function drawSummary(m){
   const sp=SP[m.sp];
   screenBG('No.'+String(sp.id).padStart(4,'0')+'　'+monName(m)+(m.shiny?' ✦':'')+'　Lv'+m.lv);
-  win(4,18,74,74,'#e8f0f8');drawMonUI(m.sp,m.shiny,9,23,64);
+  win(4,18,74,74,'#e8f0f8');drawIndividualPreview(m.sp,9,23,64,m.shiny,m.st==='slp'?'sleep':'idle');
   win(80,18,156,74);
   sp.types.forEach((t,j)=>typeTag(t,88+j*16,24));
   tx(TKANA[sp.types[0]]+(sp.types[1]!=null?'・'+TKANA[sp.types[1]]:''),124,25,'#5a5560',9);
@@ -4777,7 +4778,7 @@ async function evolveMon(m){
       const big=ph>=1?nx.id:((G.t>>2)%2&&ph>0.3?nx.id:sp.id),s=96+Math.sin(G.t/6)*6;
       ctx.fillStyle='rgba(255,255,200,'+(0.15+0.25*ph)+')';ctx.beginPath();ctx.ellipse(120,84,60+ph*20,60+ph*20,0,0,6.3);ctx.fill();
       ctx.save();ctx.translate(120,84);ctx.rotate(G.t/50);for(let i=0;i<12;i++){ctx.rotate(Math.PI/6);ctx.fillStyle='rgba(255,250,200,'+(0.05+0.12*ph)+')';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-10,-130);ctx.lineTo(10,-130);ctx.closePath();ctx.fill();}ctx.restore();
-      drawMonUI(big,m.shiny,120-s/2,84-s/2,s);
+      drawIndividualPreview(big,120-s/2,84-s/2,s,m.shiny,ph>=1?'levelup':'cast');
       fxDraw(ctx);
       win(0,LH-MSG_H,LW,MSG_H);}};
   UI.push(w);
@@ -5124,7 +5125,7 @@ async function openMenu(){
     const items=[];
     if(S.flags.dex)items.push(['巡環図鑑',dexMenu],['旅の手帳',journeyJournal]);
     if(badgeCount()>=2)items.push(['育成牧場',nurseryMenu]);
-    if(S.flags.dex)items.push(['旅の生活',expansionLifeMenu],['地方の記録',individualAtlasMenu]);
+    if(S.flags.dex)items.push(['旅の生活',expansionLifeMenu],['地方の記録',individualAtlasMenu],['動きの観察室',animaMotionLab]);
     if(S.flags.champ)items.push(['修練場案内',expansionFacilityGuide]);
     if(S.party.length)items.push(['アニマ',partyScreen]);
     items.push(['もちもの',bagScreen]);
@@ -5133,7 +5134,7 @@ async function openMenu(){
     if(hasItem('k_fly'))items.push([G.pl.fly?'地上に おりる':'空を とぶ',async()=>{const r=await flyStart();return r?'close':null;}]);
     if(hasItem('k_map'))items.push(['地図',mapScreen]);
     items.push(['相性表',typeChartScreen],['きせかえ',wearScreen],[S.name,cardScreen],['きろくする',async()=>{if(saveGame()){sfx('get');await msg('ここまでの 旅を きろくした！');}else await msg('きろく できなかった。空き容量を 確認してね。');}],['せってい',optionsMenu],['とじる',null]);
-    const MIC={'巡環図鑑':30,'アニマ':31,'もちもの':32,'あずかり牧場':36,'地図':34,'相性表':35,'きせかえ':33,'きろくする':37,'せってい':38,'自転車に のる':39,'自転車を おりる':39};
+    const MIC={'巡環図鑑':30,'動きの観察室':31,'アニマ':31,'もちもの':32,'あずかり牧場':36,'地図':34,'相性表':35,'きせかえ':33,'きろくする':37,'せってい':38,'自転車に のる':39,'自転車を おりる':39};
     const i=await menu(items.map(a=>({label:a[0],ic:MIC[a[0]]})),{x:LW-118,y:4,w:114,idx,rows:12});
     if(i<0||!items[i][1])return;idx=i;
     const r=await items[i][1]();
@@ -5180,8 +5181,8 @@ function folVisible(){return FOL.show&&!G.pl.surf&&!G.pl.fly&&!(G.pl.alt>0.02)&&
 function folPos(){const p=G.pl,t=FOL.moving&&p.moving?p.prog/16:1;return[(FOL.fx+(FOL.x-FOL.fx)*t)*16,(FOL.fy+(FOL.y-FOL.fy)*t)*16,t];}
 function drawFollower(g,camx,camy){
   const m=folLead();if(!m)return;const q=folPos(),x=q[0]-camx,y=q[1]-camy,mv=FOL.moving&&G.pl.moving;
-  const hop=mv?-Math.abs(Math.sin(q[2]*Math.PI))*1.6:Math.sin(G.t/16)*0.4,fl=FAMS[SP[m.sp].fam].plan;
-  const lift=(fl==='ghost'||fl==='fish')?3+Math.sin(G.t/20)*1.2:0;
+  const hop=reducedFx()?0:mv?-Math.abs(Math.sin(q[2]*Math.PI))*.65:0,fl=FAMS[SP[m.sp].fam].plan;
+  const lift=(fl==='ghost'||fl==='fish')?2.4:0;
   drawIcon(g,3,x,y+2);
   drawIndividualMotion(g,m,monCanvas(m.sp,m.shiny,FOL.face),x+8-13,y+15.5-26+hop-lift,26,1,0,0,FOL.face,mv?'walk':'idle');
 }
@@ -5191,7 +5192,7 @@ async function folTalk(){
   const L=m.st?[n+'は ぐあいが わるそうだ…。はやく 治してあげよう。']:r<0.34?[n+'は つかれているようだ。診療所で 休ませてあげよう。']:
     [n+'は うれしそうに こちらを 見ている。',n+'は ぴょんぴょん はねている！',n+'は あたりの においを かいでいる。',n+'は きみの まわりを くるりと まわった。',n+'は たのしそうに ついてくる。',n+'と 目が あった。なんだか うれしい。',n+'は カンテラの 灯を じっと 見つめている。'];
   if(!m.st&&r>=0.34&&m.bond>=180)L.push(n+'は すっかり 心を ゆるしている！');
-  if(!m.st)startIndividualMotion(m,'celebrate');sfx('sel');await msg(pick(L));
+  const line=pick(L),clip=m.st?'status':r<.34?'sleep':/はね|うれし|たのし|心を/.test(line)?'celebrate':/におい|じっと|目が/.test(line)?'inspect':'alert';startIndividualMotion(m,clip);sfx('sel');await msg(line);
 }
 
 /* ---------- 昼と夜（端末の時計にあわせる） ---------- */
@@ -6076,7 +6077,7 @@ function drawWorldPix(){
     else if(o.k==='deco'){if(!objFit(g,o.f,x+8,y+16,16,25))drawIcon(g,0,x,y);}
     else if(o.k==='legend'){drawIcon(g,3,x-4,y+2,24,18);      // 守護獣の装置（その上に あらわれる）
       const dv=picOK('obj/dev'+(o.sp===SP_OWARI?0:SP[o.sp].book)+'.webp');if(dv){smooth(g);const w=30,h=w*dv.height/dv.width;g.drawImage(dv,x+8-w/2,y+15-h,w,h);}
-      if(!o.absent)g.drawImage(monCanvas(o.sp,false,false),x-8,y-(dv?27:18)+Math.sin(G.t/20)*1.5,32,32);}
+      if(!o.absent)drawAnimaWorldPreview(g,o.sp,x-8,y-(dv?27:18),32);}
     else{
       const water=m.t[o.y*m.W+o.x]===T.WATER;
       if(water)drawChar(g,o.spr,o.dir,0,x,y-2+Math.sin(G.t/16+o.x)*0.5,12);
@@ -6351,7 +6352,10 @@ window.addEventListener('load',()=>{
 <script src="data/npc-schedules.js"></script>
 <script src="data/field-designs.js"></script>
 <script src="individual-world.js"></script>
+<script src="data/anima-rigs.js"></script>
+<script src="anima-sprite-engine.js"></script>
 <script src="animation-enhancement.js"></script>
+<script src="anima-motion-lab.js"></script>
 <script src="mobile-quality.js"></script>
 </body>
 </html>

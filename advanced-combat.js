@@ -79,7 +79,7 @@ async function doubleUseItem(D,a){
  if(it.k==='cure'){m.st=null;m.sc=0;}
  if(it.k==='revive'){m.hp=it.v?maxHP(m):Math.max(1,Math.floor(maxHP(m)/2));m.st=null;m.sc=0;}
  if(it.k==='pp')for(const v of m.mv)v.pp=MOVES[v.id].pp;
- if(--S.bag[a.id]<=0)delete S.bag[a.id];sfx('heal');const target=D.slots[0].find(s=>s&&s.i===a.targetIndex);if(target){const opp=doubleActive(D,1)[0];if(opp){const B=doublePair(D,target,opp);healFx(0);await hpAnim(B,0);}else target.hpShow=m.hp;}
+ if(--S.bag[a.id]<=0)delete S.bag[a.id];startIndividualMotion(m,'recover');sfx('heal');const target=D.slots[0].find(s=>s&&s.i===a.targetIndex);if(target){const opp=doubleActive(D,1)[0];if(opp){const B=doublePair(D,target,opp);healFx(0);await hpAnim(B,0);}else target.hpShow=m.hp;}
  await say(monName(m)+'に '+it.n+'を 使った！');
 }
 function doubleAI(D,s,reserved){
