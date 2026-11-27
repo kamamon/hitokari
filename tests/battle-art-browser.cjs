@@ -13,10 +13,13 @@ const {chromium,webkit,devices}=require('playwright'),assert=require('node:asser
    ck(f===battleArtSource(front,false,96),'source cache');ck(f.sourceWidth>100&&b.sourceHeight>100,'native artwork');
    // Use a real animation pose, assert a high resolution mesh frame and alpha geometry.
    front.previewClip='slash';front.previewStart=G.t-12;const p=resolveIndividualMotion(front,null),frame=battleArtFrame(f,p,false);ck(frame&&frame.n>=Math.min(320,f.n),'HD motion frame');
-   const out=document.createElement('canvas');out.width=out.height=frame.c.width;const g=out.getContext('2d');g.drawImage(frame.c,0,0);const a=g.getImageData(0,0,out.width,out.height).data;let visible=0;for(let i=3;i<a.length;i+=4)if(a[i]>32)visible++;ck(visible>100&&a[3]===0,'alpha');
+   const out=document.createElement('canvas');out.width=out.height=frame.n+2*frame.pad;const g=out.getContext('2d');if(frame.rect)g.drawImage(frame.c,...frame.rect,0,0,out.width,out.height);else g.drawImage(frame.c,0,0);const a=g.getImageData(0,0,out.width,out.height).data;let visible=0;for(let i=3;i<a.length;i+=4)if(a[i]>32)visible++;ck(visible>100&&a[3]===0,'alpha');
    const gpuBackend=battleArtInfo().backend;delete front.previewClip;
+   if(gpuBackend==='webgl-hd'){
+    const pattern=document.createElement('canvas');pattern.width=pattern.height=192;const pg=pattern.getContext('2d');pg.fillStyle='#ef2b32';pg.fillRect(20,20,65,65);pg.fillStyle='#1f47e7';pg.fillRect(106,106,65,65);const source={canvas:pattern,n:192,bounds:[0,0,1,1]};const identity={rig:animaRig(19),clip:'attack',t:0};const q=battleMeshGPU().render(source,identity,false),cc=document.createElement('canvas');cc.width=cc.height=192;const cg=cc.getContext('2d');cg.drawImage(q.c,q.rect[0]+q.pad,q.rect[1]+q.pad,192,192,0,0,192,192);const red=cg.getImageData(48,48,1,1).data,blue=cg.getImageData(140,140,1,1).data;ck(red[0]>180&&red[2]<100&&blue[2]>180&&blue[0]<100,'GPU correct orientation/colors');
+   }
    // Even without WebGL, use sharp originals or high-density CPU frames.
-   G.t++;const cpu=battleArtFrame(f,p,false,true);ck(cpu&&cpu.n>=Math.min(320,f.n),'CPU fallback HD');ck(AnimaSpriteEngine.info().hdBytes<=24*1048576,'CPU cache bound');
+   G.t++;const cpu=battleArtFrame(f,p,false,true);ck(cpu&&cpu.n===f.n,'CPU fallback preserves full resolution');ck(AnimaSpriteEngine.info().hdBytes<=24*1048576,'CPU cache bound');
    const pix=(c)=>c.getContext('2d').getImageData(0,0,c.width,c.height).data;
    // Pixel test: an image with narrow alternating detail must retain more contrast in HD.
    const test=document.createElement('canvas');test.width=test.height=384;const tg=test.getContext('2d');for(let x=12;x<372;x+=4){tg.fillStyle=(x/4)%2?'#fff':'#141414';tg.fillRect(x,12,4,360);}

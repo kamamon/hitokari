@@ -3,7 +3,7 @@
 // orientation and shiny color; deform at the backing-store pixel density.
 const BATTLE_ART_CACHE=new Map();
 const BATTLE_ART_STATS={gpu:0,cpu:0,direct:0,sourceBuilds:0,lastSize:0,lastTarget:0,backend:'not-used'};
-let BATTLE_ART_BYTES=0,BATTLE_GPU=null,BATTLE_GPU_TRIED=false,BATTLE_ART_TICK=-1,BATTLE_ART_BAKES=0,BATTLE_SCENE_DENSITY=false;
+let BATTLE_ART_BYTES=0,BATTLE_GPU=null,BATTLE_GPU_TRIED=false,BATTLE_ART_TICK=-1,BATTLE_ART_BAKES=0,BATTLE_CPU_NEXT=0,BATTLE_SCENE_DENSITY=false;
 function syncBattleResolution(){
  const active=G.scene==='battle';
  if(active!==BATTLE_SCENE_DENSITY){BATTLE_SCENE_DENSITY=active;resize();}
@@ -36,7 +36,7 @@ function battleArtSource(mon,back,w,g=null){
  return a;
 }
 function makeBattleMeshGPU(){
- const c=document.createElement('canvas');c.width=c.height=128;
+ const c=document.createElement('canvas');c.width=c.height=640; // Fixed buffer: never reallocate it between differently sized battle actors.
  const gl=c.getContext('webgl',{alpha:true,antialias:false,depth:false,stencil:false,premultipliedAlpha:true,preserveDrawingBuffer:true});
  if(!gl)return null;
  function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
@@ -50,7 +50,7 @@ function makeBattleMeshGPU(){
  function clear(){for(const v of textures.values())gl.deleteTexture(v.tex);textures.clear();texBytes=0;}
  function render(source,p,mirrored){
   if(gl.isContextLost())return null;
-  const n=source.n,pad=Math.ceil(n*.105),out=n+2*pad;if(c.width!==out||c.height!==out)c.width=c.height=out;
+  const n=source.n,pad=Math.ceil(n*.105),out=n+2*pad;
   let v=textures.get(source.canvas);
   if(!v){
    const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
@@ -61,10 +61,10 @@ function makeBattleMeshGPU(){
   const [l,t,bw,bh]=source.bounds;let k=0;
   for(let j=0;j<=grid;j++)for(let i=0;i<=grid;i++){const xx=(i*out/grid-pad)/n,yy=(j*out/grid-pad)/n,d=AnimaSpriteEngine.mesh(p.rig,p.clip,p.t,clamp((xx-l)/bw,0,1),clamp((yy-t)/bh,0,1),mirrored);
    verts[k++]=i/grid*2-1;verts[k++]=1-j/grid*2;verts[k++]=xx-d[0]*bw;verts[k++]=yy-d[1]*bh;}
-  gl.viewport(0,0,out,out);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.disable(gl.BLEND);gl.useProgram(program);
+  gl.viewport(0,c.height-out,out,out);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT);gl.disable(gl.BLEND);gl.useProgram(program);
   gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,v.tex);gl.uniform1i(gl.getUniformLocation(program,'art'),0);
   gl.bindBuffer(gl.ARRAY_BUFFER,vb);gl.bufferData(gl.ARRAY_BUFFER,verts,gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,16,0);gl.enableVertexAttribArray(uv);gl.vertexAttribPointer(uv,2,gl.FLOAT,false,16,8);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.drawElements(gl.TRIANGLES,indices.length,gl.UNSIGNED_SHORT,0);
-  return{c,n,pad};
+  return{c,n,pad,rect:[0,0,out,out]};
  }
  return{render,clear,info:()=>({textures:textures.size,bytes:texBytes})};
 }
@@ -79,9 +79,9 @@ function battleArtFrame(source,p,back,forceCPU=false){
  // No WebGL: same high-resolution source, separate bounded CPU cache; never use tiny atlases.
  // Keep frame generation within a one-bake-per-tick budget. Uncached poses use crisp root motion.
  if(BATTLE_ART_TICK!==G.t){BATTLE_ART_TICK=G.t;BATTLE_ART_BAKES=0;}
- const before=AnimaSpriteEngine.info().builds,n=Math.min(source.n,isTouchDevice()?320:384),steps=AnimaSpriteEngine.looped.has(p.clip)?8:10;
- let a=null;try{a=AnimaSpriteEngine.getFrame(source.canvas,p.rig,p.clip,p.t,{size:n,steps,mirror:!!back,hd:true,budget:24*1048576,allow:BATTLE_ART_BAKES<1});}catch(e){}
- BATTLE_ART_BAKES+=AnimaSpriteEngine.info().builds-before;
+ const before=AnimaSpriteEngine.info().builds,n=source.n,steps=AnimaSpriteEngine.looped.has(p.clip)?8:10,started=performance.now();
+ let a=null;try{a=AnimaSpriteEngine.getFrame(source.canvas,p.rig,p.clip,p.t,{size:n,steps,mirror:!!back,hd:true,budget:24*1048576,allow:forceCPU||(BATTLE_ART_BAKES<1&&G.t>=BATTLE_CPU_NEXT)});}catch(e){}
+ const made=AnimaSpriteEngine.info().builds-before;BATTLE_ART_BAKES+=made;if(made){const elapsed=performance.now()-started;BATTLE_CPU_NEXT=G.t+Math.max(1,Math.min(8,Math.ceil(elapsed/6)));}
  if(a){BATTLE_ART_STATS.cpu++;BATTLE_ART_STATS.backend='cpu-hd';return a;}
  return null;
 }
@@ -100,11 +100,11 @@ function drawBattleArt(g,m,x,y,w,back=false,al=1,sx=0,lit=0,forceCPU=false){
  if(!a){BATTLE_ART_STATS.direct++;BATTLE_ART_STATS.backend='direct-hd';}
  const q=battleSnap(g,x+w/2+dir*p.dx*s,y+w+p.dy*s);
  g.save();g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.translate(q[0],q[1]);g.transform(p.sx*(1+(sx||0)),0,p.lean*dir,p.sy*(1-(sx||0)),0,0);g.globalAlpha=al;
- const draw=()=>{if(a){const margin=a.pad/a.n*w;g.drawImage(a.c,-w/2-margin,-w-margin,w+2*margin,w+2*margin);}else g.drawImage(source.canvas,-w/2,-w,w,w);};
+ const draw=()=>{if(a){const margin=a.pad/a.n*w;if(a.rect)g.drawImage(a.c,...a.rect,-w/2-margin,-w-margin,w+2*margin,w+2*margin);else g.drawImage(a.c,-w/2-margin,-w-margin,w+2*margin,w+2*margin);}else g.drawImage(source.canvas,-w/2,-w,w,w);};
  draw();
  // Hit lighting is a brief overlay, not a permanent duplicate that softens the image.
  if(lit>.05&&!reducedFx()){g.globalCompositeOperation='lighter';g.globalAlpha=Math.min(.25,lit*.25)*al;draw();}
  g.restore();animaMotionFX(g,m,p,x,y,w,false,al);
 }
-function clearBattleArt(){BATTLE_ART_CACHE.clear();BATTLE_ART_BYTES=0;if(BATTLE_GPU)BATTLE_GPU.clear();if(typeof AnimaSpriteEngine!=='undefined')AnimaSpriteEngine.clearHD();BATTLE_ART_TICK=-1;BATTLE_ART_BAKES=0;}
+function clearBattleArt(){BATTLE_ART_CACHE.clear();BATTLE_ART_BYTES=0;if(BATTLE_GPU)BATTLE_GPU.clear();if(typeof AnimaSpriteEngine!=='undefined')AnimaSpriteEngine.clearHD();BATTLE_ART_TICK=-1;BATTLE_ART_BAKES=0;BATTLE_CPU_NEXT=0;}
 function battleArtInfo(){return{...BATTLE_ART_STATS,sources:BATTLE_ART_CACHE.size,sourceBytes:BATTLE_ART_BYTES,textures:BATTLE_GPU?BATTLE_GPU.info():null,hdBytes:AnimaSpriteEngine.info().hdBytes};}
