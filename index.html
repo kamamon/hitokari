@@ -827,6 +827,29 @@ const abilOf=m=>abilityOptions(SP[m.sp]).includes(m.ability)?m.ability:SP[m.sp].
 function starterMoveAllowed(sp,id){const r=STARTER_SPECIES.get(sp.id);if(!r)return true;return (id!==famOf(sp).starterSignature||r.stage===2)&&(r.stage>0||MOVES[id].type!==r.family.secondary);}
 function starterRivalId(chosen){const i=STARTERS.indexOf(chosen);return STARTERS[(Math.max(0,i)+1)%3];}
 function starterPinch(m,type){const ab=abilOf(m);return (ab===0||ab>=19&&ab<=21)&&type===SP[m.sp].types[0]&&m.hp>0&&m.hp*3<=maxHP(m);}
+
+function starterState(B,m){if(!B)return {};const flags=B.starterFlags||(B.starterFlags=new WeakMap());let f=flags.get(m);if(!f){f={};flags.set(m,f);}return f;}
+function starterOpponents(B,sd){return !B.pairSlots||B.pairSlots[sd].side!==B.pairSlots[1-sd].side;}
+function starterMirror(B,sd,mv){return !mv.phys&&mv.pow>0&&!mv.has('fixed')&&!mv.has('level')&&!mv.has('halve')&&starterOpponents(B,sd)&&abilOf(bmon(B,1-sd))===23&&!starterState(B,bmon(B,1-sd)).mirror;}
+async function starterAfterDamage(B,sd,before,damage,mirror=false){
+ const m=bmon(B,1-sd);if(!starterOpponents(B,sd)||!damage)return;const f=starterState(B,m);
+ if(mirror){f.mirror=true;await say(bname(B,1-sd)+'の 「水鏡」が 攻撃を やわらげた！');}
+ if(abilOf(m)===22&&!f.ember&&before*2>maxHP(m)&&m.hp>0&&m.hp*2<=maxHP(m)){
+  f.ember=true;await say(bname(B,1-sd)+'の 「残火加速」！');await boost(B,1-sd,'spe',1);
+ }
+}
+function starterStatusSnapshot(B,sd){
+ const u=bmon(B,sd),t=bmon(B,1-sd),keys=['atk','def','spa','spd','spe','acc','eva','conf','seed','focus','rech','flinch'];
+ return JSON.stringify([u.hp,u.st,u.sc,t.hp,t.st,t.sc,keys.map(k=>bstg(B,sd)[k]),keys.map(k=>bstg(B,1-sd)[k]),B.weather,B.wall]);
+}
+function starterRootMark(B,sd,mv,before){
+ const m=bmon(B,sd);if(!B.extra&&abilOf(m)===24&&!['heal','protect','rest','cure','wall'].some(k=>mv.has(k))&&before!==starterStatusSnapshot(B,sd))starterState(B,m).rootTurn=B.turnN||0;
+}
+async function starterRootEnd(B,s,turn){
+ const m=bmon(B,s),f=starterState(B,m);if(f.rootTurn!==turn)return;delete f.rootTurn;if(abilOf(m)!==24||m.hp<=0||m.hp>=maxHP(m))return;
+ m.hp=Math.min(maxHP(m),m.hp+Math.max(1,Math.floor(maxHP(m)/16)));healFx(s);await hpAnim(B,s);await say(bname(B,s)+'の 「深根」で HPが 回復した！');
+}
+
 function healMon(m){m.hp=maxHP(m);m.st=null;m.sc=0;for(const v of m.mv)v.pp=MOVES[v.id].pp;}
 
 'use strict';
@@ -4151,6 +4174,7 @@ function calcDamage(B,s,mv,crit,eff,roll=85+ri(16)){
     if(abilOf(d)===8&&(mv.type===1||mv.type===5))dmg=Math.floor(dmg/2);
   }
   {const h=heldOf(a);if(h.t===mv.type)dmg=Math.floor(dmg*1.15);if(h.all)dmg=Math.floor(dmg*h.all);}      // 持たせた道具
+  if(starterMirror(B,s,mv))dmg=Math.floor(dmg*.75);
   return Math.max(1,Math.floor(dmg*roll/100*(B.spreadFactor||1)));
 }
 async function hpAnim(B,s){const from=B.hpShow[s],to=bmon(B,s).hp;if(from===to)return;await tween(Math.min(600,160+Math.abs(from-to)*12),p=>{B.hpShow[s]=from+(to-from)*p;});B.hpShow[s]=to;}
@@ -4264,7 +4288,7 @@ async function useMove(B,sd,idx){
     if(onFoe&&ts.prot){await say(tn+'は 身を まもった！');return;}
     if(onFoe&&mv.acc>0&&!accCheck(B,sd,mv)){await say('しかし '+tn+'には あたらなかった！');return;}
     await moveFx(B,sd,mv);
-    await applyEffects(B,sd,mv,true,false);return;
+    const before=abilOf(u)===24?starterStatusSnapshot(B,sd):null;await applyEffects(B,sd,mv,true,false);if(before!==null)starterRootMark(B,sd,mv,before);return;
   }
   if(t.hp<=0)return;
   if(ts.prot){startIndividualMotion(t,'guard');await say(tn+'は 身を まもった！');return;}
@@ -4274,10 +4298,11 @@ async function useMove(B,sd,idx){
   if((mv.type===2&&ab===9)||(mv.type===3&&ab===10)||(mv.type===1&&ab===11)){
     const mx=maxHP(t);t.hp=Math.min(mx,t.hp+Math.floor(mx/4));healFx(1-sd);await hpAnim(B,1-sd);await say(tn+'は 「'+ABIL[ab].n+'」で 技を すいとった！');return;}
   if(eff===0){await say(tn+'には まったく きかない！');return;}
+  const beforeHP=t.hp,mirror=starterMirror(B,sd,mv);
   const fxd=mv.eff.find(e=>e.k==='fixed');
   if(fxd||mv.has('level')||mv.has('halve')){     // 決まった量のダメージ（能力や相性の倍率を 受けない）
     const d0=Math.min(t.hp,fxd?fxd.n:mv.has('level')?u.lv:Math.max(1,Math.floor(t.hp/2)));
-    await moveFx(B,sd,mv);await hitAnim(B,1-sd,1);t.hp-=d0;await hpAnim(B,1-sd);await applyEffects(B,sd,mv,false,t.hp<=0);return;
+    await moveFx(B,sd,mv);await hitAnim(B,1-sd,1);t.hp-=d0;await hpAnim(B,1-sd);if(abilOf(t)===22)await starterAfterDamage(B,sd,beforeHP,d0,false);await applyEffects(B,sd,mv,false,t.hp<=0);return;
   }
   const hits=mv.has('multi')?[2,2,3,3,4,5][ri(6)]:mv.has('twice')?2:1;
   let dmg=0,nh=0,crit=false,sturdy=false,held1=false;
@@ -4291,6 +4316,7 @@ async function useMove(B,sd,idx){
     if(c1){const T=fxPos(1-sd);P({s:'star',x:T.x,y:T.y,r:10,dr:1.4,life:10,add:true});flashFx('255,255,255',0.35);crit=true;}
     await hitAnim(B,1-sd,eff);t.hp-=d1;await hpAnim(B,1-sd);dmg+=d1;nh++;
   }
+  if(mirror||abilOf(t)===22)await starterAfterDamage(B,sd,beforeHP,dmg,mirror);
   if(hits>1)await say(nh+'回 あたった！');
   if(crit)await say('急所を とらえた！');
   if(eff>1)await say('こうかは てきめんだ！');else if(eff<1)await say('あまり きいていない…');
@@ -4449,6 +4475,7 @@ async function endTurn(B){
     if(B.weather==='sand'||B.weather==='hail'){const ty=SP[m.sp].types,safe=B.weather==='sand'?(ty.indexOf(8)>=0||ty.indexOf(12)>=0||ty.indexOf(16)>=0):ty.indexOf(5)>=0;
       if(!safe){m.hp=Math.max(0,m.hp-Math.max(1,Math.floor(maxHP(m)/16)));FX.lit[s]=1;await hpAnim(B,s);await say(n+'は '+WX_JP[B.weather]+'に うたれた！');if(m.hp<=0)continue;}}
     if(m.st==='psn'||m.st==='brn'){statusFx(s,m.st);FX.lit[s]=1;sfx('weak');m.hp=Math.max(0,m.hp-Math.max(1,Math.floor(maxHP(m)/8)));await hpAnim(B,s);await say(n+'は '+STATUS_JP[m.st]+'の ダメージを うけた！');if(m.hp<=0)continue;}
+    await starterRootEnd(B,s,B.turnN-1);
     const ab=abilOf(m);
     if(ab===16&&m.hp<maxHP(m)){m.hp=Math.min(maxHP(m),m.hp+Math.max(1,Math.floor(maxHP(m)/16)));healFx(s);await hpAnim(B,s);}
     if(ab===7&&st.spe<6){st.spe++;await say(n+'は 「追い風」で すばやさが 上がった！');}
