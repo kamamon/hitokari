@@ -13,6 +13,14 @@ jobs:
           node-version: '22'
       - run: node --test tests/emerald-core.test.cjs
       - run: npm install --no-save playwright
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - run: node tests/browser-smoke.cjs
       - run: node tests/expansion-browser.cjs
+      - run: node tests/individual-world-browser.cjs
+      - run: node tests/story-clear-browser.cjs
+      - run: node tests/mobile-webkit.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v5-test-reports
+          path: test-results/
