@@ -6,7 +6,7 @@ function animaMoveClip(m,mv){
  if(has('protect'))return'guard';if(has('heal')||!mv.pow&&has('mend'))return'recover';
  if(/ほうこう|さけび|いかく|うなり|おたけび/.test(n))return'roar';
  if(!mv.pow)return'cast';
- if(!mv.phys)return /こうせん|ビーム|レーザー|光線/.test(n)?'beam':/なみ|あらし|ばくはつ|はどう|ふぶき|いかり/.test(n)||mv.pow>=100?'pulse':'cast';
+ if(!mv.phys)return (/こうせん|せんこう|ビーム|レーザー|光線|とうけつこう|ひかり|ほうげき$/.test(n)||/ほう$/.test(n)&&!/かいほう$/.test(n))?'beam':/なみ|あらし|ばくはつ|はどう|ふぶき|いかり/.test(n)||mv.pow>=100?'pulse':'cast';
  if(/かみ|きば|がぶ|噛|牙/.test(n))return'bite';
  if(/しっぽ|おびれ|テール|尾/.test(n)&&(r[4]&4||[0,3,4,7,8].includes(p)))return'tailstrike';
  if(/つばさ|はね|ウイング|翼|羽/.test(n)&&(r[4]&1||[2,5].includes(p)))return'wingstrike';

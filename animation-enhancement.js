@@ -21,7 +21,7 @@ function resolveIndividualMotion(m,preferred){
  let clip=m.previewClip||preferred||'idle',phase;
  if(m.previewClip){const d=animaClipDuration(m.sp,clip);phase=AnimaSpriteEngine.looped.has(clip)?((G.t-(m.previewStart||0))%d+d)%d/d:Math.min(1,Math.max(0,G.t-(m.previewStart||0))/d);}
  else if(ev&&age<=animaClipDuration(m.sp,ev.clip)){clip=ev.clip;phase=age/animaClipDuration(m.sp,clip);}
- else{if(ev)INDIVIDUAL_MOTION_EVENTS.delete(m);if(m.st==='slp')clip='sleep';else if(clip==='idle'&&Number.isFinite(m.hp)&&m.hp>0&&m.lv&&m.hp/maxHP(m)<.25)clip='tired';else if(clip==='idle'&&!m.previewClip){const cycle=(G.t+rig[10]*3)%Math.max(240,410+rig[0]%180);if(cycle<48)clip=rig[1]===2||rig[1]===5?'wingstrike':rig[1]===3||rig[1]===4?'swim':'inspect';}const d=animaClipDuration(m.sp,clip);phase=((G.t+rig[10])%d+d)%d/d;}
+ else{if(ev)INDIVIDUAL_MOTION_EVENTS.delete(m);if(m.st==='slp')clip='sleep';else if(clip==='idle'&&Number.isFinite(m.hp)&&m.hp>0&&m.lv&&m.hp/maxHP(m)<.25)clip='tired';else if(clip==='idle'&&!m.previewClip){const cycle=(G.t+rig[10]*3)%Math.max(240,410+rig[0]%180),next=rig[1]===3||rig[1]===4?'swim':'inspect',span=animaClipDuration(m.sp,next);if(cycle<span){clip=next;phase=cycle/span;}}const d=animaClipDuration(m.sp,clip);if(phase===undefined)phase=((G.t+rig[10])%d+d)%d/d;}
  const q=AnimaSpriteEngine.pose(rig,clip,phase);
  // Blend original species-specific root timeline lightly, retaining each ID's timing and personality.
  const i=SORANE_MOTION_CLIPS.indexOf(clip),old=i<0?null:motionSample(m.sp,clip,phase*profile[10][i]);
