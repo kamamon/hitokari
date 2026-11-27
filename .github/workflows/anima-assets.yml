@@ -1,0 +1,46 @@
+name: Anima full sprite asset pack
+on:
+  pull_request:
+    paths:
+      - 'anima-sprite-engine.js'
+      - 'data/anima-rigs.js'
+      - 'anima-motion-lab.js'
+      - 'tools/bake-anima-sheets.cjs'
+      - '.github/workflows/anima-assets.yml'
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'compact: 6 actions x 4 frames; full: 17 actions x 8 frames'
+        type: choice
+        options: [compact, full]
+        default: compact
+      view:
+        description: 'front or reverse (real back art when available)'
+        type: choice
+        options: [front, reverse]
+        default: front
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - name: Generate 1212 sprite sheets
+        env:
+          PROFILE: ${{ inputs.profile || 'compact' }}
+          VIEW: ${{ inputs.view || 'front' }}
+        run: |
+          flags=()
+          if [ "$PROFILE" = compact ]; then flags+=(--compact); fi
+          if [ "$VIEW" = reverse ]; then flags+=(--back); fi
+          node tools/bake-anima-sheets.cjs --all "${flags[@]}" --out=anima-sheets
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anima-1212-sprite-sheets
+          path: anima-sheets/
+          if-no-files-found: error

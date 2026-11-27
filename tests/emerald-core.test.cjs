@@ -15,3 +15,15 @@ test('three independent inherited stats and evolution fallback',()=>{const r=h.i
 test('all original music cues and deterministic climate',()=>{const a=require('../audio-engine.js');assert.equal(Object.keys(a.tracks).length,10);for(const t of Object.keys(a.tracks))for(let i=0;i<64;i++){const v=a.notes(t,i);assert.ok(v.duration>0);assert.ok(v.notes.every(n=>Number.isFinite(n.midi)&&n.vol>0&&n.len>0));}assert.equal(a.naturalWeather({cell:{kind:'route',prog:5},pal:'snow'},2),'hail');assert.equal(a.naturalWeather({cell:{kind:'town',prog:5},pal:'snow'},2),null);assert.equal(a.naturalWeather({cell:{kind:'route',prog:3},pal:'snow'},2),null);assert.equal(a.naturalWeather({cell:{kind:'route',prog:10},pal:'desert'},8),null);});
 
 test('expansion script and asset syntax',()=>{for(const p of ['advanced-combat.js','world-expansion.js','animation-enhancement.js'])new vm.Script(fs.readFileSync(p,'utf8'),{filename:p});for(const p of ['ui/expansion-icons.svg','ui/expansion-fx.svg','obj/expansion-terrain.svg'])assert.match(fs.readFileSync(p,'utf8'),/<svg[\s\S]+<\/svg>/);});
+
+test('anima rigs: 1212 unique valid records, 17 motions, finite local deformation',()=>{
+ const e=require('../anima-sprite-engine.js'),r=require('../data/anima-rigs.js');
+ assert.equal(r.length,1212);assert.equal(e.clips.length,17);assert.equal(new Set(r.map(v=>JSON.stringify(v.slice(1)))).size,1212);
+ assert.equal(new Set(r.map(v=>v[1])).size,10);let n=0;
+ for(let i=0;i<r.length;i++){const v=r[i];assert.equal(v[0],i+1);assert.ok(v[2]>=0&&v[2]<17);
+ for(const clip of e.clips){assert.ok(e.duration(v,clip)>0);
+ for(const t of [0,.25,.5,.75,1]){const p=e.pose(v,clip,t);assert.ok(Object.values(p).every(Number.isFinite));assert.ok(p.sx>0&&p.sy>0);
+ for(const [x,y] of [[.12,.16],[.8,.18],[.2,.85],[.82,.86],[.5,.5]]){const a=e.mesh(v,clip,t,x,y);assert.ok(a.every(z=>Number.isFinite(z)&&Math.abs(z)<.3));n++;}
+ }}}assert.equal(n,515100);
+});
+test('animation asset files and new code syntax',()=>{for(const p of ['anima-sprite-engine.js','data/anima-rigs.js','anima-motion-lab.js'])new vm.Script(fs.readFileSync(p,'utf8'),{filename:p});for(const [p,n] of [['type-energy',136],['contact',80],['emotions',48]]){const s=fs.readFileSync('mon/motion-v6/'+p+'.svg','utf8');assert.match(s,/<svg[\s\S]+<\/svg>/);assert.equal([...s.matchAll(/<g transform="translate\(\d+ \d+\)">/g)].length,n);}});
