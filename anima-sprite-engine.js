@@ -92,10 +92,10 @@ const AnimaSpriteEngine=(()=>{
  }
  // Bounded, alpha-aware inverse sampling. No seams between strips or holes at joints.
  function canvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
- let sourceCounter=0;const sources=new WeakMap(),frames=new Map();let bytes=0,builds=0,hits=0,misses=0,approximate=0;
+ let sourceCounter=0;const sources=new WeakMap(),frames=new Map(),hdFrames=new Map();let bytes=0,hdBytes=0,builds=0,hits=0,misses=0,approximate=0;
  function snapshot(c,n){
   let m=sources.get(c);if(!m){m=new Map();sources.set(c,m);}if(m.has(n))return m.get(n);
-  const s=canvas(n,n),g=s.getContext('2d',{willReadFrequently:true});g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(c,0,0,n,n);
+  const s=c.width===n&&c.height===n&&typeof c.getContext==='function'?c:canvas(n,n),g=s.getContext('2d',{willReadFrequently:true});if(s!==c){g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(c,0,0,n,n);}
   const pixels=g.getImageData(0,0,n,n).data;let l=n,t=n,r=-1,b=-1;
   for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(pixels[(y*n+x)*4+3]>24){l=Math.min(l,x);r=Math.max(r,x);t=Math.min(t,y);b=Math.max(b,y);}
   if(r<l){l=t=0;r=b=n-1;}
@@ -124,19 +124,20 @@ const AnimaSpriteEngine=(()=>{
  }
  function getFrame(c,rig,clip,phase,opt={}){
   const n=opt.size||112,steps=opt.steps||12,loop=looped.has(clip),f=loop?Math.floor((phase%1+1)%1*steps)%steps:Math.round(saturate(phase)*(steps-1)),p=loop?f/steps:f/(steps-1),src=snapshot(c,n),key=src.id+'|'+rig[0]+'|'+clip+'|'+f+'|'+steps+'|'+(opt.mirror?1:0);
-  let v=frames.get(key);if(v){frames.delete(key);frames.set(key,v);hits++;return v;}misses++;
+  const pool=opt.hd?hdFrames:frames;let v=pool.get(key);if(v){pool.delete(key);pool.set(key,v);hits++;return v;}misses++;
   if(opt.allow===false){
    // During a busy double battle, use the closest already baked pose instead of jumping back to the still artwork.
    const prefix=src.id+'|'+rig[0]+'|'+clip+'|',suffix='|'+steps+'|'+(opt.mirror?1:0);let nearest=null,distance=Infinity;
-   for(const [k,v] of frames){if(!k.startsWith(prefix)||!k.endsWith(suffix))continue;const frame=Number(k.slice(prefix.length,k.length-suffix.length));let d=Math.abs(frame-f);if(loop)d=Math.min(d,steps-d);if(d<distance){distance=d;nearest=v;}}
+   for(const [k,v] of pool){if(!k.startsWith(prefix)||!k.endsWith(suffix))continue;const frame=Number(k.slice(prefix.length,k.length-suffix.length));let d=Math.abs(frame-f);if(loop)d=Math.min(d,steps-d);if(d<distance){distance=d;nearest=v;}}
    if(nearest&&distance<=2){approximate++;return nearest;}return null;
   }
-  v=raster(src,rig,clip,p,!!opt.mirror);frames.set(key,v);bytes+=v.bytes;
-  const cap=opt.budget||8*1024*1024;while(bytes>cap&&frames.size>1){const k=frames.keys().next().value;bytes-=frames.get(k).bytes;frames.delete(k);}
+  v=raster(src,rig,clip,p,!!opt.mirror);pool.set(key,v);if(opt.hd)hdBytes+=v.bytes;else bytes+=v.bytes;
+  const cap=opt.budget||8*1024*1024;while((opt.hd?hdBytes:bytes)>cap&&pool.size>1){const k=pool.keys().next().value,old=pool.get(k);if(opt.hd)hdBytes-=old.bytes;else bytes-=old.bytes;pool.delete(k);}
   return v;
  }
- function clear(){frames.clear();bytes=0;}
- function info(){return{frames:frames.size,bytes,builds,hits,misses,approximate};}
- return{clips,labels,plans,looped,duration,pose,mesh,getFrame,clear,info};
+ function clearHD(){hdFrames.clear();hdBytes=0;}
+ function clear(){frames.clear();bytes=0;clearHD();}
+ function info(){return{frames:frames.size,bytes,hdFrames:hdFrames.size,hdBytes,builds,hits,misses,approximate};}
+ return{clips,labels,plans,looped,duration,pose,mesh,getFrame,clearHD,clear,info};
 })();
 if(typeof module==='object'&&module.exports)module.exports=AnimaSpriteEngine;
