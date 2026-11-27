@@ -25,15 +25,15 @@ const {chromium,webkit,devices}=require('playwright'),assert=require('node:asser
    const test=document.createElement('canvas');test.width=test.height=384;const tg=test.getContext('2d');for(let x=12;x<372;x+=4){tg.fillStyle=(x/4)%2?'#fff':'#141414';tg.fillRect(x,12,4,360);}
    const old=document.createElement('canvas');old.width=old.height=128;old.getContext('2d').drawImage(test,0,0,128,128);
    const blown=document.createElement('canvas');blown.width=blown.height=384;blown.getContext('2d').drawImage(old,0,0,384,384);
-   function energy(c){const p=pix(c),w=c.width;let n=0;for(let x=20;x<360;x++)n+=Math.abs(p[(100*w+x)*4]-p[(100*w+x-1)*4]);return n;}
-   const oldEdge=energy(blown),hdEdge=energy(test);ck(hdEdge>oldEdge*1.1,'detail preserved');
+   function energy(c){const p=pix(c),w=c.width;let n=0;for(let x=20;x<360;x++)n+=Math.pow(p[(100*w+x)*4]-p[(100*w+x-1)*4],2);return n;}
+   const oldEdge=energy(blown),hdEdge=energy(test);ck(hdEdge>oldEdge*1.1,'detail preserved '+hdEdge+' / '+oldEdge);
    // Use the actual single and double render paths. No low-res baked atlas access for battle.
    const saved=animaBakedFrame;animaBakedFrame=()=>{throw Error('battle must not use compact atlas');};
    const B={o:{trainer:{name:'QA'}},wild:false,foes:[front],fi:0,pi:0,ps:newStg(),fs:newStg(),env:battleEnv({}),hpShow:[rear.hp,front.hp],fx:{foeX:0,meX:0,foeA:1,meA:1,foeY:0,meY:0},weather:null,wall:[[0,0],[0,0]]};BT=B;fxClear();render();
    const first=battleArtInfo();ck(first.lastSize>=Math.min(512,96*K),'single high resolution');window.qaSingle=B;
    const D=doubleState({trainer:{name:'QA',team:[makeMon(2,40),makeMon(1,40)]}});window.qaDouble=D;BT=D;render();ck(battleArtInfo().lastSize>=Math.min(512,49*K),'double high resolution');
    animaBakedFrame=saved;BT=B;render();
-   return{worldK,battleK,frontPixels:[f.sourceWidth,f.sourceHeight],rearPixels:[b.sourceWidth,b.sourceHeight],frameSize:frame.n,cpuSize:cpu.n,backend:gpuBackend,detailRatio:hdEdge/oldEdge,stats:battleArtInfo()};
+   return{worldK,battleK,frontPixels:[f.sourceWidth,f.sourceHeight],rearPixels:[b.sourceWidth,b.sourceHeight],frameSize:frame.n,cpuSize:cpu.n,backend:gpuBackend,detailRatio:hdEdge/Math.max(1,oldEdge),stats:battleArtInfo()};
   });
   fs.mkdirSync('test-results/battle-art',{recursive:true});await page.locator('canvas').first().screenshot({path:'test-results/battle-art/'+name+'-single.png'});
   await page.evaluate(()=>{BT=window.qaDouble;render();});await page.locator('canvas').first().screenshot({path:'test-results/battle-art/'+name+'-double.png'});
