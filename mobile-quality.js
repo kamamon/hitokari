@@ -6,7 +6,7 @@ function mobileViewport(){const v=window.visualViewport;return{w:Math.round(v?v.
 function mobileQualityMode(){return S&&S.opts&&S.opts.gfxQuality||'auto';}
 function mobileQualityLabel(){return ({auto:'自動',low:'軽量',high:'高精細'})[mobileQualityMode()]||'自動';}
 function mobileResolution(scale){
- const q=mobileQualityMode(),touch=isTouchDevice(),max=q==='low'?2:q==='high'?touch?4:6:touch?(MOBILE_QA.adaptive?2:3):MOBILE_QA.adaptive?3:5;
+ const q=mobileQualityMode(),touch=isTouchDevice(),battle=G.scene==='battle',max=q==='low'?2:battle?(q==='high'?6:touch?5:6):q==='high'?touch?4:6:touch?(MOBILE_QA.adaptive?2:3):MOBILE_QA.adaptive?3:5;
  return clamp(Math.ceil(scale*Math.min(3,window.devicePixelRatio||1)-.02),2,max);
 }
 function mobileMotionBands(){const q=mobileQualityMode();return q==='low'||q==='auto'&&MOBILE_QA.adaptive?5:isTouchDevice()?8:12;}
@@ -23,5 +23,5 @@ function mobileFrameSample(render,interval){
 }
 function mobileFrameError(e){MOBILE_QA.errors++;}
 function mobilePercentile(a,p){if(!a.length)return 0;const v=a.slice().sort((a,b)=>a-b);return Math.round(v[Math.min(v.length-1,Math.floor(v.length*p))]*10)/10;}
-function mobilePerformanceSnapshot(){const a=MOBILE_QA,mean=a.interval.length?a.interval.reduce((n,x)=>n+x,0)/a.interval.length:0;return{samples:a.render.length,renderP50:mobilePercentile(a.render,.5),renderP95:mobilePercentile(a.render,.95),intervalP95:mobilePercentile(a.interval,.95),fps:mean?Math.round(1000/mean):0,errors:a.errors,K,mode:mobileQualityMode(),adaptive:a.adaptive,touch:!!isTouchDevice(),monsterCache:MON_PIC.size,portraitCache:CHR_PIC.size,canvasCache:MONCACHE.size,viewport:mobileViewport(),anima:typeof AnimaSpriteEngine!=='undefined'?AnimaSpriteEngine.info():null};}
+function mobilePerformanceSnapshot(){const a=MOBILE_QA,mean=a.interval.length?a.interval.reduce((n,x)=>n+x,0)/a.interval.length:0;return{samples:a.render.length,renderP50:mobilePercentile(a.render,.5),renderP95:mobilePercentile(a.render,.95),intervalP95:mobilePercentile(a.interval,.95),fps:mean?Math.round(1000/mean):0,errors:a.errors,K,mode:mobileQualityMode(),adaptive:a.adaptive,touch:!!isTouchDevice(),monsterCache:MON_PIC.size,portraitCache:CHR_PIC.size,canvasCache:MONCACHE.size,viewport:mobileViewport(),anima:typeof AnimaSpriteEngine!=='undefined'?AnimaSpriteEngine.info():null,battleArt:typeof battleArtInfo==='function'?battleArtInfo():null};}
 async function mobileDiagnostics(){const d=mobilePerformanceSnapshot();await msg('動作診断（この 端末の 実測）\n描画 '+d.renderP50+'ms / 95% '+d.renderP95+'ms\nフレーム '+d.fps+'fps　倍率 '+d.K+'x');await msg('描画エラー '+d.errors+'回\n画像 '+d.monsterCache+'／人物 '+d.portraitCache+'\n測定 '+d.samples+'フレーム');if(d.anima)await msg('動きの 素材 キャッシュ\n'+d.anima.frames+'枚　'+(d.anima.bytes/1048576).toFixed(1)+'MB\n生成 '+d.anima.builds+'回');}

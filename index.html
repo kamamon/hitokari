@@ -108,7 +108,7 @@ const BOOK_LEG=[[1201,"星明かりだけが届く空の裂け目","星々が進
 
 'use strict';
 /* ================= core.js : 乱数・タイプ・技・特性・道具 ================= */
-const VERSION='1.8.1';
+const VERSION='1.8.2';
 const SHINY_RATE=8192;           // 色違いの確率 1/8192（原作準拠）
 const PARTY_MAX=6;               // 手持ちは6匹まで
 
@@ -1743,7 +1743,7 @@ function icons(){
   g.setTransform(1,0,0,1,0,0);
   ICONS=c;return c;
 }
-function clearGfxCache(){TILESETS={};ICONS=null;CHIBI.clear();if(typeof AnimaSpriteEngine!=='undefined')AnimaSpriteEngine.clear();scnReset();}
+function clearGfxCache(){TILESETS={};ICONS=null;CHIBI.clear();if(typeof AnimaSpriteEngine!=='undefined')AnimaSpriteEngine.clear();if(typeof clearBattleArt==='function')clearBattleArt();scnReset();}
 function drawTileAt(g,ts,id,fr,x,y){const s=16*K;g.drawImage(ts,id*s,fr*s,s,s,x,y,16,16);}
 function drawIcon(g,i,x,y,w,h){const s=16*K;g.drawImage(icons(),i*s,0,s,s,x,y,w||16,h||16);}
 
@@ -2459,6 +2459,7 @@ function step(){
   if(!UI.length&&(G.busy||G.scene==='battle'))pressQ.length=0;
 }
 function render(){
+  syncBattleResolution();
   ctx.setTransform(K,0,0,K,0,0);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   ctx.globalAlpha=1;ctx.fillStyle='#181420';ctx.fillRect(0,0,LW,LH);
   if(G.scene==='world'){drawWorldPix();drawWorldUI();}
@@ -4636,6 +4637,7 @@ async function battle(o){
 const LIVE={quad:{br:0.022,sw:0.012,hop:1},biped:{br:0.02,sw:0.018,hop:1},bird:{br:0.018,sw:0.01,hop:2},serpent:{br:0.012,wave:1.7,ws:0.5},fish:{br:0.012,fl:2.2,vw:1.6},
   blob:{br:0.05},bug:{br:0.012,jit:0.5,fl:1.2},ghost:{br:0.014,fl:3,wave:1.9,ws:0.45,tail:1},golem:{br:0.014,slow:1},plant:{br:0.012,sw:0.036}};
 function drawLive(g,m,x,y,sc,back,al,sx,lit){
+  if(G.scene==='battle'){drawBattleArt(g,m,x,y,32*sc,back,al,sx,lit);return;}
   const c=(back&&monBackCv(m.sp,m.shiny))||monCanvas(m.sp,m.shiny,back,false);
   drawIndividualMotion(g,m,c,x,y,32*sc,al,sx,lit,back,null);
 }
@@ -4660,7 +4662,7 @@ function drawBattlePix(){
   if(f&&!fx.foeHide&&fx.foeA>0){
     const x=156+fx.foeX+(fx.foeDX||0),y=26+fx.foeY+(fx.foeDY||0);
     if(fx.cap>0){
-      const c=fx.cap,sc=2*(1-0.93*c),Lq=fx.seal||{x:188,y:30},cx=x+32+(Lq.x-(x+32))*c,cy=y+34+(Lq.y-(y+34))*c,im=monCanvas(f.sp,f.shiny,false);
+      const c=fx.cap,sc=2*(1-0.93*c),Lq=fx.seal||{x:188,y:30},cx=x+32+(Lq.x-(x+32))*c,cy=y+34+(Lq.y-(y+34))*c,im=battleArtSource(f,false,64).canvas;
       g.save();g.globalAlpha=1-c*c;g.drawImage(im,cx-16*sc,cy-16*sc,32*sc,32*sc);g.globalCompositeOperation='lighter';g.globalAlpha=Math.min(1,c*1.8)*(1-c*c);g.drawImage(im,cx-16*sc,cy-16*sc,32*sc,32*sc);g.restore();
     }else dm(f,x,y,2,false,fx.foeA,fx.foeSX,FX.lit[1]);
   }
@@ -6415,5 +6417,6 @@ window.addEventListener('load',()=>{
 <script src="anima-motion-lab.js"></script>
 <script src="mobile-quality.js"></script>
 <script src="starter-selection.js"></script>
+<script src="battle-art.js"></script>
 </body>
 </html>
