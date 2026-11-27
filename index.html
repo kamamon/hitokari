@@ -546,8 +546,8 @@ function smooth(g){g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';}
 function drawCell(g,path,cols,cw,ch,i,x,y,w,h){const im=picOK(path);if(!im)return false;smooth(g);g.drawImage(im,(i%cols)*cw,((i/cols)|0)*ch,cw,ch,x,y,w,h);return true;}
 const drawBadge=(g,i,x,y,s)=>drawCell(g,'ui/badges.webp',10,72,72,i,x,y,s,s);        // 0〜49 バッジ / 50〜54 圏の紋 / 55 リーグ / 56 静環団
 const UICON={fairy:17,phys:18,spec:19,stat:20,psn:21,par:22,slp:23,brn:24,frz:25,sun:26,rain:27,sand:28,hail:29,dex:30,mon:31,bag:32,wear:33,map:34,chart:35,ranch:36,rec:37,opt:38,bike:39,ok:40,back:41,dpad:42};
-const drawUIcon=(g,i,x,y,s)=>drawCell(g,'ui/icons.webp',10,56,56,i,x,y,s,s);          // 0〜16 タイプ、あとは UICON
-const drawFxP=(g,i,x,y,s)=>drawCell(g,'ui/fx.webp',17,64,64,i,x,y,s,s);               // タイプ*2+(0|1)
+const drawUIcon=(g,i,x,y,s)=>drawCell(g,'ui/expansion-icons.svg',10,64,64,i,x,y,s,s)||drawCell(g,'ui/icons.webp',10,56,56,i,x,y,s,s);          // 0〜16 タイプ、あとは UICON
+const drawFxP=(g,i,x,y,s)=>drawCell(g,'ui/expansion-fx.svg',17,64,64,i,x,y,s,s)||drawCell(g,'ui/fx.webp',17,64,64,i,x,y,s,s);               // タイプ*2+(0|1)
 const TOBJ={shrub:0,ladder:1,crack:2,up:3,down:4,boulder:5,fence:6,sign:7,desk:8,table:9,bed:10,mat:11,heal:12,counter:13,shelf:14,statue:15,altar:16,pc:17,plant:18,rock:19,flower:28,drop:37};
 const drawTileObj=(g,i,x,y,w,h)=>drawCell(g,'obj/tiles.webp',10,80,80,i,x,y,w,h);
 const PAL_IX={plain:0,forest:1,coast:2,swamp:3,desert:4,volcano:5,ruin:6,snow:7,peak:8};
@@ -2210,7 +2210,7 @@ function bar(x,y,w,h,p,col){ctx.fillStyle='#2a2233';ctx.fillRect(x-1,y-1,w+2,h+2
 const hpCol=p=>p>0.5?'#48c060':p>0.2?'#e8c030':'#e04838';
 const CAT_COL=['#d2622a','#5a64c8','#8a8792'];
 function catTag(c,x,y,wide){const w=wide?24:14;ctx.fillStyle=CAT_COL[c];ctx.fillRect(x,y,w,12);ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(x,y+11,w,1);tx(wide?CAT_JP[c]:CAT_JP[c][0],x+w/2,y+(wide?1.5:1),'#fff',wide?8:9,'center');}
-function typeTag(t,x,y){ctx.fillStyle=TCOL[t];ctx.fillRect(x,y,14,12);ctx.fillStyle='rgba(0,0,0,0.25)';ctx.fillRect(x,y+11,14,1);tx(TK[t],x+7,y+1,'#fff',9,'center');}
+function typeTag(t,x,y){ctx.fillStyle='#293f47';ctx.fillRect(x,y,14,12);ctx.fillStyle=TCOL[t]||'#89968d';ctx.fillRect(x+1,y+1,12,10);ctx.fillStyle='rgba(255,255,255,.22)';ctx.fillRect(x+1,y+1,12,1);tx(TK[t]||'無',x+7,y+1,'#fff',9,'center');}
 function drawMon(spId,shiny,x,y,scale,back,alpha){
   const c=monCanvas(spId,shiny,back);
   if(alpha!=null)wctx.globalAlpha=alpha;
@@ -3653,7 +3653,7 @@ async function lungeTo(B,sd,A,T,dist){
 async function lungeBack(B,sd){const kx=sd?'foeDX':'meDX',ky=sd?'foeDY':'meDY',x=B.fx[kx]||0,y=B.fx[ky]||0;await tween(150,p=>{B.fx[kx]=x*(1-p);B.fx[ky]=y*(1-p);});B.fx[kx]=B.fx[ky]=0;}
 async function hop(B,sd){const ky=sd?'foeDY':'meDY';await tween(170,p=>{B.fx[ky]=-Math.sin(p*Math.PI)*7;});B.fx[ky]=0;}
 // タイプの 粒の絵を 当たった所に はじけさせる
-function typePics(T,type,tr){pic('ui/fx.webp');for(let i=0;i<2+tr;i++)P({pic:type*2+(i&1),s:'star',x:T.x+rnd(-11,11),y:T.y+rnd(-9,9),vx:rnd(-0.7,0.7),vy:rnd(-1,-0.2),ay:0.03,r:rnd(5,7)+tr*0.8,dr:0.1,life:24+i*3,rot:rnd(-0.35,0.35),vr:rnd(-0.03,0.03)});}
+function typePics(T,type,tr){pic('ui/expansion-fx.svg');pic('ui/fx.webp');for(let i=0;i<2+tr;i++)P({pic:type*2+(i&1),s:'star',x:T.x+rnd(-11,11),y:T.y+rnd(-9,9),vx:rnd(-0.7,0.7),vy:rnd(-1,-0.2),ay:0.03,r:rnd(5,7)+tr*0.8,dr:0.1,life:24+i*3,rot:rnd(-0.35,0.35),vr:rnd(-0.03,0.03)});}
 function impact(sd,T,tr,col){
   burst('star',T.x,T.y,3+tr*2,1.5+tr*0.6,{r0:3,r1:5+tr*1.5,l0:9,l1:14,add:true});
   ring(T.x,T.y,col,{dr:2+tr*0.7,w:1.5+tr*0.8});
@@ -4070,6 +4070,7 @@ async function altSpecFx(B,sd,A,T,tr,mv){
 async function moveFx(B,sd,mv){
   const A=fxPos(sd),T=fxPos(1-sd),tr=mv.pow>=110?3:mv.pow>=80?2:mv.pow>=60?1:0;
   if(mv.pow===0){
+    enhancedSkillCue(A,T,mv,0);
     const onFoe=mv.eff.some(e=>e.k==='st'||(e.k==='stage'&&e.who==='foe')),C=onFoe?T:A,col=TCOL_RGB[mv.type<0?0:mv.type];
     const rune=LN({k:'rune',x:A.x,y:A.y+20,r:6,col,flat:0.3,life:999});
     if(mv.eff.some(e=>e.k==='st'&&e.st==='slp'))for(let i=0;i<6;i++){P({s:'txt:♪',x:A.x+rnd(-10,10),y:A.y-10,vx:(T.x-A.x)/50+rnd(-0.3,0.3),vy:(T.y-A.y)/50+rnd(-0.4,0.4),r:4.4,life:46});await sleep(45);}
@@ -4077,7 +4078,7 @@ async function moveFx(B,sd,mv){
     rune.life=rune.max=10;ring(C.x,C.y,col,{dr:2.2,w:2.2});
     return;
   }
-  try{if(mv.id>=N_MOVE0)await(mv.phys?altPhysFx:altSpecFx)(B,sd,A,T,tr,mv);else await TFX[mv.type<0?0:mv.type](B,sd,A,T,tr,mv);typePics(T,mv.type<0?0:mv.type,tr);}finally{FX.dim=0;B.fx.meDX=B.fx.meDY=B.fx.foeDX=B.fx.foeDY=0;B.fx.meSX=B.fx.foeSX=0;}
+  enhancedSkillCue(A,T,mv,tr);try{if(mv.id>=N_MOVE0)await(mv.phys?altPhysFx:altSpecFx)(B,sd,A,T,tr,mv);else await TFX[mv.type<0?0:mv.type](B,sd,A,T,tr,mv);typePics(T,mv.type<0?0:mv.type,tr);enhancedImpact(T,mv,tr);}finally{FX.dim=0;B.fx.meDX=B.fx.meDY=B.fx.foeDX=B.fx.foeDY=0;B.fx.meSX=B.fx.foeSX=0;}
 }
 
 'use strict';
@@ -4578,19 +4579,20 @@ async function battle(o){
 const LIVE={quad:{br:0.022,sw:0.012,hop:1},biped:{br:0.02,sw:0.018,hop:1},bird:{br:0.018,sw:0.01,hop:2},serpent:{br:0.012,wave:1.7,ws:0.5},fish:{br:0.012,fl:2.2,vw:1.6},
   blob:{br:0.05},bug:{br:0.012,jit:0.5,fl:1.2},ghost:{br:0.014,fl:3,wave:1.9,ws:0.45,tail:1},golem:{br:0.014,slow:1},plant:{br:0.012,sw:0.036}};
 function drawLive(g,m,x,y,sc,back,al,sx,lit){
-  const sp=SP[m.sp],L=LIVE[FAMS[sp.fam].plan]||LIVE.quad,t=G.t+(m.sp*53)%200,w=32*sc,asleep=m.st==='slp',frozen=m.st==='frz',q=asleep?0.45:frozen?0:L.slow?0.6:1;
+  const sp=SP[m.sp],plan=FAMS[sp.fam].plan,L=LIVE[plan]||LIVE.quad,t=G.t+(m.sp*53)%200,w=32*sc,asleep=m.st==='slp',frozen=m.st==='frz',q=asleep?0.45:frozen?0:L.slow?0.6:1;
   const c=(back&&monBackCv(m.sp,m.shiny))||monCanvas(m.sp,m.shiny,back,asleep||(!frozen&&(t%(170+(m.sp*37)%80))<7));
-  const br=Math.sin(t*0.07*q)*L.br*(frozen?0:1);
+  const br=Math.sin(t*0.07*q)*L.br*(frozen||reducedFx()?0:1);
   let dy=0,dx=0,shx=0;
   if(L.fl)dy+=Math.sin(t*0.045*q)*L.fl*(frozen?0:1);
   if(L.sw&&q)shx=Math.sin(t*0.05*q)*L.sw;
   if(L.hop&&q===1){const p=t%(L.hop===2?150:230);if(p<14)dy-=Math.sin(p/14*Math.PI)*1.1*sc;else if(L.hop===2&&p>18&&p<30)dy-=Math.sin((p-18)/12*Math.PI)*0.8*sc;}
   if(L.jit&&q===1)dx+=Math.sin(t*0.9)*L.jit*0.3;
   if(m.st==='par'&&(t%90)<10)dx+=Math.sin(t*2.4)*0.8;
-  g.save();g.translate(x+w/2+dx,y+w+dy);g.transform((1+(sx||0))*(1-br*0.6),0,shx,(1-(sx||0))*(1+br),0,0);
+  const pose=creaturePose(m,plan,t,q,sc,lit,sx);g.save();g.translate(x+w/2+dx+pose.dx,y+w+dy+pose.dy);g.transform((1+(sx||0))*(1-br*0.6)*pose.sx,0,shx+pose.lean,(1-(sx||0))*(1+br)*pose.sy,0,0);
   const blt=()=>{
     if(L.wave&&q){const N=14,sh=MS/N,dh=w/N;for(let i=0;i<N;i++){const k=L.tail?Math.max(0,(i-5)/(N-6)):1;g.drawImage(c,0,i*sh,MS,sh,-w/2+Math.sin(t*0.09*q-i*L.ws)*L.wave*k*sc*0.5,-w+i*dh,w,dh+0.3);}}
     else if(L.vw&&q){const N=14,sw=MS/N,dw=w/N;for(let i=0;i<N;i++){const k=back?(N-1-i)/(N-1):i/(N-1);g.drawImage(c,i*sw,0,sw,MS,-w/2+i*dw,-w+Math.sin(t*0.12*q-k*3)*L.vw*k*sc*0.5,dw+0.3,w);}}
+    else if(!reducedFx()&&q&&['bird','bug','plant','quad','biped','golem','blob'].includes(plan))drawCreatureBands(g,c,w,plan,t,q,sc,lit);
     else g.drawImage(c,-w/2,-w,w,w);
   };
   g.globalAlpha=al;blt();
@@ -6347,5 +6349,6 @@ window.addEventListener('load',()=>{
 </script>
 <script src="advanced-combat.js"></script>
 <script src="world-expansion.js"></script>
+<script src="animation-enhancement.js"></script>
 </body>
 </html>

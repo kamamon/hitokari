@@ -290,7 +290,7 @@ function drawExpansionTerrain(g,m,camx,camy){
  if(!m.adv&&!m.elevation)return;const x0=Math.max(0,Math.floor(camx/16)),y0=Math.max(0,Math.floor(camy/16)),x1=Math.min(m.W-1,x0+17),y1=Math.min(m.H-1,y0+15),t=G.t;
  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const a=expAt(m,x,y),z=expHeight(m,x,y),px=x*16-camx,py=y*16-camy;
  if(z){g.fillStyle='rgba(239,229,175,'+(z*.045)+')';g.fillRect(px,py,16,16);}
- if(!a)continue;const k=a.kind;
+ if(!a){if(m.advArea&&!m.indoor&&m.t[y*m.W+x]===T.GRASS&&h2(x,y,19)<.13){g.fillStyle='rgba(213,223,151,.7)';g.fillRect(px+3,py+11,1,2);g.fillRect(px+5,py+9,1,3);g.fillRect(px+8,py+12,1,1);}continue;}const k=a.kind;
  if(k==='cliff'){g.fillStyle='#80654e';g.fillRect(px,py+2,16,13);g.fillStyle='#bba17a';g.fillRect(px,py,16,4);g.fillStyle='#514e48';g.fillRect(px,py+13,16,3);g.strokeStyle='#a08263';g.beginPath();g.moveTo(px+4,py+5);g.lineTo(px+2,py+12);g.moveTo(px+12,py+6);g.lineTo(px+14,py+14);g.stroke();}
  else if(k==='stairs'||k==='ledge'){g.fillStyle=k==='stairs'?'#b59b77':'#c7b18f';g.fillRect(px,py,16,16);g.fillStyle='#795e48';if(k==='stairs'){for(let i=3;i<16;i+=4)g.fillRect(px,py+i,16,1);}else{g.fillRect(px,py+9,16,4);g.fillStyle='#f2e7cb';g.fillRect(px,py+8,16,1);g.beginPath();g.moveTo(px+5,py+3);g.lineTo(px+11,py+3);g.lineTo(px+8,py+7);g.fill();}}
  else if(k==='bridge'){g.fillStyle='#4a352c';g.fillRect(px,py+1,16,14);g.fillStyle='#bd8858';g.fillRect(px,py+2,16,12);g.fillStyle='#7d533a';for(let i=3;i<16;i+=5)g.fillRect(px+i,py+2,1,12);g.fillStyle='#e0b278';g.fillRect(px,py+1,16,2);g.fillRect(px,py+13,16,2);g.fillStyle='#624d3b';g.fillRect(px+1,py,2,4);g.fillRect(px+13,py+12,2,4);}
@@ -304,6 +304,7 @@ function drawExpansionTerrain(g,m,camx,camy){
  else if(k==='furniture'){const i=expansionState().decor[a.slot]||0;if(i){g.fillStyle=['','#ad7953','#5eaa75','#e7b95e','#a49be8','#79b2ce','#a75678','#e5bd71'][i];g.fillRect(px+1,py+2,14,12);g.strokeStyle='#39434d';g.strokeRect(px+1,py+2,14,12);g.fillStyle='#fff4d8';g.fillRect(px+4,py+4,8,3);}else expIcon(g,'empty',px,py,16,'#c2c6ba');}
  else if(k==='exit'){g.fillStyle='#d8bc83';g.fillRect(px+1,py+3,14,10);g.fillStyle='#5d5757';g.beginPath();g.moveTo(px+4,py+6);g.lineTo(px+12,py+6);g.lineTo(px+8,py+11);g.fill();}
  else{expIcon(g,k,px,py,16,k==='facility'?'#91c4d7':k==='contest'?'#e9a2bc':k==='gymreset'?'#a8b7bc':'#f2d38a');}
+ const atlasIndex={cliff:0,stairs:1,ledge:2,bridge:3,fall:4,dive:5,baseSite:7}[k];if(atlasIndex!==undefined&&k!=='fall')drawCell(g,'obj/expansion-terrain.svg',8,64,64,atlasIndex,px,py,16,16);
  }}
 function drawExpansionAtmosphere(g,m){if(m.advArea==='undersea'){g.fillStyle='rgba(24,101,139,.24)';g.fillRect(0,0,LW,LH);if(!reducedFx()){g.strokeStyle='rgba(180,246,250,.4)';g.lineWidth=.6;for(let i=0;i<13;i++){const x=(i*47+Math.sin(G.t/30+i)*7+LW)%LW,y=LH-((G.t*.5+i*29)%LH);g.beginPath();g.arc(x,y,1+(i%3)*.5,0,6.3);g.stroke();}}}}
 function drawExpansionHUD(m){if(UI.length)return;if(m.gymPuzzle){const s=m.gymPuzzle,st=gymPuzzleState(m);ctx.fillStyle='rgba(27,42,53,.84)';ctx.fillRect(2,2,236,17);tx(EXP_GYM_MODES[s.mode]+(gymPuzzleSolved(m)?'　解除済':s.mode===8&&st.start>=0?'　あと '+Math.max(0,45-(S.steps-st.start))+'歩':''),8,5,'#f7e4aa',9);}
