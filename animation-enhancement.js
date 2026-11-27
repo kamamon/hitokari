@@ -21,7 +21,7 @@ function resolveIndividualMotion(m,preferred){
  let clip=m.previewClip||preferred||'idle',phase;
  if(m.previewClip){const d=animaClipDuration(m.sp,clip);phase=AnimaSpriteEngine.looped.has(clip)?((G.t-(m.previewStart||0))%d+d)%d/d:Math.min(1,Math.max(0,G.t-(m.previewStart||0))/d);}
  else if(ev&&age<=animaClipDuration(m.sp,ev.clip)){clip=ev.clip;phase=age/animaClipDuration(m.sp,clip);}
- else{if(ev)INDIVIDUAL_MOTION_EVENTS.delete(m);if(m.st==='slp')clip='sleep';const d=animaClipDuration(m.sp,clip);phase=((G.t+rig[10])%d+d)%d/d;}
+ else{if(ev)INDIVIDUAL_MOTION_EVENTS.delete(m);if(m.st==='slp')clip='sleep';else if(clip==='idle'&&Number.isFinite(m.hp)&&m.hp>0&&m.lv&&m.hp/maxHP(m)<.25)clip='tired';else if(clip==='idle'&&!m.previewClip){const cycle=(G.t+rig[10]*3)%Math.max(240,410+rig[0]%180),next=rig[1]===3||rig[1]===4?'swim':'inspect',span=animaClipDuration(m.sp,next);if(cycle<span){clip=next;phase=cycle/span;}}const d=animaClipDuration(m.sp,clip);if(phase===undefined)phase=((G.t+rig[10])%d+d)%d/d;}
  const q=AnimaSpriteEngine.pose(rig,clip,phase);
  // Blend original species-specific root timeline lightly, retaining each ID's timing and personality.
  const i=SORANE_MOTION_CLIPS.indexOf(clip),old=i<0?null:motionSample(m.sp,clip,phase*profile[10][i]);
@@ -37,28 +37,28 @@ function animaRenderSettings(w){
 function animaFrame(g,atlas,index,x,y,w,h=w){return drawCell(g,'mon/motion-v6/'+atlas+'.svg',8,64,64,index,x,y,w,h);}
 function animaMotionFX(g,m,p,x,y,w,behind,al){
  if(reducedFx()||w<18||p.still||!p.rig)return;
- const clip=p.clip,t=p.t,r=p.rig,frame=Math.min(7,Math.max(0,Math.floor(t*8))),ground=['walk','enter','attack','swim','celebrate'].includes(clip);
+ const clip=p.clip,t=p.t,r=p.rig,frame=Math.min(7,Math.max(0,Math.floor(t*8))),ground=['walk','run','enter','attack','swim','celebrate','pounce','dash','land'].includes(clip);
  g.save();g.globalAlpha=al;
  if(behind&&ground&&clip!=='walk'||behind&&clip==='walk'&&w>=24){const f=clip==='walk'?Math.floor((t*2%1)*8):frame,sz=w*.79;g.globalAlpha=al*(clip==='walk'?.55:.85);animaFrame(g,'contact',r[1]*8+Math.min(7,f),x+w*.5-sz*.5,y+w*.83-sz*.5,sz,sz);}
- if(behind&&['cast','levelup','guard'].includes(clip)){const sz=w*(clip==='guard'?.85:1.15),type=r[2];g.globalAlpha=al*Math.min(.88,.25+p.energy*.5);animaFrame(g,'type-energy',type*8+frame,x+w*.5-sz*.5,y+w*.5-sz*.5,sz);}
+ if(behind&&['cast','levelup','guard','beam','pulse','charge','roar'].includes(clip)){const sz=w*(clip==='guard'?.85:1.15),type=r[2];g.globalAlpha=al*Math.min(.88,.25+p.energy*.5);animaFrame(g,'type-energy',type*8+frame,x+w*.5-sz*.5,y+w*.5-sz*.5,sz);}
  if(!behind){
-  const symbol={celebrate:0,recover:1,sleep:2,alert:3,guard:4,inspect:5}[clip];
+  const symbol={celebrate:0,recover:1,sleep:2,alert:3,guard:4,inspect:5,tired:2,roar:3}[clip];
   if(symbol!==undefined&&(clip!=='sleep'||w>45||Math.floor(G.t/80)%2===0)){const sz=Math.max(9,w*.27);g.globalAlpha=al*.88;animaFrame(g,'emotions',symbol*8+frame,x+w*.73-sz*.5,y+w*.09-sz*.5,sz);}
  }
- g.restore();
+ g.restore();animaAdvancedFX(g,m,p,x,y,w,behind,al);
 }
 function drawIndividualMotion(g,m,c,x,y,w,al=1,sx=0,lit=0,back=false,preferred=null){
- if(!c||!c.width||!c.height||al<=0)return;const p=resolveIndividualMotion(m,preferred),s=w/32,dir=back?1:-1,px=dir*p.dx*s,py=p.dy*s;
+ if(!c||!c.width||!c.height||al<=0)return;const p=resolveIndividualMotion(m,preferred),s=w/32,dir=back?1:-1,px=dir*p.dx*s,py=p.dy*s;p.direction=dir;
  animaMotionFX(g,m,p,x,y,w,true,al);
  g.save();g.translate(x+w/2+px,y+w+py);g.transform(p.sx*(1+(sx||0)),0,p.lean*dir,p.sy*(1-(sx||0)),0,0);g.globalAlpha=al;
  let asset=null;
  if(!p.still&&c.width>=32&&w>=18){
   const q=animaRenderSettings(w);if(ANIMA_BAKE_TICK!==G.t){ANIMA_BAKE_TICK=G.t;ANIMA_BAKE_COUNT=0;}
   const before=AnimaSpriteEngine.info().builds;
-  try{asset=AnimaSpriteEngine.getFrame(c,p.rig,p.clip,p.t,{size:q.size,steps:q.steps,budget:q.budget,mirror:!!back,allow:ANIMA_BAKE_COUNT<q.perTick});}catch(e){asset=null;}
+  try{asset=animaBakedFrame(m,p,back,c)||AnimaSpriteEngine.getFrame(c,p.rig,p.clip,p.t,{size:q.size,steps:q.steps,budget:q.budget,mirror:!!back,allow:ANIMA_BAKE_COUNT<q.perTick});}catch(e){asset=null;}
   ANIMA_BAKE_COUNT+=AnimaSpriteEngine.info().builds-before;
  }
- const draw=()=>{if(asset){const margin=asset.pad/asset.n*w;g.drawImage(asset.c,-w/2-margin,-w-margin,w+2*margin,w+2*margin);}else g.drawImage(c,-w/2,-w,w,w);};
+ const draw=()=>{if(asset){const margin=asset.pad/asset.n*w;if(asset.rect){g.save();if(asset.flip)g.scale(-1,1);g.drawImage(asset.c,...asset.rect,-w/2-margin,-w-margin,w+2*margin,w+2*margin);g.restore();}else g.drawImage(asset.c,-w/2-margin,-w-margin,w+2*margin,w+2*margin);}else g.drawImage(c,-w/2,-w,w,w);};
  draw();if(lit>.05&&!reducedFx()){g.globalCompositeOperation='lighter';g.globalAlpha=Math.min(.35,lit*.35)*al;draw();}
  g.restore();animaMotionFX(g,m,p,x,y,w,false,al);
 }

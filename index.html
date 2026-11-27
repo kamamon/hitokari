@@ -108,7 +108,7 @@ const BOOK_LEG=[[1201,"星明かりだけが届く空の裂け目","星々が進
 
 'use strict';
 /* ================= core.js : 乱数・タイプ・技・特性・道具 ================= */
-const VERSION='1.6';
+const VERSION='1.7';
 const SHINY_RATE=8192;           // 色違いの確率 1/8192（原作準拠）
 const PARTY_MAX=6;               // 手持ちは6匹まで
 
@@ -1774,7 +1774,7 @@ function monBackCv(spId,shiny){
   const P=pic(MON_PIC_DIR+'b'+('000'+sp.book).slice(-4)+'.webp');if(P.st!==1)return null;
   const key=spId+'|'+(shiny?1:0)+'|'+MS;let c=MONBACK_CV.get(key);if(c)return c;
   c=document.createElement('canvas');c.width=c.height=MS;const g=c.getContext('2d');g.scale(MS/32,MS/32);drawMonPic(g,sp,P,shiny,false);
-  MONBACK_CV.set(key,c);if(MONBACK_CV.size>12)MONBACK_CV.delete(MONBACK_CV.keys().next().value);return c;
+  c._animaView='rear';MONBACK_CV.set(key,c);if(MONBACK_CV.size>12)MONBACK_CV.delete(MONBACK_CV.keys().next().value);return c;
 }
 function picShiny(P){   // 色違い：色の成分を 入れかえる
   if(P.sh)return P.sh;
@@ -3661,6 +3661,7 @@ function fxClear(){FX.parts.length=0;FX.lines.length=0;FX.shake=0;FX.flash=null;
 const fxPos=s=>BT&&BT.double&&BT.pair&&BT.pair[s]?doublePosition(BT.pair[s]):s?{x:188,y:60}:{x:66,y:108};
 const LN=o=>{o.max=o.life;FX.lines.push(o);return o;};
 async function lungeTo(B,sd,A,T,dist){
+  resumeActorMoveMotion(bmon(B,sd));
   const kx=sd?'foeDX':'meDX',ky=sd?'foeDY':'meDY',dx=T.x-A.x,dy=T.y-A.y,len=Math.hypot(dx,dy);
   await tween(80,p=>{B.fx[kx]=-dx/len*5*p;B.fx[ky]=-dy/len*5*p;});
   LN({k:'speed',x:T.x,y:T.y,col:'255,255,255',n:12,life:7});
@@ -3679,6 +3680,7 @@ function impact(sd,T,tr,col){
 }
 // 大技の前の「ため」：足もとに魔法陣、気が立ちのぼる
 async function charge(B,sd,A,col,tr){
+  const actor=bmon(B,sd);startIndividualMotion(actor,'charge');
   const rune=LN({k:'rune',x:A.x,y:A.y+22,r:4,col,flat:0.32,life:999});
   sfx('lvup');
   await tween(260+tr*110,p=>{
@@ -3687,7 +3689,7 @@ async function charge(B,sd,A,col,tr){
     if(tr>=3&&Math.random()<0.8)LN({k:'speed',x:A.x,y:A.y,col,n:9,life:2});
     if(tr>=3)shakeFx(1.2);
   });
-  rune.life=rune.max=12;
+  rune.life=rune.max=12;resumeActorMoveMotion(actor);
 }
 // 最大級の技のとどめ：光の筋・衝撃波・ズーム
 async function finisher(sd,T,col){
@@ -4084,7 +4086,7 @@ async function altSpecFx(B,sd,A,T,tr,mv){
   await sleep(60);
 }
 async function moveFx(B,sd,mv){
-  startIndividualMotion(bmon(B,sd),mv.has('protect')?'guard':mv.has('heal')?'recover':mv.phys&&mv.pow?'attack':'cast');
+  const actor=bmon(B,sd);actorMotionForMove(actor,mv);
   const A=fxPos(sd),T=fxPos(1-sd),tr=mv.pow>=110?3:mv.pow>=80?2:mv.pow>=60?1:0;
   if(mv.pow===0){
     enhancedSkillCue(A,T,mv,0);
@@ -4092,10 +4094,10 @@ async function moveFx(B,sd,mv){
     const rune=LN({k:'rune',x:A.x,y:A.y+20,r:6,col,flat:0.3,life:999});
     if(mv.eff.some(e=>e.k==='st'&&e.st==='slp'))for(let i=0;i<6;i++){P({s:'txt:♪',x:A.x+rnd(-10,10),y:A.y-10,vx:(T.x-A.x)/50+rnd(-0.3,0.3),vy:(T.y-A.y)/50+rnd(-0.4,0.4),r:4.4,life:46});await sleep(45);}
     await tween(340,p=>{rune.r=6+p*18;for(let i=0;i<3;i++){const a=p*9+i*2.1,rad=22-p*9;P({s:'glow:'+col,x:C.x+Math.cos(a)*rad,y:C.y+12-p*28+Math.sin(a)*5,r:rnd(1.6,3.2),life:12,add:true});}});
-    rune.life=rune.max=10;ring(C.x,C.y,col,{dr:2.2,w:2.2});
+    rune.life=rune.max=10;ring(C.x,C.y,col,{dr:2.2,w:2.2});ANIMA_MOVE_POSES.delete(actor);
     return;
   }
-  enhancedSkillCue(A,T,mv,tr);try{if(mv.id>=N_MOVE0)await(mv.phys?altPhysFx:altSpecFx)(B,sd,A,T,tr,mv);else await TFX[mv.type<0?0:mv.type](B,sd,A,T,tr,mv);typePics(T,mv.type<0?0:mv.type,tr);enhancedImpact(T,mv,tr);}finally{FX.dim=0;B.fx.meDX=B.fx.meDY=B.fx.foeDX=B.fx.foeDY=0;B.fx.meSX=B.fx.foeSX=0;}
+  enhancedSkillCue(A,T,mv,tr);try{if(mv.id>=N_MOVE0)await(mv.phys?altPhysFx:altSpecFx)(B,sd,A,T,tr,mv);else await TFX[mv.type<0?0:mv.type](B,sd,A,T,tr,mv);typePics(T,mv.type<0?0:mv.type,tr);enhancedImpact(T,mv,tr);}finally{FX.dim=0;B.fx.meDX=B.fx.meDY=B.fx.foeDX=B.fx.foeDY=0;B.fx.meSX=B.fx.foeSX=0;ANIMA_MOVE_POSES.delete(actor);}
 }
 
 'use strict';
@@ -4251,8 +4253,8 @@ async function useMove(B,sd,idx){
     await applyEffects(B,sd,mv,true,false);return;
   }
   if(t.hp<=0)return;
-  if(ts.prot){await say(tn+'は 身を まもった！');return;}
-  if(mv.acc>0&&!accCheck(B,sd,mv)){startIndividualMotion(u,mv.phys?'attack':'cast');startIndividualMotion(t,'alert');await say('しかし こうげきは はずれた！');return;}
+  if(ts.prot){startIndividualMotion(t,'guard');await say(tn+'は 身を まもった！');return;}
+  if(mv.acc>0&&!accCheck(B,sd,mv)){actorMotionForMove(u,mv);startIndividualMotion(t,'dodge');await say('しかし こうげきは はずれた！');return;}
   let eff=mv.type>=0?typeEff(mv.type,SP[t.sp].types):1;const ab=abilOf(t);
   if(mv.type===8&&ab===2)eff=0;
   if((mv.type===2&&ab===9)||(mv.type===3&&ab===10)||(mv.type===1&&ab===11)){
@@ -4281,7 +4283,7 @@ async function useMove(B,sd,idx){
   if(sturdy)await say(tn+'は 「不屈」で もちこたえた！');
   if(held1)await say(tn+'は 「約束の木札」で こらえた！');
   for(const e of mv.eff){
-    if(e.k==='recoil'&&u.hp>0){u.hp=Math.max(0,u.hp-Math.max(1,Math.floor(dmg/4)));await hpAnim(B,sd);await say(un+'は はんどうを うけた！');}
+    if(e.k==='recoil'&&u.hp>0){startIndividualMotion(u,'recoil');u.hp=Math.max(0,u.hp-Math.max(1,Math.floor(dmg/4)));await hpAnim(B,sd);await say(un+'は はんどうを うけた！');}
     if(u.hp>0&&(e.k==='mend'||e.k==='mend4')&&u.hp<maxHP(u)){u.hp=Math.min(maxHP(u),u.hp+Math.max(1,Math.floor(maxHP(u)/(e.k==='mend'?8:4))));healFx(sd);await hpAnim(B,sd);await say(un+'の たいりょくが 回復した！');}
     if(u.hp>0&&e.k==='purify'&&u.st){u.st=null;healFx(sd);await say(un+'の 状態異常が なおった！');}
     if(u.hp>0&&(e.k==='renew'||e.k==='renewD')){const st=bstg(B,sd);let ch=false;for(const k of (e.k==='renew'?['atk','def','spa','spd','spe','acc','eva']:['def','spd']))if(st[k]<0){st[k]=0;ch=true;}if(ch)await say(un+'の 下がった 能力が もとに もどった！');}
@@ -4547,14 +4549,14 @@ async function battle(o){
       if(a>=b||ri(256)<Math.floor(a*128/b)+30*B.runTry){sfx('door');await say('うまく にげきれた！');B.result='run';break;}
       await say('にげられなかった！');
     }else if(act.t==='switch'){
-      await say(monName(me)+'、もどれ！');await tween(200,p=>{B.fx.meX=-120*p;});await sendMe(B,act.pi);
+      await say(monName(me)+'、もどれ！');startIndividualMotion(me,'withdraw');await tween(200,p=>{B.fx.meX=-120*p;});await sendMe(B,act.pi);
     }else if(act.t==='item'){
       if(act.pi===B.pi){healFx(0);await hpAnim(B,0);}
     }else if(act.t==='seal'){
       if(!B.wild){await say('人の アニマとは 絆を 結べない！');}
       else if(await tryCatch(B,act.id)){await giveExp(B);B.result='caught';break;}
     }
-    if(swap>=0&&!B.result){await say(B.o.trainer.name+'は '+monName(bmon(B,1))+'を もどした！');await tween(180,p=>{B.fx.foeX=120*p;});B.fi=swap;B.lastSwitch=B.turnN||0;await sendFoe(B);}
+    if(swap>=0&&!B.result){await say(B.o.trainer.name+'は '+monName(bmon(B,1))+'を もどした！');startIndividualMotion(bmon(B,1),'withdraw');await tween(180,p=>{B.fx.foeX=120*p;});B.fi=swap;B.lastSwitch=B.turnN||0;await sendFoe(B);}
     if(act.t==='move'&&swap>=0){await useMove(B,0,act.i);}
     else if(act.t==='move'){
       const fi=aiPick(B),mv=act.i<0?STRUGGLE:MOVES[me.mv[act.i].id],fmv=fi<0?STRUGGLE:MOVES[bmon(B,1).mv[fi].id];
@@ -5180,9 +5182,9 @@ function drawBoat(g,cx,y,dir,front){
 /* ---------- 連れ歩き（先頭のアニマが うしろを ついてくる） ---------- */
 const FOL={x:0,y:0,fx:0,fy:0,show:false,face:false,moving:false};
 function folLead(){if(!S||S.opts.follow===0)return null;for(const m of S.party)if(m.hp>0)return m;return null;}
-function folReset(){const p=G.pl;FOL.x=FOL.fx=p.x;FOL.y=FOL.fy=p.y;FOL.show=false;FOL.moving=false;}
-function folStart(){const p=G.pl;FOL.fx=FOL.x;FOL.fy=FOL.y;FOL.x=p.x;FOL.y=p.y;if(FOL.x>FOL.fx)FOL.face=true;else if(FOL.x<FOL.fx)FOL.face=false;FOL.moving=true;}
-function folArrive(){FOL.moving=false;FOL.show=true;}
+function folReset(){const p=G.pl;FOL.x=FOL.fx=p.x;FOL.y=FOL.fy=p.y;FOL.show=false;FOL.moving=false;FOL.landPending=false;}
+function folStart(){const p=G.pl;FOL.fx=FOL.x;FOL.fy=FOL.y;FOL.x=p.x;FOL.y=p.y;if(FOL.x>FOL.fx)FOL.face=true;else if(FOL.x<FOL.fx)FOL.face=false;FOL.moving=true;FOL.landPending=!!(G.map&&Math.abs(FOL.x-FOL.fx)+Math.abs(FOL.y-FOL.fy)===1&&expansionLedge(G.map,FOL.fx,FOL.fy,FOL.x,FOL.y));}
+function folArrive(){FOL.moving=false;FOL.show=true;if(FOL.landPending){const m=folLead();if(m)startIndividualMotion(m,'land');}FOL.landPending=false;}
 function folVisible(){return FOL.show&&!G.pl.surf&&!G.pl.fly&&!(G.pl.alt>0.02)&&!riding()&&G.map&&G.map.id.slice(0,2)!=='lg'&&!!folLead();}
 function folPos(){const p=G.pl,t=FOL.moving&&p.moving?p.prog/16:1;return[(FOL.fx+(FOL.x-FOL.fx)*t)*16,(FOL.fy+(FOL.y-FOL.fy)*t)*16,t];}
 function drawFollower(g,camx,camy){
@@ -5190,7 +5192,7 @@ function drawFollower(g,camx,camy){
   const hop=reducedFx()?0:mv?-Math.abs(Math.sin(q[2]*Math.PI))*.65:0,fl=FAMS[SP[m.sp].fam].plan;
   const lift=(fl==='ghost'||fl==='fish')?2.4:0;
   drawIcon(g,3,x,y+2);
-  drawIndividualMotion(g,m,monCanvas(m.sp,m.shiny,FOL.face),x+8-13,y+15.5-26+hop-lift,26,1,0,0,FOL.face,mv?'walk':'idle');
+  drawIndividualMotion(g,m,monCanvas(m.sp,m.shiny,FOL.face),x+8-13,y+15.5-26+hop-lift,26,1,0,0,FOL.face,mv?(G.pl.spd>=4?'run':fl==='fish'?'swim':'walk'):'idle');
 }
 async function folTalk(){
   const m=folLead();if(!m)return;const n=monName(m),r=m.hp/maxHP(m),p=G.pl;
@@ -6360,6 +6362,8 @@ window.addEventListener('load',()=>{
 <script src="individual-world.js"></script>
 <script src="data/anima-rigs.js"></script>
 <script src="anima-sprite-engine.js"></script>
+<script src="data/anima-baked-manifest.js"></script>
+<script src="anima-advanced-motion.js"></script>
 <script src="animation-enhancement.js"></script>
 <script src="anima-motion-lab.js"></script>
 <script src="mobile-quality.js"></script>

@@ -104,7 +104,7 @@ async function doubleExecute(D,a){const s=a.slot;if(!s||s.captured||s.mon.hp<=0|
  if(a.kind==='run'){if(!D.wild)return;D.runTry++;const speed=combatStat(s.mon,s.st,5),foe=Math.max(1,...doubleActive(D,1).map(z=>combatStat(z.mon,z.st,5)));if(speed>=foe||ri(256)<Math.floor(speed*128/foe)+30*D.runTry){D.result='run';await say('うまく にげきれた！');}else await say('にげられなかった！');return;}
  if(a.kind==='capture'){await doubleCapture(D,a);return;}
  if(a.kind==='item'){await doubleUseItem(D,a);return;}
- if(a.kind==='switch'){const next=doubleReserve(D,s.side,[],s.pos).find(v=>v.i===a.i);if(!next)return;await say(monName(s.mon)+'、もどれ！');const q=doubleSlot(s.side,s.pos,next.i,next.mon);q.lastSwitch=D.turnN;D.slots[s.side][s.pos]=q;await say(monName(q.mon)+'、出番だ！');await doubleEnter(D,q);return;}
+ if(a.kind==='switch'){const next=doubleReserve(D,s.side,[],s.pos).find(v=>v.i===a.i);if(!next)return;await say(monName(s.mon)+'、もどれ！');startIndividualMotion(s.mon,'withdraw');await tween(180,p=>{s.fx.A=1-p;});const q=doubleSlot(s.side,s.pos,next.i,next.mon);q.lastSwitch=D.turnN;D.slots[s.side][s.pos]=q;await say(monName(q.mon)+'、出番だ！');await doubleEnter(D,q);return;}
  const enemy=doubleActive(D,1-s.side);if(!enemy.length)return;
  const mode=a.mode||'enemy',m=a.i<0?STRUGGLE:MOVES[s.mon.mv[a.i].id];
  const allies=doubleActive(D,s.side);

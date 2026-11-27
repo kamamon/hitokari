@@ -21,8 +21,9 @@ jobs:
       - run: node tests/mobile-webkit.cjs
       - run: node tests/anima-sprite-browser.cjs
       - run: node tools/bake-anima-sheets.cjs --out=test-results/anima-motion/full-sheets
+      - run: node tools/bake-anima-runtime.cjs --out=test-results/anima-motion/runtime-sample
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v6-test-reports
+          name: v7-test-reports
           path: test-results/

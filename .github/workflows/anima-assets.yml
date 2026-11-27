@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       profile:
-        description: 'compact: 6 actions x 4 frames; full: 17 actions x 8 frames'
+        description: 'compact: 10 actions x 4 frames; full: 32 actions x 8 frames'
         type: choice
         options: [compact, full]
         default: compact
@@ -43,4 +43,22 @@ jobs:
         with:
           name: anima-1212-sprite-sheets
           path: anima-sheets/
+          if-no-files-found: error
+
+  runtime-pack:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: node tools/bake-anima-runtime.cjs --all --out=anima-runtime-pack
+      - uses: actions/upload-artifact@v4
+        with:
+          name: anima-v7-runtime-atlas-pack
+          path: anima-runtime-pack/
           if-no-files-found: error

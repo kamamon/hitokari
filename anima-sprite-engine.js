@@ -2,14 +2,14 @@
 // Original art, continuous inverse mesh deformation, cached transparent raster frames.
 // No new biological details are invented for source art. Body-plan masks control movement.
 const AnimaSpriteEngine=(()=>{
- const clips=['idle','enter','attack','cast','hit','faint','walk','celebrate','sleep','guard','recover','alert','swim','inspect','recoil','status','levelup'];
- const labels=['待機','登場','物理攻撃','特殊攻撃','被弾','戦闘不能','歩行','喜び','睡眠','防御','回復','警戒','遊泳','観察','反動','状態異常','成長'];
+ const clips=['idle','enter','attack','cast','hit','faint','walk','celebrate','sleep','guard','recover','alert','swim','inspect','recoil','status','levelup','run','pounce','bite','slash','tailstrike','wingstrike','dash','beam','pulse','charge','dodge','tired','roar','withdraw','land'];
+ const labels=['待機','登場','物理攻撃','特殊攻撃','被弾','戦闘不能','歩行','喜び','睡眠','防御','回復','警戒','遊泳','観察','反動','状態異常','成長','疾走','飛びかかり','噛みつき','斬撃','尾撃','翼撃','突進','光線','波動','溜め','回避','疲労','咆哮','退場','着地'];
  const plans=['quad','biped','bird','fish','serpent','bug','blob','ghost','plant','golem'];
- const looped=new Set(['idle','walk','sleep','swim']);
- const durations={idle:100,enter:29,attack:34,cast:43,hit:20,faint:26,walk:26,celebrate:39,sleep:108,guard:32,recover:42,alert:29,swim:32,inspect:48,recoil:24,status:38,levelup:50};
+ const looped=new Set(['idle','walk','sleep','swim','run','tired']);
+ const durations={idle:100,enter:29,attack:34,cast:43,hit:20,faint:26,walk:26,celebrate:39,sleep:108,guard:32,recover:42,alert:29,swim:32,inspect:48,recoil:24,status:38,levelup:50,run:18,pounce:31,bite:27,slash:28,tailstrike:34,wingstrike:32,dash:26,beam:45,pulse:40,charge:34,dodge:23,tired:92,roar:42,withdraw:26,land:21};
  const saturate=x=>Math.max(0,Math.min(1,x)),smooth=x=>{x=saturate(x);return x*x*(3-2*x);},mix=(a,b,t)=>a+(b-a)*t;
  const bump=(x,c,w)=>Math.max(0,1-Math.abs(x-c)/w),TAU=2*Math.PI;
- function duration(r,clip,base){if(clip==='walk')return r[11];if(clip==='swim')return Math.max(18,r[11]+4);return Math.max(12,Math.round((base||durations[clip]||30)*(r[12]>105&&['attack','enter','faint'].includes(clip)?1.12:1)));}
+ function duration(r,clip,base){if(clip==='walk')return r[11];if(clip==='run')return Math.max(12,Math.round(r[11]*.62));if(clip==='swim')return Math.max(18,r[11]+4);return Math.max(12,Math.round((base||durations[clip]||30)*(r[12]>105&&['attack','enter','faint'].includes(clip)?1.12:1)));}
  function pose(r,clip,p){
   p=saturate(p);const t=p*TAU,beat=Math.sin(t),b2=Math.sin(t*2),heavy=Math.max(.65,Math.min(1.25,92/r[12])),limb=r[8]/100,secondary=r[9]/100;
   const anticipation=bump(p,.19,.19),strike=bump(p,.44,.20),follow=bump(p,.70,.30),land=bump(p,.57,.16);
@@ -32,8 +32,23 @@ const AnimaSpriteEngine=(()=>{
    case 'recoil':x=-2.4*bump(p,.25,.25);tilt=-.07*bump(p,.25,.3);sx+=.04*bump(p,.3,.3);sy-=.07*bump(p,.3,.3);head=-.7*bump(p,.25,.3);tail=-head;energy=1-p;break;
    case 'status':x=.32*Math.sin(t*4)*Math.sin(Math.PI*p);y=.25*b2;head=.8*Math.sin(t*3)*Math.sin(Math.PI*p);tail=.6*b2;fold=.3*Math.sin(Math.PI*p);energy=Math.sin(Math.PI*p);break;
    case 'levelup':y=-1.6*Math.abs(Math.sin(t*2));flap=.65*b2;head=.4*beat;tail=.7*beat;energy=Math.sin(Math.PI*p);break;
+   case 'run':x=.34*b2;y=-1.05*Math.abs(beat)*heavy;sx+=.032*b2;sy-=.055*b2;tilt=.04+.018*beat;stride=1.45*beat;tail=.85*beat;head=.4*b2;flap=.85*b2;energy=.65;break;
+   case 'pounce':x=-.9*anticipation+3.2*strike;y=1.2*anticipation-3.6*bump(p,.43,.25)+.8*land;sx+=.10*anticipation-.03*strike+.07*land;sy-=.13*anticipation;sy+=.10*strike-.09*land;tilt=.07*strike;stride=1.3*strike;flap=1.1*strike;tail=.9*strike;head=.7*strike;energy=strike;break;
+   case 'bite':x=-.7*anticipation+3.5*strike;y=.35*anticipation-.65*strike;sx+=.09*strike;sy-=.045*strike;head=-.8*anticipation+1.6*strike;tail=.65*follow;stride=.55*strike;energy=strike;break;
+   case 'slash':x=-.8*anticipation+2.8*strike;y=-.95*strike;sx+=.05*strike;sy+=.045*strike;tilt=-.10*anticipation+.12*strike-.025*follow;flap=1.4*strike-.8*anticipation;stride=.85*strike;head=.52*strike;tail=-.75*follow;energy=strike;break;
+   case 'tailstrike':x=-.7*strike;y=-.5*strike;tilt=-.065*strike+.045*anticipation;tail=-1.35*anticipation+1.8*strike-.55*follow;head=-.65*strike;stride=.58*strike;energy=strike;break;
+   case 'wingstrike':y=-2.5*bump(p,.43,.35);x=1.4*strike;flap=-1.1*anticipation+1.55*strike-.75*follow;tail=.9*follow;head=.6*strike;sy+=.055*strike;energy=strike;break;
+   case 'dash':x=-1.4*anticipation+4.7*strike-.65*follow;y=.4*anticipation-.85*strike;sx+=.17*strike;sy-=.095*strike;tilt=.065*strike;stride=1.5*strike;tail=-1.1*strike;head=.65*strike;energy=strike;break;
+   case 'beam':x=-.8*bump(p,.55,.35);y=-.6*bump(p,.42,.42);sx+=.08*strike;sy+=.05*anticipation-.055*strike;head=.4*anticipation+1.3*strike;tail=-.8*strike;flap=.5*strike;energy=Math.sin(Math.PI*p);break;
+   case 'pulse':y=-1.15*bump(p,.5,.44);sx+=.12*strike;sy+=.12*strike;head=.65*strike;flap=.65*b2*Math.sin(Math.PI*p);tail=.75*b2;energy=Math.sin(Math.PI*p);break;
+   case 'charge':y=.8*bump(p,.45,.45);sx+=.055*bump(p,.5,.5);sy-=.085*bump(p,.5,.5);head=-.5*Math.sin(Math.PI*p);fold=.55*Math.sin(Math.PI*p);tail=.55*b2;energy=Math.sin(Math.PI*p);break;
+   case 'dodge':x=-3.3*bump(p,.43,.43);y=-1.35*bump(p,.42,.38);tilt=-.12*bump(p,.43,.43);sx+=.055*strike;sy-=.05*strike;stride=-.8*strike;flap=.65*strike;tail=.72*follow;energy=strike;break;
+   case 'tired':y=.64+.18*beat;sx+=.035*beat;sy-=.075+.034*beat;head=-.48+.1*beat;fold=.25;tail=.13*beat;break;
+   case 'roar':x=-.35*anticipation;y=-.9*bump(p,.45,.4);sy+=.11*strike;sx+=.045*strike;head=-.7*anticipation+1.25*strike;flap=.68*strike;tail=.85*strike;energy=Math.sin(Math.PI*p);break;
+   case 'withdraw':x=-1.25*smooth(p);y=-1.65*bump(p,.32,.32);sx-=.23*smooth(p);sy-=.20*smooth(p);fold=.8*smooth(p);head=-.55*smooth(p);energy=1-p;break;
+   case 'land':y=-2.4*(1-smooth(p))+.8*land;sx+=.1*land;sy-=.12*land;stride=.5*land;flap=.55*(1-p);head=-.5*land;tail=.48*follow;energy=land;break;
   }
-  if([2,3,5,7].includes(r[1])&&['idle','cast','walk','swim'].includes(clip)){y-=.6*beat*secondary;flap+=.28*b2;}
+  if([2,3,5,7].includes(r[1])&&['idle','cast','walk','run','swim'].includes(clip)){y-=.6*beat*secondary;flap+=.28*b2;}
   return{x:x*heavy,y:y*heavy,sx,sy,tilt,energy,flap:flap*limb,stride:stride*limb,tail:tail*secondary,head:head*r[7]/100,fold};
  }
  // Inverse displacement in normalized artwork bounds. Each plan has independently moving regions.
@@ -69,8 +84,11 @@ const AnimaSpriteEngine=(()=>{
   if(r[4]&4)dy+=q.tail*.022*tail;
   if(r[4]&8)dx+=q.tail*.012*top*edge;
   if(r[4]&16){dx*=.79;dy*=.79;}
-  if(clip==='guard'||clip==='faint'){dx+=(cx-u)*q.fold*.04*edge;dy+=q.fold*.024*top;}
-  return[mirrored?-dx:dx,dy];
+  if(clip==='guard'||clip==='faint'||clip==='charge'||clip==='withdraw'){dx+=(cx-u)*q.fold*.04*edge;dy+=q.fold*.024*top;}
+  if(clip==='bite'||clip==='roar'){dx-=q.head*.037*front*top;dy+=q.head*.024*front*(1-top);}
+  if(clip==='slash'){dx+=q.flap*.034*front*foot;dy+=q.flap*.033*edge*foot;}
+  if(clip==='wingstrike'&&(r[1]===2||r[1]===5||r[4]&1))dy+=q.flap*.035*edge*top;
+  dx=Math.max(-.24,Math.min(.24,dx));dy=Math.max(-.24,Math.min(.24,dy));return[mirrored?-dx:dx,dy];
  }
  // Bounded, alpha-aware inverse sampling. No seams between strips or holes at joints.
  function canvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
