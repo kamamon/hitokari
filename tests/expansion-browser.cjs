@@ -31,7 +31,7 @@ const server=http.createServer((req,res)=>{const name=decodeURIComponent(new URL
   // Exercise the real move resolver with deterministic test presentation.
   msg=async()=>{};sleep=async()=>{};tween=async(ms,f)=>{f(1);};moveFx=async()=>{};hitAnim=async()=>{};faintAnim=async()=>{};
   const move=(name)=>MOVES.find(m=>m.name===name).id,learn=(mon,name)=>{const id=move(name);mon.mv=[{id,pp:20}];};
-  const a=makeMon(6,65,{iv:31}),a2=makeMon(2,65,{iv:31}),f1=makeMon(2,40),f2=makeMon(2,40),f3=makeMon(1,40);
+  const a=makeMon(6,65,{iv:31}),a2=makeMon(2,65,{iv:31}),f1=makeMon(2,90,{iv:31,nat:0}),f2=makeMon(2,90,{iv:31,nat:0}),f3=makeMon(1,40);
   learn(a,'おおなみ');learn(a2,'いやしのいき');learn(f1,'ぶつかる');learn(f2,'ぶつかる');learn(f3,'ぶつかる');S.party=[a,a2,makeMon(4,65)];const d=doubleState({facility:true,trainer:{name:'test',team:[f1,f2,f3],money:0}});BT=d;G.scene='battle';const start=[f1.hp,f2.hp];await doubleExecute(d,{kind:'move',slot:d.slots[0][0],i:0,mode:'spread'});check(a.mv[0].pp===19,'one PP for spread');check(f1.hp<start[0]&&f2.hp<start[1],'two spread targets');
   a.hp=Math.max(1,Math.floor(maxHP(a)/2));const before=a.hp;await doubleExecute(d,{kind:'move',slot:d.slots[0][1],i:0,mode:'support',target:0});check(a.hp>before&&a2.mv[0].pp===19,'ally healing');d.o.facility=false;S.bag.heal1=1;a.hp=Math.max(1,Math.floor(maxHP(a)/2));const hp=a.hp;await doubleExecute(d,{kind:'item',slot:d.slots[0][1],id:'heal1',targetIndex:0});check(a.hp>hp&&!S.bag.heal1,'double item');d.o.facility=true;
   f1.hp=0;await doubleFaints(d);check(d.slots[1][0].i===2,'faint refill');const old=d.slots[0][0];await doubleExecute(d,{kind:'switch',slot:old,i:2});check(d.slots[0][0].i===2&&doubleReserve(d,0).some(v=>v.i===0),'switch');drawDoublePix(d);drawDoubleUI(d);
