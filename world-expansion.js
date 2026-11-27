@@ -81,6 +81,7 @@ function decorateExpansionMap(m){
   if(k%5===0||m.cell.main===0)portalAt(m,'contest',18,14,'彩華祭ホール');
   if(k===50||m.blds.some(b=>b.kind==='league'))portalAt(m,'hub',18,17,'巡環修練場');
   const p=findPortal(m,13,15);if(p)expPut(m,p[0],p[1],{kind:'berry',plot:0});
+  addLifePortal(m);
  }else if(!m.indoor&&m.cell&&!m.cell.gate&&m.cell.kind!=='sea'){
   // Optional existing-pond bridges; never overwrite gates or occupied/warp tiles.
   let done=false;for(let y=3;y<m.H-3&&!done;y++)for(let x=3;x<m.W-4&&!done;x++){
@@ -90,7 +91,7 @@ function decorateExpansionMap(m){
   }
  }
 }
-const EXP_AREAS=new Set(['ridge','river','coast','undersea','base','hub','contest','trial-single','trial-double','trial-rental','trial-endurance']);
+const EXP_AREAS=new Set(['ridge','river','coast','undersea','base','hub','contest','trial-single','trial-double','trial-rental','trial-endurance','life']);
 function validExpansionMapId(id){if(typeof id!=='string')return false;const p=id.split(':');return p.length===3&&p[0]==='a'&&EXP_AREAS.has(p[1])&&Object.prototype.hasOwnProperty.call(CELLS,p[2]);}
 function expId(area,cell){return 'a:'+area+':'+cell.key;}
 function expTownReturn(cell,area){const m=getMap(cell.key);for(const [k,o] of Object.entries(m.adv||{}))if(o.kind==='portal'&&o.area===area){const [x,y]=k.split(',').map(Number);return{map:cell.key,x,y,dir:2};}return{map:cell.key,x:15,y:15,dir:2};}
@@ -108,6 +109,7 @@ function expansionEncounter(m,area){
 }
 function generateExpansionMap(id){
  if(!validExpansionMapId(id))throw Error('invalid expansion map');const [,area,key]=id.split(':'),cell=CELLS[key],r=RNG('adventure:'+id);let m;
+ if(area==='life')return generateLifeDistrict(id,cell);
  if(area==='ridge'){
   m=expOutdoor(id,cell,23,24,cell.pal==='cave'?'forest':cell.pal);m.name=cell.name+'・風渡り段丘';m.enc={rate:13,bonus:1};
   for(let y=1;y<m.H-1;y++)for(let x=1;x<m.W-1;x++){
@@ -182,7 +184,7 @@ function expansionStep(m,p){
 }
 function expansionInteract(m,x,y){
  const p=G.pl,front=expAt(m,x,y),here=expAt(m,p.x,p.y);let a=front,ax=x,ay=y;
- if(here&&['dive','surface','portal','gymplate','berry','baseSite','furniture','baseRest','facility','trialPortal','contest','gymhint','gymreset'].includes(here.kind)&&(!front||front.kind==='exit')){a=here;ax=p.x;ay=p.y;}
+ if(here&&['dive','surface','portal','gymplate','berry','baseSite','furniture','baseRest','facility','trialPortal','contest','landmark','gymhint','gymreset'].includes(here.kind)&&(!front||front.kind==='exit')){a=here;ax=p.x;ay=p.y;}
  if(!a)return false;
  if(a.kind==='gymplate'){if(a.step){run(()=>msg('この 石板は 上を 歩いて 作動させる。'));}else run(()=>operateGym(m,a.i));return true;}
  if(a.kind==='gymhint'){run(()=>msg(gymClue(m)));return true;}
@@ -193,6 +195,7 @@ function expansionInteract(m,x,y){
  if(a.kind==='surface'){run(async()=>{await warpTo({map:expId('coast',m.cell),x:12,y:10},2);G.pl.surf=true;autoSave();});return true;}
  if(a.kind==='fall'){if(!p.surf){run(()=>msg('水上移動で 滝の 下へ。バッジ8個が 必要。'));return true;}if(badgeCount()<8){run(()=>msg('滝を のぼるには バッジ8個が 必要。'));return true;}return false;}
  if(a.kind==='sign'){run(()=>msg(a.label));return true;}
+ if(a.kind==='landmark'){run(()=>visitIndividualLandmark(m,a));return true;}
  if(a.kind==='berry'){run(()=>berryPlotMenu(m,ax,ay));return true;}
  if(a.kind==='baseSite'){run(()=>claimBase(m,ax,ay));return true;}
  if(a.kind==='furniture'){run(()=>furnitureMenu(a.slot));return true;}
@@ -202,7 +205,7 @@ function expansionInteract(m,x,y){
  if(a.kind==='contest'){run(()=>contestMenu(a.mode));return true;}
  return false;
 }
-function generateExpansionEntry(area,cell){const coords={ridge:[11,22],river:[5,22],coast:[11,22],hub:[8,13],contest:[8,13],base:[7,11],undersea:[11,19]},q=coords[area];return{map:expId(area,cell),x:q[0],y:q[1]};}
+function generateExpansionEntry(area,cell){const coords={ridge:[11,22],river:[5,22],coast:[11,22],hub:[8,13],contest:[8,13],base:[7,11],undersea:[11,19],life:[15,29]},q=coords[area];return{map:expId(area,cell),x:q[0],y:q[1]};}
 // Berries are original fruits, grown using travel steps and real elapsed time.
 const EXP_FRUITS=[
  {name:'ひだまりの実',color:'#edab3d',grow:180,effect:'heal',value:30},
@@ -284,8 +287,8 @@ function tickExpansionNPC(canInput){if(!G.map||G.map.indoor||G.map.advArea)retur
  for(const o of G.objs){if(o.role!=='civ'||o.gift)continue;
   if(o.npcMove){const z=o.npcMove;z.t++;o.ox=(z.x-o.x)*16*Math.min(1,z.t/12);o.oy=(z.y-o.y)*16*Math.min(1,z.t/12);if(z.t>=12){o.x=z.x;o.y=z.y;o.ox=o.oy=0;o.npcMove=null;}continue;}
   if(!canInput||G.busy||p.fly||Math.abs(o.x-p.x)+Math.abs(o.y-p.y)<2)continue;
-  if((G.t+hashStr(String(o.pid)))%143!==0)continue;
-  const phase=dayPhase(),r=RNG('npc-destination:'+o.pid+':'+phase),target=[o.homeX+r.range(-2,2),o.homeY+r.range(-2,2)],directions=RNG('npc:'+o.pid+':'+phase+':'+Math.floor(G.t/143)).shuffle([0,1,2,3]);
+  if((G.t+hashStr(String(o.pid)))%npcProfile(o.pid)[6]!==0)continue;
+  const phase=dayPhase(),schedule=npcScheduleAt(o.pid),r=RNG('npc-destination:'+o.pid+':'+schedule.zone),target=[o.homeX+r.range(-2,2),o.homeY+r.range(-2,2)],directions=RNG('npc:'+o.pid+':'+phase+':'+Math.floor(G.t/143)).shuffle([0,1,2,3]);
   if(Math.abs(o.x-target[0])+Math.abs(o.y-target[1])>0)directions.sort((a,b)=>Math.abs(o.x+DX[a]-target[0])+Math.abs(o.y+DY[a]-target[1])-Math.abs(o.x+DX[b]-target[0])-Math.abs(o.y+DY[b]-target[1]));
   for(const d of directions){const x=o.x+DX[d],y=o.y+DY[d];if(x<2||y<2||x>=m.W-2||y>=m.H-2||Math.abs(x-o.homeX)+Math.abs(y-o.homeY)>2||!([T.GRASS,T.FLOWER,T.PATH].includes(m.t[y*m.W+x]))||m.warps[expKey(x,y)]||expAt(m,x,y)||objAt(x,y)||x===p.x&&y===p.y||p.moving&&x===p.x+DX[p.dir]&&y===p.y+DY[p.dir])continue;
    if(m.t[y*m.W+x]===T.PATH&&Math.abs(x-o.homeX)+Math.abs(y-o.homeY)>1)continue;o.dir=d;o.npcMove={x,y,t:0};break;}

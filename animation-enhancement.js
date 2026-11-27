@@ -1,28 +1,40 @@
 'use strict';
-// Deformation bands for the existing original illustration layers; no external character artwork.
-function creaturePose(m,plan,t,q,sc,lit,sx){
- if(reducedFx()||!q)return{dx:0,dy:0,sx:1,sy:1,lean:0};
- const phase=t*.055*q,fatigue=m.hp/maxHP(m)<.25?.45:1,hit=Math.max(0,lit||0);
- let dx=0,dy=0,xscale=1,yscale=1,lean=0;
- if(plan==='bird'||plan==='bug'){dy=Math.sin(phase*1.8)*sc*.65*fatigue;xscale+=Math.sin(phase*2.7)*.018;}
- if(plan==='biped'||plan==='quad'){lean=Math.sin(phase)*.012;dy-=Math.abs(Math.sin(phase))*sc*.22;}
- if(plan==='golem'){lean=Math.sin(phase*.5)*.007;}
- if(plan==='blob'){xscale+=Math.sin(phase)*.025;yscale-=Math.sin(phase)*.024;}
- if(plan==='plant'){lean=Math.sin(phase*.8)*.022;}
- if(m.st==='slp'){yscale*=.98;dy+=sc*.35;}
- if(hit>.1){lean+=(Math.sin(t*.65)*.025)*hit;xscale+=hit*.015;yscale-=hit*.02;}
- return{dx,dy,sx:xscale,sy:yscale,lean};
+// Every original species has nine independent data-backed motion timelines.
+const INDIVIDUAL_MOTION_EVENTS=new WeakMap();
+function motionProfile(id){return SORANE_MOTION_DATA[id-1]||SORANE_MOTION_DATA[0];}
+function motionClipIndex(name){const i=SORANE_MOTION_CLIPS.indexOf(name);return i<0?0:i;}
+function startIndividualMotion(m,clip){if(!m||!m.sp)return;INDIVIDUAL_MOTION_EVENTS.set(m,{clip,start:G.t});}
+function motionSample(id,clip,frame,loop=false){
+ const p=motionProfile(id),i=motionClipIndex(clip),duration=p[10][i],frames=p[11][i],t=loop?((frame%duration)+duration)%duration/duration:clamp(frame/duration,0,1),z=t*(frames.length-1),a=Math.min(frames.length-2,Math.floor(z)),v=z-a,e=v*v*(3-2*v);
+ const q=frames[a].map((x,j)=>x+(frames[a+1][j]-x)*e);
+ return {dx:q[0]/100,dy:q[1]/100,sx:1+q[2]/1000,sy:1+q[3]/1000,lean:q[4]/1000,warp:q[5]/100,t,profile:p};
 }
-function drawCreatureBands(g,c,w,plan,t,q,sc,lit){
- const N=12,sh=MS/N,dh=w/N,phase=t*.07*q;let previous=0;
- for(let i=0;i<N;i++){const u=(i+.5)/N,v=1-u;let dx=0,sx=1;
-  if(plan==='bird'||plan==='bug'){const a=Math.sin(phase*2+u*4)*Math.sin(Math.PI*u);sx+=a*.025;dx=a*sc*.23;}
-  else if(plan==='plant'){dx=Math.sin(phase+u*1.8)*v*v*sc*.8;}
-  else if(plan==='quad'||plan==='biped'){dx=Math.sin(phase+u*2)*v*sc*.34;}
-  else if(plan==='golem'){dx=Math.sin(phase*.45)*v*sc*.19;}
-  else if(plan==='blob'){sx+=Math.sin(phase+u*3)*.018;}
-  const dw=w*sx;g.drawImage(c,0,i*sh,MS,sh,-dw/2+dx,-w+i*dh,dw,dh+.35);
- }}
+function resolveIndividualMotion(m,preferred){
+ if(reducedFx()||m.st==='frz')return{dx:0,dy:0,sx:1,sy:1,lean:0,warp:0,t:0,profile:motionProfile(m.sp)};
+ const ev=INDIVIDUAL_MOTION_EVENTS.get(m),p=motionProfile(m.sp),age=ev?G.t-ev.start:0;
+ if(ev&&age<=p[10][motionClipIndex(ev.clip)])return motionSample(m.sp,ev.clip,age);
+ if(ev)INDIVIDUAL_MOTION_EVENTS.delete(m);
+ const name=m.st==='slp'?'sleep':preferred||'idle';
+ return motionSample(m.sp,name,G.t+p[6],true);
+}
+function drawIndividualMotion(g,m,c,x,y,w,al=1,sx=0,lit=0,back=false,preferred=null){
+ if(!c||!c.width||!c.height)return;const p=resolveIndividualMotion(m,preferred),s=w/32,dir=back?1:-1,px=dir*p.dx*s,py=p.dy*s;
+ g.save();g.translate(x+w/2+px,y+w+py);g.transform(p.sx*(1+sx),0,p.lean*dir,p.sy*(1-sx),0,0);g.globalAlpha=al;
+ const sourceW=c.width,sourceH=c.height,axis=p.profile[4],bands=Math.min(p.profile[5],typeof mobileMotionBands==='function'?mobileMotionBands():12);
+ const draw=()=>{
+   if(Math.abs(p.warp)<.03||bands<2||reducedFx()||sourceW<32||sourceH<32){g.drawImage(c,-w/2,-w,w,w);return;}
+   for(let i=0;i<bands;i++){
+    const u=(i+.5)/bands,phase=p.t*Math.PI*2+u*(p.profile[2]==='serpent'?5:3)+p.profile[6]*Math.PI/180;
+    const wave=Math.sin(phase)*p.warp*s*(axis?Math.sin(Math.PI*u):(1-u));
+    if(axis){const sw=sourceW/bands,dw=w/bands;g.drawImage(c,i*sw,0,sw,sourceH,-w/2+i*dw,-w+wave,dw+.25,w);}
+    else{const sh=sourceH/bands,dh=w/bands;g.drawImage(c,0,i*sh,sourceW,sh,-w/2+wave*dir,-w+i*dh,w,dh+.3);}
+   }
+ };
+ draw();if(lit>.05&&!reducedFx()){g.globalCompositeOperation='lighter';g.globalAlpha=Math.min(.7,lit)*al;draw();}
+ g.restore();
+}
+const INDIVIDUAL_PREVIEWS=new Map();
+function drawIndividualPreview(id,x,y,w){let m=INDIVIDUAL_PREVIEWS.get(id);if(!m){m={sp:id,shiny:false,st:null};INDIVIDUAL_PREVIEWS.set(id,m);if(INDIVIDUAL_PREVIEWS.size>20)INDIVIDUAL_PREVIEWS.delete(INDIVIDUAL_PREVIEWS.keys().next().value);}drawIndividualMotion(ctx,m,monCanvas(id,false,false),x,y,w,1,0,0,false,'idle');}
 function enhancedSkillCue(A,T,mv,tier){
  if(reducedFx())return;const col=TCOL_RGB[Math.max(0,mv.type)]||'230,230,230';
  if(mv.pow===0){ring(A.x,A.y+9,col,{dr:1.4,w:1.5,life:13,max:13,flat:.48});return;}
