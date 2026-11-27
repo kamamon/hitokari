@@ -1,0 +1,203 @@
+{
+  "version": 2,
+  "total": 1212,
+  "approved": [
+    {
+      "key": "fire",
+      "choice": "C",
+      "ids": [
+        2,
+        18,
+        19
+      ],
+      "names": [
+        "カエンコ",
+        "エンリュウ",
+        "オウカリュー"
+      ]
+    },
+    {
+      "key": "water",
+      "choice": "A",
+      "ids": [
+        3,
+        20,
+        21
+      ],
+      "names": [
+        "ミオラッコ",
+        "ミオレイン",
+        "シオルミナ"
+      ]
+    },
+    {
+      "key": "grass",
+      "choice": "A",
+      "ids": [
+        1,
+        16,
+        17
+      ],
+      "names": [
+        "メブクマ",
+        "ワカグマ",
+        "ジュカイオウ"
+      ]
+    }
+  ],
+  "approvedSpecies": 9,
+  "defaultStatus": "hold-provisional",
+  "heldSpecies": 1203,
+  "next": {
+    "map": "0,3",
+    "name": "第1街道",
+    "land": [
+      {
+        "family": 150,
+        "ids": [
+          451,
+          452,
+          453
+        ],
+        "names": [
+          "カミクラ",
+          "タコヒラ",
+          "テンガイサ"
+        ]
+      },
+      {
+        "family": 238,
+        "ids": [
+          717,
+          718,
+          719
+        ],
+        "names": [
+          "フタツノク",
+          "クロスパル",
+          "ソウショウル"
+        ]
+      },
+      {
+        "family": 111,
+        "ids": [
+          334,
+          335,
+          336
+        ],
+        "names": [
+          "ムギリリ",
+          "ホナリリ",
+          "カリホルン"
+        ]
+      },
+      {
+        "family": 254,
+        "ids": [
+          765,
+          766,
+          767
+        ],
+        "names": [
+          "フクラミュ",
+          "タイリューム",
+          "ソラノボルド"
+        ]
+      },
+      {
+        "family": 333,
+        "ids": [
+          1002,
+          1003,
+          1004
+        ],
+        "names": [
+          "テダマリ",
+          "オテフワ",
+          "フクロダマ"
+        ]
+      },
+      {
+        "family": 181,
+        "ids": [
+          546,
+          547,
+          548
+        ],
+        "names": [
+          "トフマル",
+          "カタフモ",
+          "シロトウド"
+        ]
+      },
+      {
+        "family": 353,
+        "ids": [
+          1062,
+          1063,
+          1064
+        ],
+        "names": [
+          "タコネラ",
+          "ラセンネギ",
+          "スクリュダン"
+        ]
+      },
+      {
+        "family": 83,
+        "ids": [
+          250,
+          251,
+          252
+        ],
+        "names": [
+          "ハギアリ",
+          "キリアゴ",
+          "シュクセツ"
+        ]
+      }
+    ],
+    "waterAfterLand": [
+      {
+        "family": 364,
+        "ids": [
+          1095,
+          1096,
+          1097
+        ],
+        "names": [
+          "チョウガイ",
+          "ヒラチョウラ",
+          "カクヒラギ"
+        ]
+      },
+      {
+        "family": 371,
+        "ids": [
+          1116,
+          1117,
+          1118
+        ],
+        "names": [
+          "モミフサ",
+          "ソウカンモ",
+          "リンジュフサ"
+        ]
+      },
+      {
+        "family": 363,
+        "ids": [
+          1092,
+          1093,
+          1094
+        ],
+        "names": [
+          "ウキツブ",
+          "ナガフクネ",
+          "レンカイラ"
+        ]
+      }
+    ]
+  },
+  "policy": "Unapproved existing assets remain playable for continuity; no new design work until explicit acceptance. Reuse IDs and preserve old originals. Prior generated pack is a provisional archive, not approved artwork."
+}

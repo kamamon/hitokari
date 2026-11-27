@@ -8,7 +8,7 @@ function combatStat(m,st,i){let v=stat(m,i)*stgMul(st?st[STKEY[i]]||0:0);if(i===
 function combatEstimate(a,t,m,as,ts,weather){const eff=combatEffect(m,t);if(!eff||m.pow===0)return 0;const fixed=m.eff.find(e=>e.k==='fixed');if(fixed)return fixed.n;if(m.has('level'))return a.lv;if(m.has('halve'))return Math.max(1,t.hp/2);
  let p=m.pow;if(m.has('pinch')&&a.hp*3<=maxHP(a))p*=2;if(m.has('hex')&&t.st)p*=2;
  let d=(Math.floor(2*a.lv/5+2)*p*combatStat(a,as,m.phys?1:3)/combatStat(t,ts,m.phys?2:4)/50+2)*eff*0.925;
- if(SP[a.sp].types.includes(m.type))d*=1.5;if(abilOf(a)===0&&SP[a.sp].types[0]===m.type&&a.hp*3<=maxHP(a))d*=1.5;
+ if(SP[a.sp].types.includes(m.type))d*=1.5;if(starterPinch(a,m.type))d*=1.5;if(abilOf(t)===23&&!m.phys&&!starterState(BT,t).mirror)d*=.75;
  if(abilOf(t)===8&&(m.type===1||m.type===5))d*=0.5;if(weather==='sun')d*=m.type===1?1.5:m.type===2?0.5:1;if(weather==='rain')d*=m.type===2?1.5:m.type===1?0.5:1;
  if(m.has('multi'))d*=3;if(m.has('twice'))d*=2;const held=heldOf(a);if(held.t===m.type)d*=1.15;d*=held.all||1;return Math.max(1,d);}
 function combatOptions(m){const arr=m.mv.map((v,i)=>({i,m:MOVES[v.id]})).filter(v=>m.mv[v.i].pp>0);return arr.length?arr:[{i:-1,m:STRUGGLE}];}
@@ -30,7 +30,7 @@ function doubleSlot(side,pos,i,mon){return{side,pos,i,mon,st:newStg(),hpShow:mon
 function doublePosition(s){return s.side?{x:147+s.pos*61,y:57-s.pos*9}:{x:41+s.pos*65,y:103+s.pos*7};}
 function doubleActive(D,side){return D.slots[side].filter(s=>s&&!s.captured&&s.mon.hp>0);}
 function doubleReserve(D,side,used=[],pos=null){const a=side?D.foes:S.party,active=D.slots[side].filter(Boolean).map(s=>s.i);return a.map((mon,i)=>({mon,i})).filter(v=>v.mon.hp>0&&!active.includes(v.i)&&!used.includes(v.i)&&(!side||!D.caughtIndices.has(v.i)&&(!D.o.multi||pos===null||D.o.ownerByIndex[v.i]===pos)));}
-function doublePair(D,a,t){const pair=a.side?[t,a]:[a,t];D.pair=pair;const B={o:D.o,wild:D.wild,foes:D.foes,pi:pair[0].i,fi:pair[1].i,ps:pair[0].st,fs:pair[1].st,parts:D.parts,pairMons:pair.map(s=>s.mon),pairSlots:pair,wall:pair.map(s=>D.wall[s.side]),allStages:D.slots.flat().filter(Boolean).map(s=>s.st),hpShow:[],fx:{}};
+function doublePair(D,a,t){const pair=a.side?[t,a]:[a,t];D.pair=pair;const B={o:D.o,wild:D.wild,foes:D.foes,pi:pair[0].i,fi:pair[1].i,ps:pair[0].st,fs:pair[1].st,parts:D.parts,pairMons:pair.map(s=>s.mon),pairSlots:pair,wall:pair.map(s=>D.wall[s.side]),allStages:D.slots.flat().filter(Boolean).map(s=>s.st),starterFlags:D.starterFlags||(D.starterFlags=new WeakMap()),hpShow:[],fx:{}};
  for(const key of ['weather','wT','naturalWX','coins','turnN'])Object.defineProperty(B,key,{get:()=>D[key],set:v=>D[key]=v});
  for(let i=0;i<2;i++){const s=pair[i],prefix=i?'foe':'me';Object.defineProperty(B.hpShow,i,{get:()=>s.hpShow,set:v=>s.hpShow=v,enumerable:true});for(const k of ['DX','DY','SX','Hide','A','Y'])Object.defineProperty(B.fx,prefix+k,{get:()=>s.fx[k],set:v=>s.fx[k]=v});}
  return B;
@@ -120,7 +120,7 @@ async function doubleResidual(D){
   if(m.hp<=0)continue;const ty=SP[m.sp].types,safe=D.weather==='sand'?ty.some(x=>[8,12,16].includes(x)):ty.includes(5);
   if((D.weather==='sand'||D.weather==='hail')&&!safe){m.hp=Math.max(0,m.hp-Math.max(1,Math.floor(mx/16)));await hpAnim(B,side);await say(monName(m)+'は '+WX_JP[D.weather]+'に うたれた！');}
   if(m.hp<=0)continue;if(m.st==='psn'||m.st==='brn'){m.hp=Math.max(0,m.hp-Math.max(1,Math.floor(mx/8)));await hpAnim(B,side);await say(monName(m)+'は '+STATUS_JP[m.st]+'の ダメージを うけた！');}
-  if(m.hp<=0)continue;if(ab===16&&m.hp<mx){m.hp=Math.min(mx,m.hp+Math.max(1,Math.floor(mx/16)));await hpAnim(B,side);}if(ab===7&&st.spe<6){st.spe++;await say(monName(m)+'の すばやさが 上がった！');}if(ab===13&&m.st&&ri(3)===0){m.st=null;await say(monName(m)+'の 状態異常が 治った！');}
+  if(m.hp<=0)continue;await starterRootEnd(B,side,D.turnN);if(ab===16&&m.hp<mx){m.hp=Math.min(mx,m.hp+Math.max(1,Math.floor(mx/16)));await hpAnim(B,side);}if(ab===7&&st.spe<6){st.spe++;await say(monName(m)+'の すばやさが 上がった！');}if(ab===13&&m.st&&ri(3)===0){m.st=null;await say(monName(m)+'の 状態異常が 治った！');}
  }
  if(D.weather&&!D.naturalWX&&--D.wT<=0){await say(WX_OFF[D.weather]);D.weather=null;}
  for(const side of [0,1])for(let c=0;c<2;c++)if(D.wall[side][c]>0)--D.wall[side][c];

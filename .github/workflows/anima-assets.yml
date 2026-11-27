@@ -1,24 +1,31 @@
-name: Anima full sprite asset pack
+name: Anima approved sprite asset pack
 on:
   pull_request:
     paths:
       - 'anima-sprite-engine.js'
       - 'data/anima-rigs.js'
       - 'anima-motion-lab.js'
+      - 'data/anima-approval.json'
+      - 'mon/starter-v2/**'
       - 'tools/bake-anima-sheets.cjs'
       - '.github/workflows/anima-assets.yml'
   workflow_dispatch:
     inputs:
       profile:
-        description: 'compact: 10 actions x 4 frames; full: 32 actions x 8 frames'
+        description: 'compact or full'
         type: choice
         options: [compact, full]
-        default: compact
+        default: full
       view:
-        description: 'front or reverse (real back art when available)'
+        description: 'front or reverse (real back art where available)'
         type: choice
         options: [front, reverse]
         default: front
+      scope:
+        description: 'approved starters only; legacy all remains provisional'
+        type: choice
+        options: [approved, legacy-all]
+        default: approved
 jobs:
   bake:
     runs-on: ubuntu-latest
@@ -30,25 +37,26 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
-      - name: Generate 1212 sprite sheets
+      - name: Generate approved starter sheets
         env:
-          PROFILE: ${{ inputs.profile || 'compact' }}
+          PROFILE: ${{ inputs.profile || 'full' }}
           VIEW: ${{ inputs.view || 'front' }}
+          SCOPE: ${{ inputs.scope || 'approved' }}
         run: |
           flags=()
           if [ "$PROFILE" = compact ]; then flags+=(--compact); fi
           if [ "$VIEW" = reverse ]; then flags+=(--back); fi
-          node tools/bake-anima-sheets.cjs --all "${flags[@]}" --out=anima-sheets
+          if [ "$SCOPE" = legacy-all ]; then flags+=(--all); else flags+=(--ids=2,18,19,3,20,21,1,16,17); fi
+          node tools/bake-anima-sheets.cjs "${flags[@]}" --out=anima-sheets
       - uses: actions/upload-artifact@v4
         with:
-          name: anima-1212-sprite-sheets
+          name: anima-v8-sprite-sheets
           path: anima-sheets/
           if-no-files-found: error
-
   runtime-pack:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -56,9 +64,9 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
-      - run: node tools/bake-anima-runtime.cjs --all --out=anima-runtime-pack
+      - run: node tools/bake-anima-runtime.cjs --ids=2,18,19,3,20,21,1,16,17 --out=anima-runtime-pack
       - uses: actions/upload-artifact@v4
         with:
-          name: anima-v7-runtime-atlas-pack
+          name: anima-v8-runtime-atlas-pack
           path: anima-runtime-pack/
           if-no-files-found: error

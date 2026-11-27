@@ -7,7 +7,7 @@ const server=http.createServer((req,res)=>{const name=decodeURIComponent(new URL
  await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>typeof G!=='undefined'&&UI.length>0&&typeof doubleState==='function');
  const result=await page.evaluate(async()=>{
   const check=(v,m)=>{if(!v)throw Error(m);};
-  S=newSave('テスト');Object.assign(S,homeSpot());S.party=[makeMon(STARTERS[0],50),makeMon(STARTERS[1],50),makeMon(STARTERS[2],50),makeMon(STARTERS[3],50)];S.flags.dex=1;S.starter=1;for(let k=1;k<=10;k++)S.badges[k]=1;S.bag.k_surf=1;startFromSave();
+  S=newSave('テスト');Object.assign(S,homeSpot());S.party=[makeMon(2,50),makeMon(1,50),makeMon(6,50),makeMon(4,50)];S.flags.dex=1;S.starter=1;for(let k=1;k<=10;k++)S.badges[k]=1;S.bag.k_surf=1;startFromSave();
   // All puzzle solutions are mechanically reachable and actual gym maps have a closed gate.
   const gymCells=Object.values(CELLS).filter(c=>c.kind==='town'&&c.gym);check(gymCells.length===50,'50 gyms');
   const modes=new Set(),signatures=new Set();
@@ -31,14 +31,14 @@ const server=http.createServer((req,res)=>{const name=decodeURIComponent(new URL
   // Exercise the real move resolver with deterministic test presentation.
   msg=async()=>{};sleep=async()=>{};tween=async(ms,f)=>{f(1);};moveFx=async()=>{};hitAnim=async()=>{};faintAnim=async()=>{};
   const move=(name)=>MOVES.find(m=>m.name===name).id,learn=(mon,name)=>{const id=move(name);mon.mv=[{id,pp:20}];};
-  const a=makeMon(STARTERS[2],65,{iv:31}),a2=makeMon(STARTERS[0],65,{iv:31}),f1=makeMon(STARTERS[0],40),f2=makeMon(STARTERS[0],40),f3=makeMon(STARTERS[1],40);
-  learn(a,'おおなみ');learn(a2,'いやしのいき');learn(f1,'ぶつかる');learn(f2,'ぶつかる');learn(f3,'ぶつかる');S.party=[a,a2,makeMon(STARTERS[3],65)];const d=doubleState({facility:true,trainer:{name:'test',team:[f1,f2,f3],money:0}});BT=d;G.scene='battle';const start=[f1.hp,f2.hp];await doubleExecute(d,{kind:'move',slot:d.slots[0][0],i:0,mode:'spread'});check(a.mv[0].pp===19,'one PP for spread');check(f1.hp<start[0]&&f2.hp<start[1],'two spread targets');
+  const a=makeMon(6,65,{iv:31}),a2=makeMon(2,65,{iv:31}),f1=makeMon(2,90,{iv:31,nat:0}),f2=makeMon(2,90,{iv:31,nat:0}),f3=makeMon(1,40);
+  learn(a,'おおなみ');learn(a2,'いやしのいき');learn(f1,'ぶつかる');learn(f2,'ぶつかる');learn(f3,'ぶつかる');S.party=[a,a2,makeMon(4,65)];const d=doubleState({facility:true,trainer:{name:'test',team:[f1,f2,f3],money:0}});BT=d;G.scene='battle';const start=[f1.hp,f2.hp];await doubleExecute(d,{kind:'move',slot:d.slots[0][0],i:0,mode:'spread'});check(a.mv[0].pp===19,'one PP for spread');check(f1.hp<start[0]&&f2.hp<start[1],'two spread targets');
   a.hp=Math.max(1,Math.floor(maxHP(a)/2));const before=a.hp;await doubleExecute(d,{kind:'move',slot:d.slots[0][1],i:0,mode:'support',target:0});check(a.hp>before&&a2.mv[0].pp===19,'ally healing');d.o.facility=false;S.bag.heal1=1;a.hp=Math.max(1,Math.floor(maxHP(a)/2));const hp=a.hp;await doubleExecute(d,{kind:'item',slot:d.slots[0][1],id:'heal1',targetIndex:0});check(a.hp>hp&&!S.bag.heal1,'double item');d.o.facility=true;
   f1.hp=0;await doubleFaints(d);check(d.slots[1][0].i===2,'faint refill');const old=d.slots[0][0];await doubleExecute(d,{kind:'switch',slot:old,i:2});check(d.slots[0][0].i===2&&doubleReserve(d,0).some(v=>v.i===0),'switch');drawDoublePix(d);drawDoubleUI(d);
   for(const s of d.slots[1].filter(Boolean))s.mon.hp=0;await doubleFaints(d);check(d.result==='win','double victory');
   BT=null;G.scene='world';G.fade=0;UI.length=0;loadMap(town.id,15,15,0);
   // Exercise single/double AI switch recommendation with a clear type disadvantage.
-  const fire=makeMon(STARTERS[0],50,{iv:31}),water=makeMon(STARTERS[4],50,{iv:31}),grass=makeMon(STARTERS[1],50,{iv:31});learn(fire,'ひばな');learn(water,'おおなみ');learn(grass,'もりのやいば');fire.hp=Math.max(1,Math.floor(maxHP(fire)/4));const sw=switchRating({mon:fire,st:newStg()},[{mon:water,st:newStg()}],[{mon:grass,i:1}],null);check(sw===1,'AI tactical switch');
+  const fire=makeMon(2,50,{iv:31}),water=makeMon(3,50,{iv:31}),grass=makeMon(1,50,{iv:31});learn(fire,'ひばな');learn(water,'おおなみ');learn(grass,'もりのやいば');fire.hp=Math.max(1,Math.floor(maxHP(fire)/4));const sw=switchRating({mon:fire,st:newStg()},[{mon:water,st:newStg()}],[{mon:grass,i:1}],null);check(sw===1,'AI tactical switch');
   return{gyms:gymCells.length,modes:modes.size,areas:11,spread:true,ally:true,items:true,refill:true,win:true,aiSwitch:true};
  });assert.equal(result.gyms,50);assert.equal(result.modes,10);assert.deepEqual(errors,[]);console.log('expansion checks:',result);
  }finally{if(browser)await browser.close();server.close();}
