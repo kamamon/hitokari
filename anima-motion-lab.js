@@ -50,8 +50,7 @@ async function downloadAnimaSheet(id,back){
  try{
   const sheet=await buildAnimaSheet(id,{back,onProgress:(p,t)=>{progress=p;total=t;}});
   const blob=await new Promise(r=>sheet.toBlob(r,'image/png'));if(!blob)throw Error('PNG export');
-  const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='anima-'+String(id).padStart(4,'0')+(back?'-reverse':'-front')+'-motion.png';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-  await msg('透過PNGの 素材を 作成した。17行 × 8コマ。保存先は ブラウザーの 設定を 確認してね。');
+  await showAnimaExport(blob,id,back);
  }catch(e){console.warn(e);await msg('素材を 作れなかった。もう一度 ためしてね。');}finally{popW(w);}
 }
 async function animaMotionLab(){
@@ -61,4 +60,14 @@ async function animaMotionLab(){
   const j=await menu(ids.map(id=>({label:String(id).padStart(4,'0')+' '+SP[id].name,right:S.caught[id]?'●':'○'})),{x:4,y:4,w:232,rows:12,idx:selected,title:'アニマを 選ぶ',bg:()=>screenBG()});if(j<0)continue;selected=j;
   if(i===0)selected=await animaLabView(ids,j);else{const side=await menu(['正面','背面／反転'],{x:45,y:60,w:150,title:'素材の 向き'});if(side>=0)await downloadAnimaSheet(ids[j],side===1);}
  }
+}
+
+function showAnimaExport(blob,id,back){
+ return new Promise(res=>{const el=document.getElementById('animaExport'),img=document.getElementById('animaExportImage'),link=document.getElementById('animaExportLink'),share=document.getElementById('animaExportShare'),close=document.getElementById('animaExportClose'),url=URL.createObjectURL(blob),name='anima-'+String(id).padStart(4,'0')+(back?'-reverse':'-front')+'-motion.png';
+  document.getElementById('animaExportTitle').textContent=SP[id].name+'・アニメーション素材';
+  img.src=url;link.href=url;link.download=name;let file=null;try{file=new File([blob],name,{type:'image/png'});}catch(e){}
+  let canShare=false;try{canShare=!!(file&&navigator.canShare&&navigator.canShare({files:[file]}));}catch(e){}
+  share.style.display=canShare?'':'none';share.onclick=async()=>{if(canShare){try{await navigator.share({files:[file],title:SP[id].name+'・アニメーション素材'});}catch(e){if(e.name!=='AbortError')console.warn(e);}}};
+  el.style.display='flex';close.onclick=()=>{el.style.display='none';img.removeAttribute('src');link.removeAttribute('href');share.onclick=null;close.onclick=null;setTimeout(()=>URL.revokeObjectURL(url),30000);res();};close.focus();
+ });
 }

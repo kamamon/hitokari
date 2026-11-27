@@ -19,6 +19,8 @@ jobs:
       - run: node tests/individual-world-browser.cjs
       - run: node tests/story-clear-browser.cjs
       - run: node tests/mobile-webkit.cjs
+      - run: node tests/anima-sprite-browser.cjs
+      - run: node tools/bake-anima-sheets.cjs --out=test-results/anima-motion/full-sheets
       - uses: actions/upload-artifact@v4
         if: always()
         with:

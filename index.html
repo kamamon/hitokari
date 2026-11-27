@@ -66,6 +66,11 @@ body.land #bB{right:max(16px,env(safe-area-inset-right));bottom:10%;width:min(ca
 body.land #bM{right:max(8px,env(safe-area-inset-right));width:min(calc(var(--rail,120px) - 12px),96px);top:6%;opacity:1}
 body.land #bC{right:auto;left:max(8px,env(safe-area-inset-left));top:7%;bottom:auto;opacity:1}
 #dpad,#bA,#bB,#bM,#bC{touch-action:none}
+#animaExport{display:none;position:fixed;inset:0;z-index:11;align-items:center;justify-content:center;background:rgba(20,25,37,.94);padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));touch-action:auto}
+#animaExport .export-card{width:min(460px,100%);max-height:100%;overflow:auto;background:#f4f4e8;color:#273e48;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 5px 24px #0005}
+#animaExport img{width:100%;max-height:38vh;object-fit:contain;image-rendering:auto;background:#e1e6e3;border-radius:8px}
+#animaExport a,#animaExport button{display:block;text-align:center;font-size:16px;font-weight:bold;padding:12px;border:0;border-radius:8px;background:#376c70;color:#fff;text-decoration:none}
+#animaExport button{background:#5a6271}
 </style>
 </head>
 <body>
@@ -77,6 +82,7 @@ body.land #bC{right:auto;left:max(8px,env(safe-area-inset-left));top:7%;bottom:a
   </div>
 </div>
 <div id="io"><div id="ioInfo"></div><textarea id="ioText" spellcheck="false"></textarea><button id="ioCopy">コピーする</button><button id="ioLoad">読みこむ</button><button id="ioClose">とじる</button></div>
+<div id="animaExport" role="dialog" aria-modal="true" aria-label="アニメーション素材"><div class="export-card"><strong id="animaExportTitle"></strong><img id="animaExportImage" alt="透過アニメーション素材のプレビュー"><span>17行 × 8コマの透過PNG。iPhoneではファイルに保存、または共有を利用できます。</span><a id="animaExportLink">PNGを保存</a><button id="animaExportShare" type="button">共有する</button><button id="animaExportClose" type="button">とじる</button></div></div>
 <script src="emerald-core.js"></script>
 <script src="audio-engine.js"></script>
 <script>
@@ -2392,7 +2398,7 @@ function setupInput(){
   cv.addEventListener('pointerup',swUp);const swCancel=e=>{if(sw&&e.pointerId===sw.id){sw=null;setDir(-1);}};cv.addEventListener('pointercancel',swCancel);cv.addEventListener('lostpointercapture',swCancel);
   const resetHeld=()=>{padId=null;sw=null;knob.style.transform='';for(const k in held)setHeld(k,0);pressQ.length=0;document.querySelectorAll('.btn.on').forEach(e=>e.classList.remove('on'));};
   window.addEventListener('blur',resetHeld);document.addEventListener('visibilitychange',()=>{if(document.hidden)resetHeld();});
-  document.addEventListener('touchmove',e=>{if(!e.target.closest||!e.target.closest('#io'))e.preventDefault();},{passive:false});
+  document.addEventListener('touchmove',e=>{if(!e.target.closest||!e.target.closest('#io,#animaExport'))e.preventDefault();},{passive:false});
   document.addEventListener('contextmenu',e=>e.preventDefault());
   document.addEventListener('gesturestart',e=>e.preventDefault());
 }
