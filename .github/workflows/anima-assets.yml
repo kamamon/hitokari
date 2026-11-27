@@ -1,5 +1,12 @@
 name: Anima full sprite asset pack
 on:
+  pull_request:
+    paths:
+      - 'anima-sprite-engine.js'
+      - 'data/anima-rigs.js'
+      - 'anima-motion-lab.js'
+      - 'tools/bake-anima-sheets.cjs'
+      - '.github/workflows/anima-assets.yml'
   workflow_dispatch:
     inputs:
       profile:
@@ -25,8 +32,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Generate 1212 sprite sheets
         env:
-          PROFILE: ${{ inputs.profile }}
-          VIEW: ${{ inputs.view }}
+          PROFILE: ${{ inputs.profile || 'compact' }}
+          VIEW: ${{ inputs.view || 'front' }}
         run: |
           flags=()
           if [ "$PROFILE" = compact ]; then flags+=(--compact); fi

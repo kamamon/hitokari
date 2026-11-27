@@ -32,7 +32,7 @@ function animaRenderSettings(w){
  const low=typeof mobileQualityMode==='function'&&(mobileQualityMode()==='low'||(mobileQualityMode()==='auto'&&MOBILE_QA.adaptive));
  const touch=typeof isTouchDevice==='function'&&isTouchDevice();
  // Small sprites need fewer source pixels; keep GPU/CPU work bounded on mobile.
- return{size:low?72:w<40?80:touch?112:144,steps:low?8:touch?10:12,budget:(low?4:touch?7:12)*1048576,perTick:low?1:touch?2:3};
+ const high=typeof mobileQualityMode==='function'&&mobileQualityMode()==='high';return{size:low?72:w<40?80:w<65?(touch?112:144):high?(touch?160:192):touch?128:160,steps:low?8:touch?10:12,budget:(low?4:touch?7:12)*1048576,perTick:low?1:touch?2:3};
 }
 function animaFrame(g,atlas,index,x,y,w,h=w){return drawCell(g,'mon/motion-v6/'+atlas+'.svg',8,64,64,index,x,y,w,h);}
 function animaMotionFX(g,m,p,x,y,w,behind,al){
