@@ -71,3 +71,17 @@ function showAnimaExport(blob,id,back){
   el.style.display='flex';close.onclick=()=>{el.style.display='none';img.removeAttribute('src');link.removeAttribute('href');share.onclick=null;close.onclick=null;setTimeout(()=>URL.revokeObjectURL(url),30000);res();};close.focus();
  });
 }
+
+async function buildAnimaRuntimeAtlas(id,opts={}){
+ const rig=animaRig(id),back=!!opts.back,n=opts.size||80,steps=opts.frames||6,clips=opts.clips||['idle','walk','run','attack','pounce','dash','cast','beam','hit','celebrate'];
+ if(!Number.isInteger(n)||n<48||n>192||!Number.isInteger(steps)||steps<2||steps>16||!clips.length||clips.some(k=>!AnimaSpriteEngine.clips.includes(k)))throw Error('atlas options');
+ const src=await waitAnimaArtwork(id,back),pad=Math.ceil(n*.105),cell=n+2*pad,sheet=document.createElement('canvas');
+ sheet.width=steps*cell;sheet.height=clips.length*cell;const g=sheet.getContext('2d');
+ for(let row=0;row<clips.length;row++){const clip=clips[row];for(let f=0;f<steps;f++){
+   const phase=AnimaSpriteEngine.looped.has(clip)?f/steps:f/(steps-1);
+   const im=AnimaSpriteEngine.getFrame(src,rig,clip,phase,{size:n,steps,budget:8*1048576,mirror:back,allow:true});
+   if(!im||im.c.width!==cell||im.c.height!==cell)throw Error('frame geometry');
+   g.drawImage(im.c,f*cell,row*cell);
+ }if(opts.yield!==false)await new Promise(r=>setTimeout(r,0));}
+ return sheet;
+}
