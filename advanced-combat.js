@@ -1,7 +1,8 @@
 'use strict';
 // Active slot battle adapter. Reuses the existing move/status/animation resolver for both sides.
 const DOUBLE_SPREAD=new Set(['おおなみ','だいかいしょう','はなあらし','たいじゅのいかり','ひょうてんか','だいおせん','ふはいのきり','ちかくへんどう','てんぷうは','ほうせきあらし','がけくずし','だいぐんしゅう','うろこあらし','はめつのほうこう','らんきりゅう','だいせんぷう']);
-const doubleTarget=m=>DOUBLE_SPREAD.has(m.name)?'spread':m.pow>0||m.eff.some(e=>e.k==='st'||e.k==='seed'||e.k==='split'||e.k==='stage'&&e.who==='foe')?'enemy':m.eff.some(e=>e.k==='heal'||e.k==='cure')?'support':'self';
+const DOUBLE_ADJACENT=new Set(['ちかくへんどう']);
+const doubleTarget=m=>DOUBLE_ADJACENT.has(m.name)?'all':DOUBLE_SPREAD.has(m.name)?'spread':m.pow>0||m.eff.some(e=>e.k==='st'||e.k==='seed'||e.k==='split'||e.k==='stage'&&e.who==='foe')?'enemy':m.eff.some(e=>e.k==='heal'||e.k==='cure')?'support':'self';
 function combatEffect(m,t){if(m.type<0)return 1;const ab=abilOf(t);return (m.type===8&&ab===2||m.type===2&&ab===9||m.type===3&&ab===10||m.type===1&&ab===11)?0:typeEff(m.type,SP[t.sp].types);}
 function combatStat(m,st,i){let v=stat(m,i)*stgMul(st?st[STKEY[i]]||0:0);if(i===1){if(m.st&&abilOf(m)===12)v*=1.5;else if(m.st==='brn')v*=0.5;}if(i===5){if(m.st==='par')v*=0.25;v*=heldOf(m).spe||1;}return Math.max(1,Math.floor(v));}
 function combatEstimate(a,t,m,as,ts,weather){const eff=combatEffect(m,t);if(!eff||m.pow===0)return 0;const fixed=m.eff.find(e=>e.k==='fixed');if(fixed)return fixed.n;if(m.has('level'))return a.lv;if(m.has('halve'))return Math.max(1,t.hp/2);
@@ -29,7 +30,7 @@ function doubleSlot(side,pos,i,mon){return{side,pos,i,mon,st:newStg(),hpShow:mon
 function doublePosition(s){return s.side?{x:147+s.pos*61,y:57-s.pos*9}:{x:41+s.pos*65,y:103+s.pos*7};}
 function doubleActive(D,side){return D.slots[side].filter(s=>s&&s.mon.hp>0);}
 function doubleReserve(D,side,used=[]){const a=side?D.foes:S.party,active=D.slots[side].filter(Boolean).map(s=>s.i);return a.map((mon,i)=>({mon,i})).filter(v=>v.mon.hp>0&&!active.includes(v.i)&&!used.includes(v.i));}
-function doublePair(D,a,t){const pair=a.side?[t,a]:[a,t];D.pair=pair;const B={o:D.o,wild:false,foes:D.foes,pi:pair[0].i,fi:pair[1].i,ps:pair[0].st,fs:pair[1].st,parts:D.parts,pairMons:pair.map(s=>s.mon),pairSlots:pair,wall:D.wall,allStages:D.slots.flat().filter(Boolean).map(s=>s.st),hpShow:[],fx:{}};
+function doublePair(D,a,t){const pair=a.side?[t,a]:[a,t];D.pair=pair;const B={o:D.o,wild:false,foes:D.foes,pi:pair[0].i,fi:pair[1].i,ps:pair[0].st,fs:pair[1].st,parts:D.parts,pairMons:pair.map(s=>s.mon),pairSlots:pair,wall:pair.map(s=>D.wall[s.side]),allStages:D.slots.flat().filter(Boolean).map(s=>s.st),hpShow:[],fx:{}};
  for(const key of ['weather','wT','naturalWX','coins'])Object.defineProperty(B,key,{get:()=>D[key],set:v=>D[key]=v});
  for(let i=0;i<2;i++){const s=pair[i],prefix=i?'foe':'me';Object.defineProperty(B.hpShow,i,{get:()=>s.hpShow,set:v=>s.hpShow=v,enumerable:true});for(const k of ['DX','DY','SX','Hide','A','Y'])Object.defineProperty(B.fx,prefix+k,{get:()=>s.fx[k],set:v=>s.fx[k]=v});}
  return B;
@@ -41,25 +42,52 @@ function doubleState(o){const D={double:true,o,wild:false,foes:o.trainer.team,en
 }
 async function doubleEnter(D,s){if(!s)return;if(s.side)markSeen(s.mon.sp);else D.parts.add(s.i);const q=doublePosition(s);ring(q.x,q.y+18,'230,255,255',{flat:0.35,dr:2.4,w:2});if(s.mon.shiny)sparkleFx(q.x,q.y,12);
  if(abilOf(s.mon)===1){await say(monName(s.mon)+'の 威圧！');for(const t of doubleActive(D,1-s.side))await boost(doublePair(D,s,t),1-s.side,'atk',-1);}}
-async function doublePlayerAction(D,s,reserved){
- for(;;){D.focus=s;const choice=await menu(['技を 使う','交代する','前の選択へ'],{x:6,y:LH-MSG_H+2,w:228,cols:2,cancel:true,title:monName(s.mon)+' の 行動'});
- if(choice<0||choice===2)return null;
+async function doublePlayerAction(D,s,reserved,itemsReserved={}){
+ for(;;){D.focus=s;const choice=await menu(['技を 使う','交代する',{label:'もちもの',dis:!!D.o.facility},'前の選択へ'],{x:6,y:LH-MSG_H+2,w:228,cols:2,cancel:true,title:monName(s.mon)+' の 行動'});
+ if(choice<0||choice===3)return null;
+ if(choice===2){if(D.o.facility)continue;const item=await doubleChooseItem(s,itemsReserved);if(item)return item;continue;}
  if(choice===1){const pool=doubleReserve(D,0,reserved);if(!pool.length){await sayW('交代できる 相棒は いない。');continue;}
  const i=await menu(pool.map(v=>({label:monName(v.mon),right:'HP '+v.mon.hp+'/'+maxHP(v.mon)})),{x:8,y:36,w:224,title:'交代先'});if(i>=0)return{kind:'switch',slot:s,i:pool[i].i};continue;}
  const options=combatOptions(s.mon);
- const mi=await menu(options.map(v=>({label:v.m.name,right:(v.i<0?'PP―':'PP'+s.mon.mv[v.i].pp)+' '+(doubleTarget(v.m)==='spread'?'全体':TK[v.m.type]||'無')})),{x:3,y:LH-MSG_H+1,w:234,rows:3,cancel:true,title:'技を 選ぶ',fg:j=>{const m=options[j].m;win(4,111,232,35);tx(TKANA[m.type]||'無',11,116,'#2a2233',9);tx('威力 '+powTxt(m)+' 命中 '+(m.acc||'必中'),228,116,'#2a2233',9,'right');tx(doubleTarget(m)==='spread'?'相手2体（2体時75%）':doubleTarget(m)==='support'?'自分 または 味方':moveNote(m).slice(0,23),11,130,'#5a5560',8);}});if(mi<0)continue;
+ const mi=await menu(options.map(v=>({label:v.m.name,right:(v.i<0?'PP―':'PP'+s.mon.mv[v.i].pp)+' '+(['spread','all'].includes(doubleTarget(v.m))?'範囲':TK[v.m.type]||'無')})),{x:3,y:LH-MSG_H+1,w:234,rows:3,cancel:true,title:'技を 選ぶ',fg:j=>{const m=options[j].m;win(4,111,232,35);tx(TKANA[m.type]||'無',11,116,'#2a2233',9);tx('威力 '+powTxt(m)+' 命中 '+(m.acc||'必中'),228,116,'#2a2233',9,'right');tx(doubleTarget(m)==='all'?'相手と 味方にも 命中':doubleTarget(m)==='spread'?'相手2体（2体時75%）':doubleTarget(m)==='support'?'自分 または 味方':moveNote(m).slice(0,23),11,130,'#5a5560',8);}});if(mi<0)continue;
  const v=options[mi],kind=doubleTarget(v.m);let target=null;
  if(kind==='enemy'||kind==='support'){const targets=kind==='support'?doubleActive(D,0):doubleActive(D,1);if(targets.length===1)target=targets[0].pos;else{const i=await menu(targets.map(t=>({label:monName(t.mon),right:'HP '+t.mon.hp})),{x:10,y:LH-MSG_H+1,w:220,title:kind==='support'?'回復対象':'攻撃対象'});if(i<0)continue;target=targets[i].pos;}}
  return{kind:'move',slot:s,i:v.i,target,mode:kind};
  }
 }
+function doubleItemEligible(it,m){
+ if(!it||!m)return false;
+ if(it.k==='heal')return m.hp>0&&m.hp<maxHP(m);
+ if(it.k==='cure')return m.hp>0&&!!m.st&&(it.v==='all'||it.v===m.st);
+ if(it.k==='revive')return m.hp<=0;
+ if(it.k==='pp')return m.mv.some(v=>v.pp<MOVES[v.id].pp);
+ return false;
+}
+async function doubleChooseItem(s,reserved){
+ const ids=ITEM_ORDER.filter(id=>(S.bag[id]||0)>(reserved[id]||0)&&['heal','cure','revive','pp'].includes(ITEMS[id].k)&&S.party.some(m=>doubleItemEligible(ITEMS[id],m)));
+ if(!ids.length){await sayW('使える 道具が ない。');return null;}
+ const i=await menu(ids.map(id=>({label:ITEMS[id].n,right:'×'+(S.bag[id]-(reserved[id]||0))})),{x:4,y:8,w:232,rows:10,title:'戦闘用の 道具'});if(i<0)return null;
+ const id=ids[i],j=await menu(S.party.map(m=>({label:monName(m),right:'HP '+m.hp+'/'+maxHP(m),dis:!doubleItemEligible(ITEMS[id],m)})),{x:5,y:30,w:230,title:'使う 相棒'});if(j<0)return null;
+ return{kind:'item',slot:s,id,targetIndex:j};
+}
+async function doubleUseItem(D,a){
+ if(D.o.facility||!(S.bag[a.id]>0))return;
+ const m=S.party[a.targetIndex],it=ITEMS[a.id];if(!doubleItemEligible(it,m)){await say('道具は 使わなかった。');return;}
+ if(it.k==='heal')m.hp=Math.min(maxHP(m),m.hp+it.v);
+ if(it.k==='cure'){m.st=null;m.sc=0;}
+ if(it.k==='revive'){m.hp=it.v?maxHP(m):Math.max(1,Math.floor(maxHP(m)/2));m.st=null;m.sc=0;}
+ if(it.k==='pp')for(const v of m.mv)v.pp=MOVES[v.id].pp;
+ if(--S.bag[a.id]<=0)delete S.bag[a.id];sfx('heal');const target=D.slots[0].find(s=>s&&s.i===a.targetIndex);if(target){const opp=doubleActive(D,1)[0];if(opp){const B=doublePair(D,target,opp);healFx(0);await hpAnim(B,0);}else target.hpShow=m.hp;}
+ await say(monName(m)+'に '+it.n+'を 使った！');
+}
 function doubleAI(D,s,reserved){
  const enemies=doubleActive(D,1-s.side);
  if(D.turnN-s.lastSwitch>=2&&D.turnN>=1){const i=switchRating(s,enemies,doubleReserve(D,s.side,reserved),D.weather);if(i>=0)return{kind:'switch',slot:s,i};}
  let best=null,bs=-Infinity;
- for(const v of combatOptions(s.mon)){const m=v.m,kind=doubleTarget(m),targets=kind==='support'?doubleActive(D,s.side):kind==='self'?[s]:kind==='spread'?[null]:enemies;
+ for(const v of combatOptions(s.mon)){const m=v.m,kind=doubleTarget(m),targets=kind==='support'?doubleActive(D,s.side):kind==='self'?[s]:['spread','all'].includes(kind)?[null]:enemies;
  for(const t of targets){let score=0;
  if(m.pow){const targets2=t?[t]:enemies;score=targets2.reduce((sum,z)=>sum+HitokariUpgrade.damageScore(combatEstimate(s.mon,z.mon,m,s.st,z.st,D.weather)*(targets2.length>1?0.75:1),z.mon.hp,(m.acc||100)/100,m.prio,combatStat(s.mon,s.st,5)>=combatStat(z.mon,z.st,5)),0);
+ if(kind==='all'){const ally=doubleActive(D,s.side).find(z=>z!==s);if(ally)score-=70*combatEstimate(s.mon,ally.mon,m,s.st,ally.st,D.weather)/Math.max(1,ally.mon.hp);}
  if(m.has('rech'))score*=0.7;if(m.has('boom')&&s.mon.hp>maxHP(s.mon)*0.25)score*=0.1;
  }else if(kind==='support'){const h=t.mon.hp/maxHP(t.mon);score=m.has('heal')?(h<0.4?85:h<0.7?35:0):(t.mon.st?62:0);}
  else if(kind==='self'){score=m.has('protect')?(s.st.protN?0:8):m.has('wall')?(!D.wall[s.side][m.eff.find(e=>e.k==='wall').c]?30:0):m.has('wx')?(D.weather!==m.eff.find(e=>e.k==='wx').w?18:0):m.has('rest')?(s.mon.hp<maxHP(s.mon)*0.3?70:0):m.eff.some(e=>e.k==='stage'&&e.who==='self'&&Math.abs(s.st[e.stat])<3)?24:4;}
@@ -68,13 +96,14 @@ function doubleAI(D,s,reserved){
  }}
  return best||{kind:'move',slot:s,i:-1,mode:'enemy',target:enemies[0]?.pos};
 }
-function doubleOrder(actions){return actions.map(a=>({a,p:a.kind==='switch'?100:(a.i<0?0:MOVES[a.slot.mon.mv[a.i].id].prio),speed:combatStat(a.slot.mon,a.slot.st,5),tie:Math.random()})).sort((a,b)=>b.p-a.p||b.speed-a.speed||a.tie-b.tie).map(x=>x.a);}
+function doubleOrder(actions){return actions.map(a=>({a,p:a.kind==='switch'?100:a.kind==='item'?90:(a.i<0?0:MOVES[a.slot.mon.mv[a.i].id].prio),speed:combatStat(a.slot.mon,a.slot.st,5),tie:Math.random()})).sort((a,b)=>b.p-a.p||b.speed-a.speed||a.tie-b.tie).map(x=>x.a);}
 async function doubleExecute(D,a){const s=a.slot;if(!s||s.mon.hp<=0||D.slots[s.side][s.pos]!==s)return;
+ if(a.kind==='item'){await doubleUseItem(D,a);return;}
  if(a.kind==='switch'){const next=doubleReserve(D,s.side).find(v=>v.i===a.i);if(!next)return;await say(monName(s.mon)+'、もどれ！');const q=doubleSlot(s.side,s.pos,next.i,next.mon);q.lastSwitch=D.turnN;D.slots[s.side][s.pos]=q;await say(monName(q.mon)+'、出番だ！');await doubleEnter(D,q);return;}
  const enemy=doubleActive(D,1-s.side);if(!enemy.length)return;
  const mode=a.mode||'enemy',m=a.i<0?STRUGGLE:MOVES[s.mon.mv[a.i].id];
  const allies=doubleActive(D,s.side);
- let targets=mode==='spread'?enemy:mode==='support'?[allies.find(t=>t.pos===a.target)||s]:mode==='self'?[enemy[0]]:[enemy.find(t=>t.pos===a.target)||enemy[0]];
+ let targets=mode==='all'?[...enemy,...allies.filter(t=>t!==s)]:mode==='spread'?enemy:mode==='support'?[allies.find(t=>t.pos===a.target)||s]:mode==='self'?[enemy[0]]:[enemy.find(t=>t.pos===a.target)||enemy[0]];
  const support=mode==='support'&&targets[0]!==s;if(mode==='support'&&!support)targets=[enemy[0]];
  let moved=false;
  for(let j=0;j<targets.length;j++){if(j&&!moved)break;const t=targets[j];if(t.mon.hp<=0||s.mon.hp<=0)continue;const B=doublePair(D,s,t);B.extra=j>0;B.spreadFactor=targets.length>1?0.75:1;B.supportAlly=support;await useMove(B,s.side,a.i);if(!j)moved=B.didMove;}
@@ -106,8 +135,8 @@ async function doubleBattle(o){
  const D=doubleState(o),speaker=SPEAKER;SPEAKER=0;fxClear();
  try{for(const m of S.party.concat(D.foes))monPreload(m.sp);await fadeTo(1,180);BT=D;G.scene='battle';await fadeTo(0,220);await say(o.trainer.name+'との ダブルバトル！');
  for(const s of D.slots.flat().filter(Boolean))await doubleEnter(D,s);
- while(!D.result){const actions=[],players=doubleActive(D,0),reserved=[];let i=0;
- while(i<players.length){const a=await doublePlayerAction(D,players[i],reserved);if(!a){if(i){const prev=actions.pop();if(prev.kind==='switch')reserved.splice(reserved.indexOf(prev.i),1);i--;}continue;}actions.push(a);if(a.kind==='switch')reserved.push(a.i);i++;}
+ while(!D.result){const actions=[],players=doubleActive(D,0),reserved=[],itemsReserved={};let i=0;
+ while(i<players.length){const a=await doublePlayerAction(D,players[i],reserved,itemsReserved);if(!a){if(i){const prev=actions.pop();if(prev.kind==='switch')reserved.splice(reserved.indexOf(prev.i),1);if(prev.kind==='item')itemsReserved[prev.id]--;i--;}continue;}actions.push(a);if(a.kind==='switch')reserved.push(a.i);if(a.kind==='item')itemsReserved[a.id]=(itemsReserved[a.id]||0)+1;i++;}
  const aiReserved=[];for(const s of doubleActive(D,1)){const a=doubleAI(D,s,aiReserved);if(a.kind==='switch')aiReserved.push(a.i);actions.push(a);}
  D.focus=null;for(const a of doubleOrder(actions)){if(!doubleActive(D,0).length||!doubleActive(D,1).length)break;await doubleExecute(D,a);}
  await doubleResidual(D);await doubleFaints(D);D.turnN++;

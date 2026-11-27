@@ -4836,7 +4836,7 @@ async function useItem(id,opt){
     if(id==='k_fly'){const r=await flyStart();return r?'close':null;}
     if(id==='k_map'){await mapScreen();return null;}
     if(id==='k_rod'){await msg('水辺に むかって Aボタンを おすと 釣りが できる。');return null;}
-    if(it.use==='scan'){const c=G.map&&G.map.cell,L=c?[].concat(c.land||[],c.water||[]):[];if(!L.length){await msg('この あたりに アニマの 足あとは ない。');return null;}
+    if(it.use==='scan'){const c=G.map&&(G.map.advEnc||G.map.cell),L=c?[].concat(c.land||[],c.water||[]):[];if(!L.length){await msg('この あたりに アニマの 足あとは ない。');return null;}
       await msg('足あとを 読みとった。この あたりに すむのは…\n'+L.map(f=>{const id=FAMS[f].ids[0];return S.seen[id]?SP[id].name:'？？？';}).join('、')+'。');return null;}
     await msg(it.d);return null;
   }
@@ -5452,7 +5452,7 @@ async function talk(o){
      const grunt=o.grunt,nm=o.cls+'の '+o.name;
      if(o.beaten){if(!grunt&&await trainerRematch(o))break;await msg('「'+lineOf(grunt?GR_POST:TR_POST,o)+'」');break;}
      await msg('「'+lineOf(grunt?GR_PRE:TR_PRE,o)+'」');
-     const r=await battle({double:!grunt&&o.team.length>=2&&((hashStr(mid+':'+o.tid)%4)===0),trainer:{name:nm,team:mkTeam(o.team,Math.min(28,6+Math.floor(o.team[0].lv/3))),money:o.money,spr:o.spr}});
+     const r=await battle({double:!grunt&&o.team.length>=2&&(o.double||((hashStr(mid+':'+o.tid)%4)===0)),trainer:{name:nm,team:mkTeam(o.team,Math.min(28,6+Math.floor(o.team[0].lv/3))),money:o.money,spr:o.spr}});
      if(r==='lose'){await blackout();break;}
      S.flags['t:'+mid+':'+o.tid]=1;o.beaten=true;HitokariUpgrade.noteMatch(S,'t:'+mid+':'+o.tid);saveGame();break;}
    case'leader':await gymBattle(o);break;
@@ -5824,7 +5824,7 @@ function activeObjs(m){
 function loadMap(id,x,y,dir){
   let m;try{m=getMap(id);}catch(e){console.error(e);m=null;}
   if(!m){const h=homeSpot();m=getMap(h.map);x=h.x;y=h.y;}
-  if(m.cell)for(const L of [m.cell.land,m.cell.water])if(L)for(const fid of L)if(FAMS[fid])FAMS[fid].ids.forEach(monPreload);      // この場所に出る子の 原画を 先に読む
+  if(m.cell)for(const L of [(m.advEnc||m.cell).land,(m.advEnc||m.cell).water])if(L)for(const fid of L)if(FAMS[fid])FAMS[fid].ids.forEach(monPreload);      // この場所に出る子の 原画を 先に読む
   if(S&&S.party)for(const q of S.party)monPreload(q.sp);
   if(m.cell&&m.cell.kind==='town'&&G.cellKey!==undefined&&G.cellKey!==m.cell.key&&S){S.rot=S.rot||{};S.rot[m.cell.key]=(S.rot[m.cell.key]||0)+1;}      // 人物図鑑2000人を維持するため、住民の巡回を維持
   G.cellKey=m.cell?m.cell.key:null;chrPreload('pl');
@@ -5910,7 +5910,7 @@ function onStep(){
   if(m.enc&&m.cell&&S.party.length){
     let kind=null,rate=m.enc.rate;
     if(m.advArea==='undersea'&&(v===T.CFLOOR||v===T.TALL)){kind='water';rate=12;}else if(v===T.TALL||(v===T.CFLOOR&&m.pal==='cave'))kind='land';else if(v===T.WATER&&p.surf){kind='water';rate=10;}
-    const lead=S.party.find(a=>a.hp>0);if(kind&&lead&&chance(HitokariUpgrade.encounterChance(rate,abilOf(lead)))){const wp=wildPick(m.cell,kind,m.enc.bonus||0)||(kind==='water'?waterFallback(m.cell):null);if(wp&&!HitokariUpgrade.repelBlocks(repel,wp.lv,lead.lv))run(()=>doWild(wp));}
+    const lead=S.party.find(a=>a.hp>0);if(kind&&lead&&chance(HitokariUpgrade.encounterChance(rate,abilOf(lead)))){const ec=m.advEnc||m.cell,wp=wildPick(ec,kind,m.enc.bonus||0)||(kind==='water'?waterFallback(ec):null);if(wp&&!HitokariUpgrade.repelBlocks(repel,wp.lv,lead.lv))run(()=>doWild(wp));}
   }
 }
 function waterFallback(cell){let best=null,bd=1e9;for(const a of WORLD.areas){if(!a.water.length)continue;const d=Math.abs(a.prog-cell.prog);if(d<bd){bd=d;best=a;}}return best?wildPick(best,'water',0):null;}
@@ -5995,7 +5995,7 @@ async function waterAct(){
   if(ch==='アニマに 乗って 進む'){const p=G.pl;p.surf=true;p.moving=true;p.spd=2;p.prog=0;folStart();sfx('door');}
   else if(ch==='釣りを する'){G.pl.fish=1;try{
     await msg('つりざおを ふった。……………');
-    if(chance(0.6)){const w=wildPick(G.map.cell,'water',0)||waterFallback(G.map.cell);if(w){sfx('alert');await msg('かかった！');await doWild(w,{water:true});return;}}
+    if(chance(0.6)){const ec=G.map.advEnc||G.map.cell,w=wildPick(ec,'water',0)||waterFallback(ec);if(w){sfx('alert');await msg('かかった！');await doWild(w,{water:true});return;}}
     await msg('…なにも 釣れなかった。');
   }finally{G.pl.fish=0;}
   }
@@ -6247,7 +6247,7 @@ async function journeyJournal(){
     if(c<0||c===4)return;
     if(c===0){const goals=[1,2,3,4,5].map(i=>CIRCUITS[i]+' '+Math.min(2,badgeIn(i))+'/2').join('\n');await msg('勝利 '+p.wins+'　捕獲 '+p.captures+'　敗北 '+p.losses+'\n（記録は 改修版から）');await msg('リーグまでの 目標\n'+goals);await msg('歩数 '+S.steps+'　再戦勝利 '+Object.values(p.rematches).reduce((n,r)=>n+(r.wins||0),0));}
     if(c===1){const ids=Array.from({length:50},(_,i)=>i+1).filter(k=>S.badges[k]);if(!ids.length){await msg('まだ バッジは ない。');continue;}await menu(ids.map(k=>({label:GYM_TOWN[k],right:badgeCount()>=4&&HitokariUpgrade.rematchReady(S,'g:'+k,512)?'再戦可':'準備中'})),{x:4,y:2,w:232,rows:12,title:'ジム　Bで 戻る',bg:()=>screenBG(),fg:j=>{const k=ids[j],v=p.rematches['g:'+k];win(4,181,232,27);tx('再戦勝利 '+(v&&v.wins||0)+'回　必要: バッジ4個・512歩',10,189,'#5a5560',8);}});}
-    if(c===2){const cell=G.map.cell,ids=cell?[...new Set([...(cell.land||[]),...(cell.water||[])])]:[];if(!ids.length){await msg('この場所には 野生の 足あとが ない。');continue;}await menu(ids.map(f=>{const id=FAMS[f].ids[0];return{label:S.seen[id]?SP[id].name:'？？？？？',right:cell.water.includes(f)?'水辺':'陸地'};}),{x:8,y:8,w:224,rows:11,title:'生息情報（発見済みのみ表示）',bg:()=>screenBG()});}
+    if(c===2){const cell=G.map.advEnc||G.map.cell,ids=cell?[...new Set([...(cell.land||[]),...(cell.water||[])])]:[];if(!ids.length){await msg('この場所には 野生の 足あとが ない。');continue;}await menu(ids.map(f=>{const id=FAMS[f].ids[0];return{label:S.seen[id]?SP[id].name:'？？？？？',right:cell.water.includes(f)?'水辺':'陸地'};}),{x:8,y:8,w:224,rows:11,title:'生息情報（発見済みのみ表示）',bg:()=>screenBG()});}
     if(c===3)await msg('巡環修練場\n連続優勝 '+p.streak+'　最高 '+p.best+'\n優勝回数 '+p.clears+'（殿堂入り後）');
   }
 }

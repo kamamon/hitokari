@@ -49,6 +49,9 @@ function decorateGym(m){const k=m.cell.gym,spec=gymPuzzleSpec(k);m.gymPuzzle=spe
  const coords=spec.n===6?[[2,7],[6,7],[10,7],[2,10],[6,10],[10,10]]:k%2?[[3,7],[9,7],[3,11],[9,11]]:[[2,8],[10,8],[4,12],[8,12]];
  // Rotate positions so solution and arrangement differ by district without blocking corridors.
  const layout=RNG('gym-layout:'+k).shuffle(coords.slice());layout.forEach(([x,y],i)=>{expSet(m,x,y,T.RUG);expPut(m,x,y,{kind:'gymplate',i,step:spec.mode===6||spec.mode===8});});
+ // Distinct room motifs and traversable obstacle layouts; controls always have a route.
+ const obstacles={0:[[2,5],[10,5]],1:[[2,6],[10,6],[2,12],[10,12]],2:[[3,6],[9,6],[3,10],[9,10]],3:[[4,5],[8,5],[4,9],[8,9]],4:[[5,6],[7,6],[5,11],[7,11]],5:[[2,5],[10,5],[2,10],[10,10]],6:[[4,6],[4,7],[4,8],[8,9],[8,10],[8,11]],7:[[2,5],[10,5],[5,8],[7,10]],8:[[3,6],[9,6],[3,9],[9,9]],9:[[4,6],[8,6],[4,10],[8,10]]}[spec.mode];
+ for(const [x,y] of obstacles)if(!expAt(m,x,y))expSet(m,x,y,spec.mode===5?T.STATUE:spec.mode===1?T.PLANT:spec.mode===9?T.TABLE:T.IWALL);
  expSet(m,3,14,T.RUG);expPut(m,3,14,{kind:'gymhint'});expSet(m,9,14,T.RUG);expPut(m,9,14,{kind:'gymreset'});
  for(let y=2;y<4;y++)expSet(m,6,y,T.RUG);
  for(let i=0;i<m.objs.length;i++){const o=m.objs[i];if(o.role==='trainer'){o.x=i%2?1:11;o.y=6+(i-1)*3;o.dir=i%2?1:3;}}
@@ -87,7 +90,7 @@ function decorateExpansionMap(m){
   }
  }
 }
-const EXP_AREAS=new Set(['ridge','river','coast','undersea','base','hub','contest']);
+const EXP_AREAS=new Set(['ridge','river','coast','undersea','base','hub','contest','trial-single','trial-double','trial-rental','trial-endurance']);
 function validExpansionMapId(id){if(typeof id!=='string')return false;const p=id.split(':');return p.length===3&&p[0]==='a'&&EXP_AREAS.has(p[1])&&Object.prototype.hasOwnProperty.call(CELLS,p[2]);}
 function expId(area,cell){return 'a:'+area+':'+cell.key;}
 function expTownReturn(cell,area){const m=getMap(cell.key);for(const [k,o] of Object.entries(m.adv||{}))if(o.kind==='portal'&&o.area===area){const [x,y]=k.split(',').map(Number);return{map:cell.key,x,y,dir:2};}return{map:cell.key,x:15,y:15,dir:2};}
@@ -95,7 +98,14 @@ function expExit(m,x,y,to){expSet(m,x,y,T.MAT);m.warps[expKey(x,y)]=to;expPut(m,
 function expOutdoor(id,cell,w,h,pal='plain'){const m=newMap(id,cell,w,h,T.TREE);m.advArea=id.split(':')[1];m.pal=pal;m.name=cell.name;m.border=T.TREE;m.adv={};m.elevation=new Uint8Array(w*h);
  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++)expSet(m,x,y,T.GRASS);return m;}
 function expSiteItem(m,x,y,id,iid){m.objs.push({k:'item',iid:'exp'+iid,x,y,item:id});}
-function expSiteTrainer(m,x,y,dir,tid){const r=RNG('exp-trainer:'+m.id+':'+tid),o=genTrainer(r,m.cell,tid,{n:3,los:3,bonus:2});o.x=x;o.y=y;o.dir=dir;m.objs.push(o);}
+function expSiteTrainer(m,x,y,dir,tid){const r=RNG('exp-trainer:'+m.id+':'+tid),o=genTrainer(r,m.cell,tid,{n:3,los:3,bonus:2});o.x=x;o.y=y;o.dir=dir;o.double=tid===91;if(o.double)o.cls='双戦 '+o.cls;m.objs.push(o);}
+function expansionEncounter(m,area){
+ const c=m.cell,r=RNG('ecology:'+m.id),target=clamp(c.prog/50,0,1),types=area==='ridge'?[4,9,11,12,8]:area==='river'?[2,4,9,3]:area==='coast'?[2,9,5,12]:[2,5,10,13,16];
+ const pool=FAMS.filter(f=>!f.legend&&!f.starter&&!f.one);
+ const choose=(list,n)=>list.map(f=>({f,score:Math.abs(f.tier-target)+(types.includes(f.t1)||types.includes(f.t2)?0:.22)+r()*.04})).sort((a,b)=>a.score-b.score).slice(0,n).map(v=>v.f.id);
+ const land=choose(pool.filter(f=>f.hab!=='water'),7),water=choose(pool.filter(f=>f.hab==='water'),6);
+ return {...c,land,water,rare:null,lv:Math.max(3,c.lv),name:m.name};
+}
 function generateExpansionMap(id){
  if(!validExpansionMapId(id))throw Error('invalid expansion map');const [,area,key]=id.split(':'),cell=CELLS[key],r=RNG('adventure:'+id);let m;
  if(area==='ridge'){
@@ -145,10 +155,15 @@ function generateExpansionMap(id){
   m=room(id,cell,17,15);m.advArea=area;m.name=area==='hub'?'巡環修練場・中央館':'彩華祭・演技ホール';m.adv={};
   for(let y=2;y<=12;y++)for(let x=2;x<=14;x++)if(y===7||x===8)expSet(m,x,y,T.RUG);
   const desks=area==='hub'?[[3,3,'single'],[8,3,'double'],[13,3,'rental'],[3,9,'endurance'],[13,9,'exchange']]:[[4,4,'beauty'],[8,4,'skill'],[12,4,'spirit'],[4,9,'cute'],[12,9,'power']];
-  desks.forEach(([x,y,v])=>expPut(m,x,y,{kind:area==='hub'?'facility':'contest',mode:v}));
+  desks.forEach(([x,y,v])=>expPut(m,x,y,{kind:area==='hub'?(v==='exchange'?'facility':'trialPortal'):'contest',mode:v}));
   expPut(m,8,11,{kind:'sign',label:area==='hub'?'各 受付の 印に A。連勝とポイントを 競う。':'各 受付で アニマの 演技大会に 参加できる。'});
   expExit(m,8,14,expTownReturn(cell,area));
+ }else if(area.startsWith('trial-')){
+  const mode=area.slice(6),f=EXP_FACILITIES[mode];m=room(id,cell,17,15);m.advArea=area;m.name=f.name+'・専用競技場';m.adv={};
+  for(let y=2;y<=11;y++)for(let x=2;x<=14;x++){if(x>=5&&x<=11&&y>=3&&y<=9)expSet(m,x,y,T.RUG);else if(mode==='rental'&&(x===3||x===13)&&y%3===0)expSet(m,x,y,T.PLANT);else if(mode==='endurance'&&(x===3||x===13)&&y%3===0)expSet(m,x,y,T.STATUE);else if(mode==='single'&&y===4&&(x===3||x===13))expSet(m,x,y,T.STATUE);}
+  expPut(m,8,3,{kind:'facility',mode});expPut(m,8,10,{kind:'sign',label:f.name+'：'+f.rounds+'連戦／'+f.size+'体／Lv50'});expExit(m,8,14,{map:expId('hub',cell),x:8,y:12,dir:2});
  }
+ if(m.enc)m.advEnc=expansionEncounter(m,area);
  return m;
 }
 function expansionLedge(m,x,y,nx,ny){const a=expAt(m,x,y),b=expAt(m,nx,ny);return !!((a&&a.kind==='ledge'||b&&b.kind==='ledge')&&ny>y);}
@@ -167,7 +182,7 @@ function expansionStep(m,p){
 }
 function expansionInteract(m,x,y){
  const p=G.pl,front=expAt(m,x,y),here=expAt(m,p.x,p.y);let a=front,ax=x,ay=y;
- if(here&&['dive','surface','portal','gymplate','berry','baseSite','furniture','baseRest','facility','contest','gymhint','gymreset'].includes(here.kind)&&(!front||front.kind==='exit')){a=here;ax=p.x;ay=p.y;}
+ if(here&&['dive','surface','portal','gymplate','berry','baseSite','furniture','baseRest','facility','trialPortal','contest','gymhint','gymreset'].includes(here.kind)&&(!front||front.kind==='exit')){a=here;ax=p.x;ay=p.y;}
  if(!a)return false;
  if(a.kind==='gymplate'){if(a.step){run(()=>msg('この 石板は 上を 歩いて 作動させる。'));}else run(()=>operateGym(m,a.i));return true;}
  if(a.kind==='gymhint'){run(()=>msg(gymClue(m)));return true;}
@@ -182,6 +197,7 @@ function expansionInteract(m,x,y){
  if(a.kind==='baseSite'){run(()=>claimBase(m,ax,ay));return true;}
  if(a.kind==='furniture'){run(()=>furnitureMenu(a.slot));return true;}
  if(a.kind==='baseRest'){run(async()=>{if(await confirmYN('ひみつ基地で 休む？')){sfx('heal');S.party.forEach(healMon);await msg('みんな 元気に なった！');saveGame();}});return true;}
+ if(a.kind==='trialPortal'){run(async()=>{if(await confirmYN(EXP_FACILITIES[a.mode].name+'へ 行きますか？')){await warpTo({map:expId('trial-'+a.mode,m.cell),x:8,y:13},0);autoSave();}});return true;}
  if(a.kind==='facility'){run(()=>expansionFacility(a.mode));return true;}
  if(a.kind==='contest'){run(()=>contestMenu(a.mode));return true;}
  return false;
@@ -218,6 +234,7 @@ async function claimBase(m,x,y){if(badgeCount()<3){await msg('この 穴を 基�
 async function furnitureMenu(slot){const v=expansionState(),i=await menu(EXP_FURNITURE.map(([name,cost],i)=>({label:name,right:v.decorOwned&&v.decorOwned[i]||i===0?'所持':cost+'G'})),{x:8,y:26,w:224,title:'家具を 選ぶ'});if(i<0)return;v.decorOwned=v.decorOwned||{};const cost=EXP_FURNITURE[i][1];if(i&&!v.decorOwned[i]){if(S.money<cost){await msg('お金が 足りない。');return;}if(!await confirmYN(cost+'Gで 買う？'))return;S.money-=cost;v.decorOwned[i]=true;}
  v.decor[slot]=i;sfx('get');saveGame();}
 const CONTEST_RULES={beauty:{name:'うつくしさ',types:[2,4,5,9],stat:4},skill:{name:'かしこさ',types:[3,10,13,16],stat:3},spirit:{name:'たくましさ',types:[6,8,12,16],stat:2},cute:{name:'かわいさ',types:[0,4,11,10],stat:5},power:{name:'かっこよさ',types:[1,6,14,15],stat:1}};
+function contestStage(m,rule,round,score,opponents){screenBG('彩華祭　'+rule.name+'　演技 '+(round+1)+'/5');const g=ctx;g.fillStyle='#31465e';g.fillRect(0,15,LW,135);g.fillStyle='#bc9368';g.fillRect(10,101,220,48);g.fillStyle='#e4c89e';g.beginPath();g.ellipse(120,107,84,22,0,0,6.3);g.fill();for(let i=0;i<7;i++){g.fillStyle=i%2?'#f0c684':'#b3d9cf';g.beginPath();g.moveTo(17+i*34,15);g.lineTo(7+i*34,46);g.lineTo(27+i*34,46);g.closePath();g.fill();}for(let i=0;i<3;i++){const x=17+i*79;g.fillStyle='#233749';g.fillRect(x,21,50,19);tx('ライバル '+(i+1),x+25,23,'#dbe7ed',7,'center');tx(opponents[i]+'点',x+25,31,'#fff1c7',7,'center');}drawLive(g,m,91,54,1.8,false,1,0,0);fxDraw(g);win(5,119,230,28);tx(monName(m)+'　'+score+'点',12,124,'#263b47',10);bar(12,139,216,3,Math.min(1,score/200),'#cc9b55');}
 function contestAppeal(m,mv,rule,last,round){const bond=HitokariUpgrade.bond(m);return Math.round(8+(rule.types.includes(mv.type)?12:0)+Math.min(12,Math.floor(mv.pow/10))+(!mv.pow?6:0)+(last===mv.id?-10:4)+Math.min(8,Math.floor(bond/32))+Math.min(6,Math.floor(stat(m,rule.stat)/28))+(round===4?4:0));}
 async function contestMenu(mode){
  if(badgeCount()<2){await msg('彩華祭には バッジ2個が 必要。');return;}const rule=CONTEST_RULES[mode],v=expansionState();if(!rule||!S.party.length)return;const rank=await menu(['ノーマル','スーパー','ハイパー','マスター'].map((n,i)=>({label:n,dis:i>0&&!(v.contests[mode+':'+(i-1)]>0)})),{x:12,y:42,w:216,title:rule.name+'　ランク'});if(rank<0)return;
@@ -226,9 +243,9 @@ async function contestMenu(mode){
  await msg(rule.name+' の 彩華祭！ 5回の 演技。おなじ技の 連続使用は 評価が 下がる。');
  const opponents=[0,0,0];for(let round=0;round<5;round++){
   const opts=m.mv.map(v=>MOVES[v.id]);if(!opts.length){await msg('演技に 使える 技が ない。');return;}
-  const i=await menu(opts.map(mv=>({label:mv.name,right:(rule.types.includes(mv.type)?'◎':'○')+(last===mv.id?' 連続':'')})),{x:8,y:45,w:224,title:'演技 '+(round+1)+'/5',cancel:false,bg:()=>{screenBG(rule.name+'　評価 '+score);drawMonUI(m.sp,m.shiny,88,17,64);}});if(i<0)continue;
+  const i=await menu(opts.map(mv=>({label:mv.name,right:(rule.types.includes(mv.type)?'◎':'○')+(last===mv.id?' 連続':'')})),{x:8,y:45,w:224,title:'演技 '+(round+1)+'/5',cancel:false,bg:()=>contestStage(m,rule,round,score,opponents)});if(i<0)continue;
   const mv=opts[i],appeal=contestAppeal(m,mv,rule,last,round);combo=last!==mv.id?combo+1:0;last=mv.id;score+=Math.max(0,appeal)+(combo>=3?3:0);for(let x=0;x<3;x++)opponents[x]+=18+rank*6+ri(12+x*2);
-  sfx('get');sparkleFx(120,85,12);await msg(mv.name+'！ 観客の 評価 +'+Math.max(0,appeal));
+  sfx('get');const stage=pushBG(()=>contestStage(m,rule,round,score,opponents));try{enhancedSkillCue({x:120,y:85},{x:120,y:85},mv,mv.pow>=80?2:1);sparkleFx(120,85,12);await sleep(220);await msg(mv.name+'！ 観客の 評価 +'+Math.max(0,appeal));}finally{popW(stage);fxClear();}
  }
  const place=1+opponents.filter(n=>n>score).length;v.contests[mode+':'+rank]=place===1?Math.max(1,v.contests[mode+':'+rank]||0):v.contests[mode+':'+rank]||0;v.contestBest=Math.max(v.contestBest||0,score);if(place===1){v.bp+=5+rank*3;HitokariUpgrade.bond(m,5);fruitAdd(3,1);sfx('lvup');}
  await msg('結果発表！ '+score+'点・第'+place+'位。'+(place===1?'彩華章と 修練ポイントを 獲得！':''));saveGame();}
@@ -268,7 +285,8 @@ function tickExpansionNPC(canInput){if(!G.map||G.map.indoor||G.map.advArea)retur
   if(o.npcMove){const z=o.npcMove;z.t++;o.ox=(z.x-o.x)*16*Math.min(1,z.t/12);o.oy=(z.y-o.y)*16*Math.min(1,z.t/12);if(z.t>=12){o.x=z.x;o.y=z.y;o.ox=o.oy=0;o.npcMove=null;}continue;}
   if(!canInput||G.busy||p.fly||Math.abs(o.x-p.x)+Math.abs(o.y-p.y)<2)continue;
   if((G.t+hashStr(String(o.pid)))%143!==0)continue;
-  const phase=dayPhase(),directions=RNG('npc:'+o.pid+':'+phase+':'+Math.floor(G.t/143)).shuffle([0,1,2,3]);
+  const phase=dayPhase(),r=RNG('npc-destination:'+o.pid+':'+phase),target=[o.homeX+r.range(-2,2),o.homeY+r.range(-2,2)],directions=RNG('npc:'+o.pid+':'+phase+':'+Math.floor(G.t/143)).shuffle([0,1,2,3]);
+  if(Math.abs(o.x-target[0])+Math.abs(o.y-target[1])>0)directions.sort((a,b)=>Math.abs(o.x+DX[a]-target[0])+Math.abs(o.y+DY[a]-target[1])-Math.abs(o.x+DX[b]-target[0])-Math.abs(o.y+DY[b]-target[1]));
   for(const d of directions){const x=o.x+DX[d],y=o.y+DY[d];if(x<2||y<2||x>=m.W-2||y>=m.H-2||Math.abs(x-o.homeX)+Math.abs(y-o.homeY)>2||!([T.GRASS,T.FLOWER,T.PATH].includes(m.t[y*m.W+x]))||m.warps[expKey(x,y)]||expAt(m,x,y)||objAt(x,y)||x===p.x&&y===p.y||p.moving&&x===p.x+DX[p.dir]&&y===p.y+DY[p.dir])continue;
    if(m.t[y*m.W+x]===T.PATH&&Math.abs(x-o.homeX)+Math.abs(y-o.homeY)>1)continue;o.dir=d;o.npcMove={x,y,t:0};break;}
  }}
@@ -303,7 +321,7 @@ function drawExpansionTerrain(g,m,camx,camy){
  else if(k==='berry'){const q=expansionState().plots[m.id+':'+expKey(x,y)],stage=fruitStage(q,S.steps);g.fillStyle='#7b5a43';g.fillRect(px+1,py+2,14,12);g.fillStyle='#bc946e';g.fillRect(px+2,py+3,12,10);if(stage){g.fillStyle='#4b8e57';g.fillRect(px+7,py+4,2,9);g.beginPath();g.ellipse(px+5,py+6,3,2,-.5,0,6.3);g.ellipse(px+10,py+6,3,2,.5,0,6.3);g.fill();if(stage===3){g.fillStyle=EXP_FRUITS[q.type].color;for(let i=0;i<3;i++){g.beginPath();g.arc(px+4+i*4,py+5+(i%2)*3,2.3,0,6.3);g.fill();}}}}
  else if(k==='furniture'){const i=expansionState().decor[a.slot]||0;if(i){g.fillStyle=['','#ad7953','#5eaa75','#e7b95e','#a49be8','#79b2ce','#a75678','#e5bd71'][i];g.fillRect(px+1,py+2,14,12);g.strokeStyle='#39434d';g.strokeRect(px+1,py+2,14,12);g.fillStyle='#fff4d8';g.fillRect(px+4,py+4,8,3);}else expIcon(g,'empty',px,py,16,'#c2c6ba');}
  else if(k==='exit'){g.fillStyle='#d8bc83';g.fillRect(px+1,py+3,14,10);g.fillStyle='#5d5757';g.beginPath();g.moveTo(px+4,py+6);g.lineTo(px+12,py+6);g.lineTo(px+8,py+11);g.fill();}
- else{expIcon(g,k,px,py,16,k==='facility'?'#91c4d7':k==='contest'?'#e9a2bc':k==='gymreset'?'#a8b7bc':'#f2d38a');}
+ else{expIcon(g,k,px,py,16,k==='facility'||k==='trialPortal'?'#91c4d7':k==='contest'?'#e9a2bc':k==='gymreset'?'#a8b7bc':'#f2d38a');}
  const atlasIndex={cliff:0,stairs:1,ledge:2,bridge:3,fall:4,dive:5,baseSite:7}[k];if(atlasIndex!==undefined&&k!=='fall')drawCell(g,'obj/expansion-terrain.svg',8,64,64,atlasIndex,px,py,16,16);
  }}
 function drawExpansionAtmosphere(g,m){if(m.advArea==='undersea'){g.fillStyle='rgba(24,101,139,.24)';g.fillRect(0,0,LW,LH);if(!reducedFx()){g.strokeStyle='rgba(180,246,250,.4)';g.lineWidth=.6;for(let i=0;i<13;i++){const x=(i*47+Math.sin(G.t/30+i)*7+LW)%LW,y=LH-((G.t*.5+i*29)%LH);g.beginPath();g.arc(x,y,1+(i%3)*.5,0,6.3);g.stroke();}}}}
