@@ -108,7 +108,7 @@ const BOOK_LEG=[[1201,"星明かりだけが届く空の裂け目","星々が進
 
 'use strict';
 /* ================= core.js : 乱数・タイプ・技・特性・道具 ================= */
-const VERSION='1.8';
+const VERSION='1.8.1';
 const SHINY_RATE=8192;           // 色違いの確率 1/8192（原作準拠）
 const PARTY_MAX=6;               // 手持ちは6匹まで
 
@@ -1500,11 +1500,11 @@ function genInterior(cell,slot){
     }
     m.name=cell.name+' ジム';
   }else if(b.kind==='lab'){
-    m=room(id,cell,11,10);for(const x of [1,2,3,7,8,9])S(x,1,T.SHELF);for(let x=4;x<=6;x++)S(x,1,T.TABLE);for(let x=3;x<=7;x++)S(x,5,T.TABLE);S(1,7,T.PLANT);S(9,7,T.PLANT);
+    m=room(id,cell,11,10);for(const x of [1,2,3,7,8,9])S(x,1,T.SHELF);for(let x=4;x<=6;x++)S(x,1,T.TABLE);m.starterDesk={x:4,y:5,count:3};for(let x=4;x<=6;x++)S(x,5,T.TABLE);S(1,7,T.PLANT);S(9,7,T.PLANT);
     S(5,9,T.MAT);m.warps['5,9']=out;
     m.objs.push({k:'npc',role:'prof',x:5,y:2,dir:2,pid:1,spr:pSpr(1)});
     m.objs.push({k:'npc',role:'key',nid:7,x:2,y:3,dir:1,pid:7,spr:pSpr(7)});
-    for(let i=0;i<STARTERS.length;i++)m.objs.push({k:'starter',i,x:3+i*2,y:5});
+    for(let i=0;i<STARTERS.length;i++)m.objs.push({k:'starter',i,x:m.starterDesk.x+i,y:m.starterDesk.y});
     m.objs.push({k:'npc',role:'rival0',x:8,y:7,dir:3,pid:4,spr:pSpr(4)});
     m.name='アニマ研究所';
   }else if(b.kind==='home'){
@@ -3078,6 +3078,7 @@ function paintChunk(g,m,ox,oy){
       const i=ey*W+ex,v=rn.tt[i];if(v===255||v===T.GRASS||v===T.TREE||v===T.CFLOOR||v===T.TALL)continue;
       if(ty>y1&&!TOBJ_TALL[v])continue;      // 下の行は 上にはみ出す物だけ
       const x=tx*16-ox,y=ty*16-oy,k=rn.gt[i],mm=rn.mk[i],s=mm&15,mx=ex-XP,my=ey-XP;
+      if(isStarterDeskTile(m,mx,my)){if(IT){g.fillStyle=IT.fp;g.fillRect(x,y,16,16);}else drawTileAt(g,ts,T.FLOOR,0,x,y);continue;}
       if(IT){      // 室内：床・壁・じゅうたんは 模様、家具は 絵
         if(v===T.IWALL){inWall(g,IT,x,y,my>0&&m.t[(my-1)*m.W+mx]===T.IWALL,my<m.H-1&&m.t[(my+1)*m.W+mx]===T.IWALL);continue;}
         if(v===T.RUG){g.fillStyle=IT.rp;g.fillRect(x,y,16,16);g.strokeStyle='rgba(200,160,70,0.55)';g.lineWidth=0.5;const L=m.t[my*m.W+mx-1]===T.RUG,R=m.t[my*m.W+mx+1]===T.RUG,U=my>0&&m.t[(my-1)*m.W+mx]===T.RUG,D=my<m.H-1&&m.t[(my+1)*m.W+mx]===T.RUG;g.beginPath();if(!L){g.moveTo(x+1,y);g.lineTo(x+1,y+16);}if(!R){g.moveTo(x+15,y);g.lineTo(x+15,y+16);}if(!U){g.moveTo(x,y+1);g.lineTo(x+16,y+1);}if(!D){g.moveTo(x,y+15);g.lineTo(x+16,y+15);}g.stroke();continue;}
@@ -5735,10 +5736,8 @@ async function legendTalk(o){
 async function starterTalk(o){
   if(!S.flags.prof){await msg('机の上に 3つの キャプセルが ならんでいる。まずは 博士の 話を 聞こう。');return;}
   if(S.starter||!Number.isInteger(o.i)||!STARTERS[o.i])return;
-  const id=STARTERS[o.i],sp=SP[id];for(const q of STARTERS)monPreload(q);
-  const bg=pushBG(()=>drawStarterTrio(o.i));
-  const ok=await confirmYN(TKANA[sp.types[0]]+'（'+TK[sp.types[0]]+'）の アニマ '+sp.name+'。この子を 最初の 相棒に しますか？');
-  popW(bg);if(!ok)return;
+  const i=await chooseStarter(o.i);if(i<0||S.starter||!STARTERS[i])return;
+  const id=STARTERS[i],sp=SP[id];
   const m=tuneIV(makeMon(id,5,{shiny:false}),'starter');
   S.starter=id;S.rivalStarter=starterRivalId(id);S.rival=STARTERS.indexOf(S.rivalStarter);await addMon(m,false);sfx('get');refreshObjs();
   await msg(S.name+'は '+sp.name+'と 相棒に なった！');
@@ -5763,16 +5762,13 @@ async function profTalk(){
     S.flags.prof=1;
     await msg('ハクノ博士「やあ '+S.name+'、待っていたよ。わたしは アニマと 人の くらしを 研究している、綴森 ハクノだ。」');
     await msg('ハクノ博士「名前を 知ることから 関係は 始まる。まずは 最初の 相棒の 名前を 知って おいで。」');
-    await msg('ハクノ博士「机の上の 3つの キャプセルに、それぞれ アニマが 入っている。話しかけて、1匹 えらびなさい。」');return;
+    await msg('ハクノ博士「研究台の 3つの キャプセルに アニマが 入っている。調べると 3匹を 見比べられるよ。」');return;
   }
   const got=countKeys(S.caught),met=metCount();
   await msg('ハクノ博士「巡環図鑑の 調子は どうだい？ なかまにした アニマ '+got+'種、出会った 人 '+met+'人。'+(got<30?'まだまだ これからだね！':got<200?'なかなかの ものだ！':got<600?'すばらしい！':'信じられない…！ きみこそ 真の 巡環図鑑の 書き手だ！')+'」');
   if(S.flags.champ&&!S.flags['k:next']){S.flags['k:next']=1;bagAdd('I0188');sfx('get');await msg('ハクノ博士「チャンピオン、おめでとう。これは 図鑑の 「未記入の次のページ」。続きは、きみが 書くんだ。」');}
   if(S.flags.champ||S.party.some(m=>STARTER_SPECIES.get(m.sp)?.stage===2))await starterResearchMenu();
   if(metCount()>=N_PEOPLE-1&&!S.flags['k:2000']){S.flags['k:2000']=1;bagAdd('I0186');sfx('lvup');await msg('ハクノ博士「2000人 すべてと 出会ったのか…！ みんなからの 便りが 届いているよ。世界は 名のある 一人一人の 営みで できているんだね。」\n'+S.name+'は 「'+ITEMS.I0186.n+'」を 受けとった！');}
-}
-function drawStarterTrio(selected){
-  screenBG('はじめての 相棒を 選ぶ');const colors=['#dc8269','#78a9d9','#85ad75'];for(let i=0;i<3;i++){const r=STARTER_TRIO[i],x=3+i*79,id=r.ids[0],on=i===selected;win(x,19,76,122,on?'#fff3cb':'#eef3f8');ctx.fillStyle=colors[i];ctx.fillRect(x+5,24,66,4);tx(['ほのお','みず','くさ'][i],x+38,30,'#35454e',9,'center');drawIndividualPreview(id,x+5,40,66);tx(SP[id].name,x+38,108,'#273941',9,'center');tx(r.roles,x+38,120,'#546573',7,'center');tx(ABIL[r.ability].n,x+38,131,'#546573',7,'center');}tx('Lv.5　→　Lv.16　→　Lv.36',120,147,'#293e47',8,'center');
 }
 async function starterResearchMenu(){for(;;){const list=S.party.filter(m=>STARTER_SPECIES.get(m.sp)?.stage===2),gifts=STARTERS.filter(id=>!S.caught[id]&&id!==S.starter),opts=['とくせいの 訓練','御三家の 研究協力','もどる'];const c=await menu([{label:opts[0],dis:!list.length},{label:opts[1],dis:!S.flags.champ||!gifts.length},opts[2]],{x:8,y:39,w:224,title:'博士の 研究',rows:3});if(c<0||c===2)return;if(c===0&&list.length){const j=await menu(list.map(m=>({label:monName(m),right:ABIL[abilOf(m)].n})),{x:6,y:26,w:228,title:'訓練する 相棒'});if(j<0)continue;const m=list[j],abilities=abilityOptions(SP[m.sp]),i=await menu(abilities.map(id=>({label:ABIL[id].n,right:id===abilOf(m)?'現在':''})),{x:8,y:30,w:224,title:'とくせいを 選ぶ'});if(i<0)continue;if(await confirmYN(ABIL[abilities[i]].d+'。この 特性に する？')){m.ability=abilities[i];sfx('get');await msg(monName(m)+'は 「'+ABIL[m.ability].n+'」を 身につけた！');saveGame();}}else if(c===1&&gifts.length&&S.flags.champ){const j=await menu(gifts.map(id=>SP[id].name),{x:10,y:40,w:220,title:'研究を たのむ 相棒'});if(j<0)continue;await addMon(tuneIV(makeMon(gifts[j],5,{shiny:false}),'starter'),true);saveGame();}}}
 async function ending(){
@@ -5876,6 +5872,7 @@ function activeObjs(m){
 function loadMap(id,x,y,dir){
   let m;try{m=getMap(id);}catch(e){console.error(e);m=null;}
   if(!m){const h=homeSpot();m=getMap(h.map);x=h.x;y=h.y;}
+  if(m.starterDesk&&!S.starter)for(const id of STARTERS)monPreload(id);
   if(m.cell)for(const L of [(m.advEnc||m.cell).land,(m.advEnc||m.cell).water])if(L)for(const fid of L)if(FAMS[fid])FAMS[fid].ids.forEach(monPreload);      // この場所に出る子の 原画を 先に読む
   if(S&&S.party)for(const q of S.party)monPreload(q.sp);
   if(m.cell&&m.cell.kind==='town'&&G.cellKey!==undefined&&G.cellKey!==m.cell.key&&S){S.rot=S.rot||{};S.rot[m.cell.key]=(S.rot[m.cell.key]||0)+1;}      // 人物図鑑2000人を維持するため、住民の巡回を維持
@@ -6107,11 +6104,13 @@ function drawWorldPix(){
   // 人物と置き物を行ごとにまとめ、木や草むらと奥→手前の順で重ねる
   const byRow={},put=e=>{const r=Math.round(e.y/16);(byRow[r]||(byRow[r]=[])).push(e);};
   const skip={};   // 道具が落ちているマスは手前の草をかぶせない（見つけやすく）
-  for(const o of G.objs){if(o.hide)continue;put({o,y:o.y*16+(o.oy||0)});if(o.k==='item')skip[(o.y+16)*64+o.x+16]=1;}
+  if(m.starterDesk)put({starterDesk:m.starterDesk,y:m.starterDesk.y*16+1});
+  for(const o of G.objs){if(o.hide||o.k==='starter'&&m.starterDesk)continue;put({o,y:o.y*16+(o.oy||0)});if(o.k==='item')skip[(o.y+16)*64+o.x+16]=1;}
   {const en=entPicFor(m);if(en)put({ent:en,y:15.5});}      // 北の出口の先が 洞くつ・遺跡・塔なら 入口の絵
   put({pl:1,y:ppy});
   if(folVisible()){const q=folPos();put({fol:1,y:q[1]});}
   drawRows(g,m,camx,camy,byRow,e=>{
+    if(e.starterDesk){drawStarterDesk(g,e.starterDesk.x*16-camx,e.starterDesk.y*16-camy,!!S.starter);return;}
     if(e.fol){drawFollower(g,camx,camy);return;}
     if(e.ent){const im=picOK('obj/b_'+e.ent+'.webp');if(im){const w=66,h=w*(ASSET.BLD_ASP[e.ent]||0.7);smooth(g);g.drawImage(im,256-w/2-camx,33-h-camy,w,h);}return;}
     if(e.pl){
@@ -6415,5 +6414,6 @@ window.addEventListener('load',()=>{
 <script src="animation-enhancement.js"></script>
 <script src="anima-motion-lab.js"></script>
 <script src="mobile-quality.js"></script>
+<script src="starter-selection.js"></script>
 </body>
 </html>
