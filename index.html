@@ -108,7 +108,7 @@ const BOOK_LEG=[[1201,"星明かりだけが届く空の裂け目","星々が進
 
 'use strict';
 /* ================= core.js : 乱数・タイプ・技・特性・道具 ================= */
-const VERSION='1.7';
+const VERSION='1.8';
 const SHINY_RATE=8192;           // 色違いの確率 1/8192（原作準拠）
 const PARTY_MAX=6;               // 手持ちは6匹まで
 
@@ -245,6 +245,7 @@ MV.push(['せいてんきどう',10,95,100,5,'self:spd+1','S'],['げっしょく
  ['じみゃくほうごう',8,95,100,5,'self:def+1','P'],['しんえんのゆりかご',2,85,100,10,'mend','S'],['てんきょうらいは',3,90,100,5,'self:spe+1','S'],
  ['げんしのめぶき',4,85,100,10,'purify','S'],['へんせいのりんぷん',11,90,100,10,'renew','S'],['めぐりのねむり',13,80,100,10,'drain','S'],
  ['ゆめのわたり',10,85,100,10,'mend4','S'],['きおくのぎんそう',16,90,100,10,'renewD','P'],['ぶんきするあした',14,95,100,5,'lowUp','S']);
+MV.push(['よいびれんが',15,85,100,15,'foe:def-1@20','P'],['ちょうきょうは',10,85,100,15,'foe:spd-1@20','S'],['じゅけんさい',6,85,100,15,'foe:atk-1@20','P']); // 専用技を末尾に追加、既存IDを維持
 const N_MOVE0=MV.findIndex(m=>m[0]==='いってんとっぱ');      // むかしからある技の数（これより後ろが 足した技）
 // 物理／特殊は「技ごと」に決まる（第4世代以降に準拠）。タイプごとに 威力の段階順で 物理4つ・特殊4つ
 const LINE_P=[['ぶつかる','きりさきづめ','だいとつげき','いってんとっぱ'],['もえづめ','ほむらげり','しゃくねつとつげき','ばくえんおとし'],['しぶきづき','みなもぎり','あらなみとっしん','たきわりおとし'],
@@ -339,6 +340,7 @@ const ABIL=[
  {n:'大食らい',d:'毎ターン 少しHPを回復する'},
  {n:'闘志',d:'急所に当てやすい'},
  {n:'聖なる守り',d:'状態異常にならない'}];
+ABIL.push({n:'焔芯',d:'HPが1/3以下のとき 焔の攻撃技が1.5倍'},{n:'潮芯',d:'HPが1/3以下のとき 潮の攻撃技が1.5倍'},{n:'芽吹き',d:'HPが1/3以下のとき 森の攻撃技が1.5倍'},{n:'残火加速',d:'敵の攻撃で初めてHP半分以下になると 素早さ1段階上昇（1戦1回）'},{n:'水鏡',d:'初めて受ける相手の特殊攻撃のダメージを25%軽減（1戦1回）'},{n:'深根',d:'回復・防御以外の変化技が成功したターンの終わりに HPを1/16回復'});
 const ABIL_BY_TYPE=[[6,12,16,17,14],[0,5,11],[0,9,13],[0,3,10],[0,13,16],[8,6,0],[12,17,1],[4,13,0],[6,0,1],
  [14,7,17],[2,13,14],[7,15,0],[6,15,0],[2,13,0],[1,17,0],[1,17,12],[15,6,0]];
 
@@ -702,6 +704,11 @@ function makeWeights(r,t1){
 // 体つきの型ごとの 能力のかたより [HP,こうげき,ぼうぎょ,とくこう,とくぼう,すばやさ]
 const ARCH_W={tank:[1.15,0.95,1.35,0.8,1.15,0.6],fast:[0.85,1.05,0.8,0.95,0.85,1.5],power:[1,1.45,1,0.7,0.85,1],mystic:[0.95,0.65,0.85,1.45,1.25,0.95],bal:[1.05,1,1,1,1,0.95]};
 const PLAN_W={bird:[0,0.05,-0.05,0,0,0.15],fish:[0,0,0,0.05,0,0.1],serpent:[0,0.1,0,0,0,0],bug:[-0.05,0.05,0.05,0,0,0.05],blob:[0.15,-0.05,0,0.05,0.05,-0.15],ghost:[-0.05,0,-0.05,0.1,0.05,0.05],plant:[0.05,-0.05,0.05,0.1,0.1,-0.2],golem:[0.1,0.1,0.2,-0.1,0,-0.25],biped:[0,0.05,0,0,0,0],quad:[0,0,0,0,0,0]};
+const STARTER_TRIO=[{"choice":"C","key":"fire","type":1,"secondary":15,"ids":[2,18,19],"name":["カエンコ","エンリュウ","オウカリュー"],"base":[[45,65,42,52,46,68],[60,86,55,65,62,82],[76,112,72,85,80,110]],"plan":"bird","plans":["quad","bird","bird"],"arch":"fast","home":"火山の岩稜","title":"炎翼竜","roles":"高速物理","eco":["小さな翼芽と尾の火で 温度を感じる。陽だまりで 跳ねるのが好き。","翼の膜に熱を集めて 滑空する。尾の炎で 急旋回する。","黒曜色の翼を広げ、宵火をまとって飛ぶ。炎の残像で 相手を惑わせる。"],"ability":19,"special":22,"signature":"よいびれんが","learn":[[1,"ぶつかる"],[1,"なきおどし"],[5,"もえづめ"],[9,"ひばしり"],[13,"すごみ"],[16,"やみうち"],[19,"ほむらげり"],[23,"かげがみ"],[27,"たぎるちしお"],[31,"やけつくきば"],[34,"しゃくねつとつげき"],[36,"よいびれんが"],[44,"くらやみぎり"],[52,"ぐれんばくえん"],[60,"しんえんのあぎと"]]},{"choice":"A","key":"water","type":2,"secondary":10,"ids":[3,20,21],"name":["ミオラッコ","ミオレイン","シオルミナ"],"base":[[56,39,49,65,64,45],[70,49,65,82,86,58],[90,64,86,111,109,75]],"plan":"biped","plans":["biped","biped","biped"],"arch":"mystic","home":"清らかな入江","title":"水霊のラッコ","roles":"特殊・支援","eco":["水滴を抱えて遊ぶ。水面に浮かび、貝殻のような胸の模様で水を集める。","浮かせた水滴を環にまとめる。仲間のまわりに水の膜を作る。","念力で幾重もの水環を操り、水鏡に危険を映して仲間を守る。"],"ability":20,"special":23,"signature":"ちょうきょうは","learn":[[1,"ぶつかる"],[1,"なきおどし"],[5,"みずはじき"],[9,"みなわだま"],[13,"みずのころも"],[16,"ねんどう"],[19,"なみうち"],[23,"げんわくは"],[27,"しんがん"],[31,"うるおい"],[34,"おおなみ"],[36,"ちょうきょうは"],[44,"しねんほう"],[52,"ほんりゅうほう"],[60,"だいかいしょう"]]},{"choice":"A","key":"grass","type":4,"secondary":6,"ids":[1,16,17],"name":["メブクマ","ワカグマ","ジュカイオウ"],"base":[[64,64,65,35,51,39],[83,86,88,42,64,47],[103,111,112,56,88,65]],"plan":"biped","plans":["quad","biped","biped"],"arch":"tank","home":"芽吹きの森","title":"森林のクマ","roles":"耐久物理","eco":["額の小さな芽が 朝日を向く。葉毛に木の実を隠す。","太い前脚に木質の装甲が育つ。若葉の肩で仲間を包んで守る。","巨木のような拳と葉の鎧を持つ森林守護獣。深く根を張って力を取り戻す。"],"ability":21,"special":24,"signature":"じゅけんさい","learn":[[1,"ぶつかる"],[1,"なきおどし"],[5,"はっぱうち"],[9,"つるばしり"],[13,"こけのころも"],[16,"こづき"],[19,"いばらむち"],[23,"まわしうち"],[27,"きをねる"],[31,"やどりだね"],[34,"もりのやいば"],[36,"じゅけんさい"],[44,"はがんしょう"],[52,"たいぼくおとし"],[60,"たいじゅのいかり"]]}];
+const STARTER_SPECIES=new Map(STARTER_TRIO.flatMap(f=>f.ids.map((id,i)=>[id,{family:f,stage:i}])));
+const STARTER_IDS=STARTER_TRIO.map(f=>f.ids[0]);
+const STARTER_FRONT_SET=new Set(STARTER_SPECIES.keys()),STARTER_REAR_SET=new Set(STARTER_TRIO.slice(1).flatMap(f=>f.ids));
+for(const f of STARTER_TRIO){for(let i=0;i<3;i++)BOOK_SP[f.ids[i]-1]=[f.name[i],f.type,i?f.secondary:-1,f.eco[i]];const b=BOOK_LINES.find(v=>v[0][0]===f.ids[0]);b[1]=[16,36];b[2]=f.title;b[3]=f.home;b[4]=f.plan;b[5]=f.arch;}
 (function genSpecies(){
   /* アニマ ＝ ユーザーさんの進化図鑑1212。3段階×399系統＋進化しない3種（No.1〜1200）＋ 伝説12（No.1201〜1212）。図鑑番号が そのまま番号 */
   const tierOf=(t1,x)=>{if(t1===0||t1===11||t1===9)x*=0.75;if(t1===14)x=0.4+x*0.6;if(t1===16||t1===13||t1===5)x=0.15+x*0.85;return x;};
@@ -755,16 +762,19 @@ const PLAN_W={bird:[0,0.05,-0.05,0,0,0.15],fish:[0,0,0,0.05,0,0.1],serpent:[0,0.
   };
   for(const fam of FAMS)if(fam&&fam.book)fam.ids.forEach((no,s)=>{const b=BOOK_SP[no-1],sp=mk(fam,s,no,b[0],b[2]>=0&&b[2]!==b[1]?[b[1],b[2]]:[b[1]]);sp.book=no;sp.eco=b[3];});
   for(const fam of FAMS)if(fam)fam.ids.forEach((q,s)=>{SP[q].next=s<fam.n-1?fam.ids[s+1]:0;SP[q].prev=s>0?fam.ids[s-1]:0;});
+  // Preserve every family index; only three approved lines are starters. Two former starters are ordinary lines.
+  for(const f of FAMS)if(f&&f.starter&&!STARTER_IDS.includes(f.ids[0]))f.starter=false;
+  for(const f of STARTER_TRIO){const fam=FAMS[SP[f.ids[0]].fam];Object.assign(fam,{starter:true,abil:f.ability,bst0:318,bstN:535,evo:[16,36],t1:f.type,t2:f.secondary,t2From:1,learn:f.learn.map(([lv,name])=>{const id=moveId(name);if(id<0)throw Error('starter move '+name);return [lv,id];}),starterSignature:moveId(f.signature)});for(let i=0;i<3;i++){const sp=SP[f.ids[i]];sp.base=f.base[i].slice();sp.bst=sp.base.reduce((x,y)=>x+y,0);sp.abil=f.ability;sp.evoLv=i===0?16:i===1?36:0;sp.yield=Math.max(30,Math.floor(sp.bst*.36-35));}}
   N_SPECIES=BOOK_SP.length;
   SP_OWARI=SP.findIndex(s=>s&&s.name==='メモルディア');
   SP_HAJIMARI=-1;
 })();
-const STARTERS=FAMS.slice(0,5).map(f=>f.ids[0]);       // 焔→森→土→雷→潮→焔 の順で有利
+const STARTERS=STARTER_IDS.slice(); // 火→水→草。ライバルは次の相性有利な相棒を固定
 const famOf=sp=>FAMS[sp.fam];
 // そのレベルで覚えている技：新しい攻撃技3つ＋変化技1つ（攻撃技がなくならないように）
-function movesAt(sp,lv){const L=famOf(sp).learn.filter(a=>a[0]<=lv).map(a=>a[1]),d=L.filter(id=>MOVES[id].pow>0),s=L.filter(id=>MOVES[id].pow===0);
+function movesAt(sp,lv){const L=famOf(sp).learn.filter(a=>a[0]<=lv&&starterMoveAllowed(sp,a[1])).map(a=>a[1]),d=L.filter(id=>MOVES[id].pow>0),s=L.filter(id=>MOVES[id].pow===0);
   const pk=d.slice(-3);if(s.length)pk.push(s[s.length-1]);else if(d.length>3)pk.push(d[d.length-4]);
-  const out=L.filter(id=>pk.indexOf(id)>=0).slice(-4),sig=famOf(sp).sig;
+  const out=L.filter(id=>pk.indexOf(id)>=0).slice(-4),sig=sp.stage===2&&famOf(sp).starter&&lv>=36?famOf(sp).starterSignature:famOf(sp).sig;
   return sig>=0?[sig].concat(out.filter(id=>id!==sig)).slice(0,4):out;}
 function formAt(fam,lv,rng){let s=0;while(s<fam.n-1&&lv>=SP[fam.ids[s]].evoLv)s++;if(rng&&s>0&&rng()<0.5)s--;return fam.ids[s];}
 const expFor=(sp,lv)=>lv<=1?0:Math.floor(sp.growth*lv*lv*lv);
@@ -784,11 +794,11 @@ function dexText(sp){
 }
 
 /* ---------- 個体 ---------- */
-function abilityOptions(sp){const f=famOf(sp),base=sp.abil;if(f.legend||f.one||f.starter)return [base];const choices=ABIL_BY_TYPE[f.t1].filter(n=>n!==base);return choices.length?[base,choices[hashStr('ability:'+f.id)%choices.length]]:[base];}
+function abilityOptions(sp){const f=famOf(sp),base=sp.abil,record=STARTER_SPECIES.get(sp.id);if(record)return record.stage===2?[base,record.family.special]:[base];if(f.legend||f.one||f.starter)return [base];const choices=ABIL_BY_TYPE[f.t1].filter(n=>n!==base);return choices.length?[base,choices[hashStr('ability:'+f.id)%choices.length]]:[base];}
 function makeMon(spId,lv,opt){
   opt=opt||{};const sp=SP[spId];
   const m={sp:spId,lv,exp:expFor(sp,lv),iv:[0,0,0,0,0,0].map(()=>opt.iv!=null?opt.iv:ri(32)),ev:[0,0,0,0,0,0],
-    nat:opt.nat!=null?opt.nat:ri(25),bond:70,ability:opt.ability!=null&&abilityOptions(sp).includes(opt.ability)?opt.ability:abilityOptions(sp)[chance(0.25)&&abilityOptions(sp).length>1?1:0],shiny:opt.shiny!=null?opt.shiny:ri(SHINY_RATE)===0,mv:[],hp:0,st:null,sc:0};
+    nat:opt.nat!=null?opt.nat:ri(25),bond:70,ability:opt.ability!=null&&abilityOptions(sp).includes(opt.ability)?opt.ability:abilityOptions(sp)[!STARTER_SPECIES.has(sp.id)&&chance(0.25)&&abilityOptions(sp).length>1?1:0],shiny:opt.shiny!=null?opt.shiny:ri(SHINY_RATE)===0,mv:[],hp:0,st:null,sc:0};
   m.mv=movesAt(sp,lv).map(id=>({id,pp:MOVES[id].pp}));
   m.hp=maxHP(m);
   return m;
@@ -814,6 +824,9 @@ function stat(m,i){
 const maxHP=m=>stat(m,0);
 const monName=m=>m.nick||SP[m.sp].name;
 const abilOf=m=>abilityOptions(SP[m.sp]).includes(m.ability)?m.ability:SP[m.sp].abil;
+function starterMoveAllowed(sp,id){const r=STARTER_SPECIES.get(sp.id);if(!r)return true;return (id!==famOf(sp).starterSignature||r.stage===2)&&(r.stage>0||MOVES[id].type!==r.family.secondary);}
+function starterRivalId(chosen){const i=STARTERS.indexOf(chosen);return STARTERS[(Math.max(0,i)+1)%3];}
+function starterPinch(m,type){const ab=abilOf(m);return (ab===0||ab>=19&&ab<=21)&&type===SP[m.sp].types[0]&&m.hp>0&&m.hp*3<=maxHP(m);}
 function healMon(m){m.hp=maxHP(m);m.st=null;m.sc=0;for(const v of m.mv)v.pp=MOVES[v.id].pp;}
 
 'use strict';
@@ -1468,7 +1481,7 @@ function genInterior(cell,slot){
     S(5,9,T.MAT);m.warps['5,9']=out;
     m.objs.push({k:'npc',role:'prof',x:5,y:2,dir:2,pid:1,spr:pSpr(1)});
     m.objs.push({k:'npc',role:'key',nid:7,x:2,y:3,dir:1,pid:7,spr:pSpr(7)});
-    for(let i=0;i<5;i++)m.objs.push({k:'starter',i,x:3+i,y:5});
+    for(let i=0;i<STARTERS.length;i++)m.objs.push({k:'starter',i,x:3+i*2,y:5});
     m.objs.push({k:'npc',role:'rival0',x:8,y:7,dir:3,pid:4,spr:pSpr(4)});
     m.name='アニマ研究所';
   }else if(b.kind==='home'){
@@ -1759,19 +1772,20 @@ function wcInit(){
 }
 // ---- 図鑑の原画（mon/001.webp 〜 500.webp）。使うときに 1体ずつ 読みこむ ----
 const MON_PIC=new Map(),MON_PIC_DIR='mon/';
+function monAssetPath(no,back=false){const selected=back?STARTER_REAR_SET.has(no):STARTER_FRONT_SET.has(no);return MON_PIC_DIR+(selected?'starter-v2/':'')+(back?'b':'')+String(no).padStart(4,'0')+'.webp';}
 function monPic(no){
  let P=MON_PIC.get(no);
  if(P){MON_PIC.delete(no);MON_PIC.set(no,P);return P;}
  P={st:0,img:new Image(),sh:null};MON_PIC.set(no,P);
  const done=st=>()=>{P.st=st;for(const k of [...MONCACHE.keys()])if(k.indexOf(no+'|')===0)MONCACHE.delete(k);trimIndividualCaches();};
- P.img.onload=done(1);P.img.onerror=done(2);P.img.src=MON_PIC_DIR+('000'+no).slice(-4)+'.webp';trimIndividualCaches();return P;
+ P.img.onload=done(1);P.img.onerror=done(2);P.img.src=monAssetPath(no);trimIndividualCaches();return P;
 }
-function monPreload(spId){const sp=SP[spId];if(sp&&sp.book){monPic(sp.book);if(typeof MONBACK!=='undefined'&&MONBACK[sp.book])pic(MON_PIC_DIR+'b'+('000'+sp.book).slice(-4)+'.webp');}}
+function monPreload(spId){const sp=SP[spId];if(sp&&sp.book){monPic(sp.book);if(typeof MONBACK!=='undefined'&&MONBACK[sp.book])pic(monAssetPath(sp.book,true));}}
 // 後ろ姿の絵がある子（27種）は 自分の側で それを使う
-const MONBACK={},MONBACK_CV=new Map();for(const n of ASSET.MON_BACK)MONBACK[n]=1;
+const MONBACK={},MONBACK_CV=new Map();for(const n of ASSET.MON_BACK)if(!STARTER_FRONT_SET.has(n))MONBACK[n]=1;for(const n of STARTER_REAR_SET)MONBACK[n]=1;
 function monBackCv(spId,shiny){
   const sp=SP[spId];if(!sp||!sp.book||!MONBACK[sp.book])return null;
-  const P=pic(MON_PIC_DIR+'b'+('000'+sp.book).slice(-4)+'.webp');if(P.st!==1)return null;
+  const P=pic(monAssetPath(sp.book,true));if(P.st!==1)return null;
   const key=spId+'|'+(shiny?1:0)+'|'+MS;let c=MONBACK_CV.get(key);if(c)return c;
   c=document.createElement('canvas');c.width=c.height=MS;const g=c.getContext('2d');g.scale(MS/32,MS/32);drawMonPic(g,sp,P,shiny,false);
   c._animaView='rear';MONBACK_CV.set(key,c);if(MONBACK_CV.size>12)MONBACK_CV.delete(MONBACK_CV.keys().next().value);return c;
@@ -4133,7 +4147,7 @@ function calcDamage(B,s,mv,crit,eff,roll=85+ri(16)){
   if(mv.type>=0){
     if(asp.types.indexOf(mv.type)>=0)dmg=Math.floor(dmg*1.5);
     dmg=Math.floor(dmg*eff);
-    if(abilOf(a)===0&&mv.type===asp.types[0]&&a.hp*3<=maxHP(a))dmg=Math.floor(dmg*1.5);
+    if(starterPinch(a,mv.type))dmg=Math.floor(dmg*1.5);
     if(abilOf(d)===8&&(mv.type===1||mv.type===5))dmg=Math.floor(dmg/2);
   }
   {const h=heldOf(a);if(h.t===mv.type)dmg=Math.floor(dmg*1.15);if(h.all)dmg=Math.floor(dmg*h.all);}      // 持たせた道具
@@ -4394,7 +4408,7 @@ async function gainExp(m,amt,B,quiet){
 }
 async function learnMoves(m,lv){
   for(const a of famOf(SP[m.sp]).learn){
-    if(a[0]!==lv||m.mv.some(v=>v.id===a[1]))continue;
+    if(a[0]!==lv||m.mv.some(v=>v.id===a[1])||!starterMoveAllowed(SP[m.sp],a[1]))continue;
     await teachMove(m,a[1]);
   }
 }
@@ -4797,6 +4811,7 @@ async function evolveMon(m){
   const oh=maxHP(m),oldName=monName(m);m.sp=nx.id;m.hp=Math.max(m.hp>0?1:0,m.hp+(maxHP(m)-oh));S.seen[nx.id]=1;S.caught[nx.id]=1;
   await msg('おめでとう！ '+oldName+'は '+nx.name+'に 進化した！');
   popW(w);
+  if(STARTER_SPECIES.has(nx.id)){const f=famOf(nx),id=nx.stage===2?f.starterSignature:f.learn.find(v=>v[0]===16)?.[1];if(id>=0&&!m.mv.some(v=>v.id===id))await teachMove(m,id);}
   return true;
 }
 // 生態と関連する早期進化。通常レベル進化は維持。
@@ -5502,7 +5517,7 @@ const KANBU=[null,
 function rivalTeam(i){
   const lv=[5,13,22,32,41,51,58][i-1],n=[1,2,3,3,4,4,4][i-1],prog=[0,7,16,25,34,43,50][i-1];
   const team=n>1?trainerTeam(RNG('rival'+i),prog,lv-1,n-1,null):[];
-  team.push({sp:formAt(FAMS[(S.rival+[0,0,1,2,0,1,2,0][i])%5],lv),lv});
+  const id=STARTERS.includes(S.rivalStarter)?S.rivalStarter:starterRivalId(S.starter);team.push({sp:formAt(famOf(SP[id]),lv),lv});
   return mkTeam(team,Math.min(31,10+i*3));
 }
 async function vanish(o){for(let i=0;i<4;i++){o.hide=1;await sleep(60);o.hide=0;await sleep(60);}removeObj(o);}
@@ -5691,13 +5706,14 @@ async function legendTalk(o){
 }
 /* ---------- 博士・最初の相棒・エンディング ---------- */
 async function starterTalk(o){
-  if(!S.flags.prof){await msg('机の上に 5つの キャプセルが ならんでいる。まずは 博士の 話を 聞こう。');return;}
-  const id=STARTERS[o.i],sp=SP[id];
-  const bg=pushBG(()=>{win(56,16,128,118,'#e8f0f8');drawMonUI(id,false,88,24,64);tx(sp.name,120,94,'#2a2233',11,'center');typeTag(sp.types[0],113,110);});
+  if(!S.flags.prof){await msg('机の上に 3つの キャプセルが ならんでいる。まずは 博士の 話を 聞こう。');return;}
+  if(S.starter||!Number.isInteger(o.i)||!STARTERS[o.i])return;
+  const id=STARTERS[o.i],sp=SP[id];for(const q of STARTERS)monPreload(q);
+  const bg=pushBG(()=>drawStarterTrio(o.i));
   const ok=await confirmYN(TKANA[sp.types[0]]+'（'+TK[sp.types[0]]+'）の アニマ '+sp.name+'。この子を 最初の 相棒に しますか？');
   popW(bg);if(!ok)return;
   const m=tuneIV(makeMon(id,5,{shiny:false}),'starter');
-  S.starter=id;S.rival=(o.i+4)%5;await addMon(m,false);sfx('get');refreshObjs();
+  S.starter=id;S.rivalStarter=starterRivalId(id);S.rival=STARTERS.indexOf(S.rivalStarter);await addMon(m,false);sfx('get');refreshObjs();
   await msg(S.name+'は '+sp.name+'と 相棒に なった！');
   SPEAKER=4;metPerson(4);
   await msg(RIVAL+'「へえ、その子を 選んだのか。じゃあ おれは こいつだ！ さっそく 勝負しようぜ、'+S.name+'！」');
@@ -5720,13 +5736,18 @@ async function profTalk(){
     S.flags.prof=1;
     await msg('ハクノ博士「やあ '+S.name+'、待っていたよ。わたしは アニマと 人の くらしを 研究している、綴森 ハクノだ。」');
     await msg('ハクノ博士「名前を 知ることから 関係は 始まる。まずは 最初の 相棒の 名前を 知って おいで。」');
-    await msg('ハクノ博士「机の上の 5つの キャプセルに、それぞれ アニマが 入っている。話しかけて、1匹 えらびなさい。」');return;
+    await msg('ハクノ博士「机の上の 3つの キャプセルに、それぞれ アニマが 入っている。話しかけて、1匹 えらびなさい。」');return;
   }
   const got=countKeys(S.caught),met=metCount();
   await msg('ハクノ博士「巡環図鑑の 調子は どうだい？ なかまにした アニマ '+got+'種、出会った 人 '+met+'人。'+(got<30?'まだまだ これからだね！':got<200?'なかなかの ものだ！':got<600?'すばらしい！':'信じられない…！ きみこそ 真の 巡環図鑑の 書き手だ！')+'」');
   if(S.flags.champ&&!S.flags['k:next']){S.flags['k:next']=1;bagAdd('I0188');sfx('get');await msg('ハクノ博士「チャンピオン、おめでとう。これは 図鑑の 「未記入の次のページ」。続きは、きみが 書くんだ。」');}
+  if(S.flags.champ||S.party.some(m=>STARTER_SPECIES.get(m.sp)?.stage===2))await starterResearchMenu();
   if(metCount()>=N_PEOPLE-1&&!S.flags['k:2000']){S.flags['k:2000']=1;bagAdd('I0186');sfx('lvup');await msg('ハクノ博士「2000人 すべてと 出会ったのか…！ みんなからの 便りが 届いているよ。世界は 名のある 一人一人の 営みで できているんだね。」\n'+S.name+'は 「'+ITEMS.I0186.n+'」を 受けとった！');}
 }
+function drawStarterTrio(selected){
+  screenBG('はじめての 相棒を 選ぶ');const colors=['#dc8269','#78a9d9','#85ad75'];for(let i=0;i<3;i++){const r=STARTER_TRIO[i],x=3+i*79,id=r.ids[0],on=i===selected;win(x,19,76,122,on?'#fff3cb':'#eef3f8');ctx.fillStyle=colors[i];ctx.fillRect(x+5,24,66,4);tx(['ほのお','みず','くさ'][i],x+38,30,'#35454e',9,'center');drawIndividualPreview(id,x+5,40,66);tx(SP[id].name,x+38,108,'#273941',9,'center');tx(r.roles,x+38,120,'#546573',7,'center');tx(ABIL[r.ability].n,x+38,131,'#546573',7,'center');}tx('Lv.5　→　Lv.16　→　Lv.36',120,147,'#293e47',8,'center');
+}
+async function starterResearchMenu(){for(;;){const list=S.party.filter(m=>STARTER_SPECIES.get(m.sp)?.stage===2),gifts=STARTERS.filter(id=>!S.caught[id]&&id!==S.starter),opts=['とくせいの 訓練','御三家の 研究協力','もどる'];const c=await menu([{label:opts[0],dis:!list.length},{label:opts[1],dis:!S.flags.champ||!gifts.length},opts[2]],{x:8,y:39,w:224,title:'博士の 研究',rows:3});if(c<0||c===2)return;if(c===0&&list.length){const j=await menu(list.map(m=>({label:monName(m),right:ABIL[abilOf(m)].n})),{x:6,y:26,w:228,title:'訓練する 相棒'});if(j<0)continue;const m=list[j],abilities=abilityOptions(SP[m.sp]),i=await menu(abilities.map(id=>({label:ABIL[id].n,right:id===abilOf(m)?'現在':''})),{x:8,y:30,w:224,title:'とくせいを 選ぶ'});if(i<0)continue;if(await confirmYN(ABIL[abilities[i]].d+'。この 特性に する？')){m.ability=abilities[i];sfx('get');await msg(monName(m)+'は 「'+ABIL[m.ability].n+'」を 身につけた！');saveGame();}}else if(c===1&&gifts.length&&S.flags.champ){const j=await menu(gifts.map(id=>SP[id].name),{x:10,y:40,w:220,title:'研究を たのむ 相棒'});if(j<0)continue;await addMon(tuneIV(makeMon(gifts[j],5,{shiny:false}),'starter'),true);saveGame();}}}
 async function ending(){
   await msg('ここは 記録の間。\n'+S.name+'と アニマたちの 名が 巡環リーグに きざまれた！');
   const bg=pushBG(()=>{ctx.fillStyle='#141020';ctx.fillRect(0,0,LW,LH);tx('チャンピオン '+S.name,120,14,'#f6e8b8',14,'center');

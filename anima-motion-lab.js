@@ -28,7 +28,7 @@ function animaLabView(ids,index){
 async function waitAnimaArtwork(id,back=false){
  const p=monPic(SP[id].book);if(p.st===0){try{await p.img.decode();if(p.img.naturalWidth)p.st=1;}catch(e){if(!p.img.naturalWidth)throw Error('artwork '+id);}}
  if(p.st!==1)throw Error('artwork '+id);
- if(back&&MONBACK[SP[id].book]){const q=pic(MON_PIC_DIR+'b'+('000'+SP[id].book).slice(-4)+'.webp');try{if(q.st!==1){await q.img.decode();if(q.img.naturalWidth)q.st=1;}}catch(e){}}
+ if(back&&MONBACK[SP[id].book]){const q=pic(monAssetPath(SP[id].book,true));try{if(q.st!==1){await q.img.decode();if(q.img.naturalWidth)q.st=1;}}catch(e){}}
  return (back&&monBackCv(id,false))||monCanvas(id,false,back,false);
 }
 async function buildAnimaSheet(id,opts={}){
