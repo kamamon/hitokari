@@ -1044,7 +1044,7 @@ function genMacro(seed,pNew){
   }
   // 最初の5系統のうち選ばなかったものは 終盤の草むらにまれに出る
   const late=landAreas.filter(a=>a.prog>=38&&a.prog<=48&&!a.branch);
-  for(let i=0;i<5;i++)if(late.length)late[(i*3)%late.length].rare=FAMS[i].id;
+  for(let i=0;i<STARTERS.length;i++)if(late.length)late[(i*3)%late.length].rare=famOf(SP[STARTERS[i]]).id;
 })();
 
 const ENC_W=[30,25,20,12,8,5,3,2,2,2];

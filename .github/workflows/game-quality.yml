@@ -20,10 +20,11 @@ jobs:
       - run: node tests/story-clear-browser.cjs
       - run: node tests/mobile-webkit.cjs
       - run: node tests/anima-sprite-browser.cjs
-      - run: node tools/bake-anima-sheets.cjs --out=test-results/anima-motion/full-sheets
-      - run: node tools/bake-anima-runtime.cjs --out=test-results/anima-motion/runtime-sample
+      - run: node tests/starter-trio-browser.cjs
+      - run: node tools/bake-anima-sheets.cjs --ids=2,18,19,3,20,21,1,16,17 --out=test-results/anima-motion/full-sheets
+      - run: node tools/bake-anima-runtime.cjs --ids=2,18,19,3,20,21,1,16,17 --out=test-results/anima-motion/runtime-sample
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v7-test-reports
+          name: v8-starter-reports
           path: test-results/
