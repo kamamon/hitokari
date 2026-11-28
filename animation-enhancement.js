@@ -5,6 +5,8 @@ const INDIVIDUAL_MOTION_EVENTS=new WeakMap();
 for(const f of STARTER_TRIO)for(let i=0;i<3;i++){const id=f.ids[i],p=SORANE_MOTION_DATA[id-1];p[1]=f.name[i];p[2]=f.plans[i];p[3]=f.eco[i];p[4]=f.plans[i]==='bird'?1:0;p[5]=f.plans[i]==='bird'?12:9;p[6]=(id*43+i*31)%360;p[7]=18+i*4;p[8]=Math.round((f.base[i][0]+f.base[i][2]+f.base[i][4])/3);p[9]=f.base[i][5];p[10]=p[10].map((d,j)=>Math.max(12,Math.round(d*(f.key==='fire'?.83:f.key==='grass'?1.14:1)+(id+j)%3)));}
 // Apply the approved route1 designs to the original nine per-species timing curves.
 for(const f of ROUTE1_LINES)for(let i=0;i<f.ids.length;i++){const id=f.ids[i],p=SORANE_MOTION_DATA[id-1];p[1]=f.names[i];p[2]=f.plans[i];p[3]=f.eco[i];p[4]=f.plans[i]==='bird'?1:0;p[5]=f.plans[i]==='bird'?12:9;p[6]=(id*37+i*43)%360;p[7]=18+i*4;p[8]=Math.round((f.base[i][0]+f.base[i][2]+f.base[i][4])/3);p[9]=f.base[i][5];p[10]=p[10].map((d,j)=>Math.max(12,Math.round(d*(f.key==='wind-bird'?.82:f.key==='earth-armor'?1.18:1)+(id+j)%3)));}
+// New approved route2 species replace only their own profiles.
+for(const f of ROUTE2_LINES)for(let i=0;i<f.ids.length;i++){const id=f.ids[i],p=SORANE_MOTION_DATA[id-1];p[1]=f.names[i];p[2]=f.plans[i];p[3]=f.eco[i];p[4]=f.plans[i]==='bug'?1:0;p[5]=f.plans[i]==='serpent'?13:10;p[6]=(id*41+i*47)%360;p[7]=16+i*5;p[8]=Math.round((f.base[i][0]+f.base[i][2]+f.base[i][4])/3);p[9]=f.base[i][5];p[10]=p[10].map((d,j)=>Math.max(12,Math.round(d*(f.key==='meadow-hopper'?.78:f.key==='electric-lamb'?1.16:f.key==='dream-fungus'?1.22:1)+(id+j)%5)));}
 function motionProfile(id){return SORANE_MOTION_DATA[id-1]||SORANE_MOTION_DATA[0];}
 function motionClipIndex(name){const i=SORANE_MOTION_CLIPS.indexOf(name);return i<0?0:i;}
 function animaRig(id){return ANIMA_RIG_DATA[id-1]||ANIMA_RIG_DATA[0];}

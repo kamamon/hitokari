@@ -24,6 +24,7 @@ jobs:
       - run: node tests/starter-selection-ui.cjs
       - run: node tests/battle-art-browser.cjs
       - run: node tests/route1-browser.cjs
+      - run: node tests/route2-browser.cjs
       - run: node tools/bake-anima-sheets.cjs --ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003 --out=test-results/anima-motion/full-sheets
       - run: node tools/bake-anima-runtime.cjs --ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003 --out=test-results/anima-motion/runtime-sample
       - uses: actions/upload-artifact@v4
