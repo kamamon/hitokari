@@ -25,16 +25,16 @@ function genRoute4(zone='main',cell=CELLS[ROUTE4_KEY]){
  const riverY=main?12:15,riverEnd=main?16:18;
  for(let y=riverY;y<=riverEnd;y++)for(let x=2;x<=29;x++)r4Set(m,x,y,T.WATER);
  // Uneven banks while preserving the continuous water barrier and the bridge footprints.
- const crossings=main?[6,7,20,21]:[10,11,24,25];for(let x=5;x<=29;x++)if(!crossings.includes(x)){if(Math.sin(x*.73)>.68)r4Set(m,x,riverY,T.GRASS);if(Math.cos(x*.61)>.73)r4Set(m,x,riverEnd,T.GRASS);}
+ const crossings=main?[12,13,20,21]:[10,11,24,25];for(let x=5;x<=29;x++)if(!crossings.includes(x)){if(Math.sin(x*.73)>.68)r4Set(m,x,riverY,T.GRASS);if(Math.cos(x*.61)>.73)r4Set(m,x,riverEnd,T.GRASS);}
  // Waterfall is a real water tile, never a mandatory traversal gate.
  for(let y=riverY;y<=riverY+1;y++)for(let x=2;x<=4;x++)expPut(m,x,y,{kind:'fall',dir:2});
  if(main){
-  r4Cliff(m,10,[6,7,20,21]);r4Rect(m,15,0,2,7,T.PATH);r4Path(m,15,6,20,11,2);r4Path(m,6,7,15,7,2);r4Rect(m,6,7,2,5,T.PATH);
-  for(const x of [6,7]){r4Set(m,x,9,T.SHRUB);m.r4Shrubs.push([x,9]);}
-  r4Bridge(m,20,12,16);r4Bridge(m,6,12,16);
-  r4Path(m,20,17,15,24,2);r4Path(m,6,17,6,21,2);r4Path(m,6,21,15,21,2);r4Rect(m,15,24,2,8,T.PATH);
+  r4Cliff(m,10,[12,13,20,21]);r4Rect(m,15,0,2,7,T.PATH);r4Path(m,15,6,20,11,2);r4Path(m,12,7,15,7,2);r4Rect(m,12,7,2,5,T.PATH);
+  for(const x of [12,13]){r4Set(m,x,9,T.SHRUB);m.r4Shrubs.push([x,9]);}
+  r4Bridge(m,20,12,16);r4Bridge(m,12,12,16);
+  r4Path(m,20,17,15,24,2);r4Path(m,12,17,12,21,2);r4Path(m,12,21,15,21,2);r4Rect(m,15,24,2,8,T.PATH);
   r4Path(m,20,21,26,22,1);r4Set(m,26,22,T.MAT);m.warps['26,22']={map:ROUTE4_INNER,x:15,y:29,dir:0};
-  r4Sign(m,13,3,'第4街道\n北：モミノキ街　南：ツユクサ野\n本道は 東の 木橋へ。');r4Sign(m,5,8,'木こりの 小道。先丸の 万能工具で 茂みを 開こう。');r4Sign(m,27,22,'渓流の 奥地への 小道');
+  r4Sign(m,13,3,'第4街道\n北：モミノキ街　南：ツユクサ野\n本道は 東の 木橋へ。');r4Sign(m,11,8,'木こりの 小道。先丸の 万能工具で 茂みを 開こう。');r4Sign(m,27,22,'渓流の 奥地への 小道');
   for(const p of [[7,4,4,2],[26,5,3,3],[6,23,3,3],[25,25,3,3],[10,28,3,2],[23,29,4,1]])r4Patch(m,...p,r);
   r4Patch(m,25,28,4,2,r,true);
   r4Prop(m,12,21,'bench','木漏れ日の 休憩所。');r4Site(m,12,21,'rest');

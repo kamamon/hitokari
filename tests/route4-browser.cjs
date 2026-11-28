@@ -37,8 +37,11 @@ const {chromium,webkit,devices}=require('playwright'),assert=require('node:asser
    const fp=doublePair(D,D.slots[0][1],D.slots[1][0]);await route4BeginMove(fp,0,flame);const spread=doublePair(D,D.slots[0][1],D.slots[1][1]);spread.extra=true;spread.r4SpreadBoost=fp.r4LastBoost;await route4BeginMove(spread,0,flame);ck(route4Power(spread,fire,rock,flame)===1.2,'spread fire boost shared');spread.r4FireActor=null;ck(route4Power(spread,fire,rock,flame)===1,'subsequent fire no boost');
    const evo=makeMon(609,25);evo.mv=[];S.party=[evo];BT=null;G.scene='world';await evolveMon(evo);ck(evo.sp===610&&evo.mv.some(x=>MOVES[x.id].name==='てつづめ'),'real evolution');
    S.party=[makeMon(19,75),makeMon(21,75)];G.fade=0;loadMap(ROUTE4_KEY,15,5,0);
+   const shortest=(m)=>{const q=[[15,0,0]],seen=new Set(['15,0']);while(q.length){const [x,y,n]=q.shift();if(x===15&&y===31)return n;for(let d=0;d<4;d++){const nx=x+DX[d],ny=y+DY[d],k=nx+','+ny;if(nx<0||nx>=32||ny<0||ny>=32||seen.has(k)||SOLID[m.t[ny*32+nx]]||m.t[ny*32+nx]===T.WATER||occupied(m,nx,ny)||!expansionPass(m,x,y,nx,ny,{surf:false,fly:false}))continue;seen.add(k);q.push([nx,ny,n+1]);}}return Infinity;};
+   const normalDistance=shortest(main);
    // Real tool interaction and saved unlock. Without tool the shrub is unchanged.
-   await useTool(T.SHRUB,6,9);ck(G.map.t[9*32+6]===T.SHRUB,'no tool');S.bag.k_cut=1;await useTool(T.SHRUB,6,9);ck(route4State()['cut:6,9']&&G.map.t[9*32+6]===T.PATH,'cut');MAPCACHE.delete(ROUTE4_KEY);loadMap(ROUTE4_KEY,15,5,0);ck(G.map.t[9*32+6]===T.PATH,'cut persists map rebuild');
+   await useTool(T.SHRUB,12,9);ck(G.map.t[9*32+12]===T.SHRUB,'no tool');S.bag.k_cut=1;await useTool(T.SHRUB,12,9);ck(route4State()['cut:12,9']&&G.map.t[9*32+12]===T.PATH,'cut');MAPCACHE.delete(ROUTE4_KEY);loadMap(ROUTE4_KEY,15,5,0);ck(G.map.t[9*32+12]===T.PATH,'cut persists map rebuild');
+   ck(shortest(G.map)<normalDistance,'tool route truly shortens north-south path');
    const rest=G.map.route4Sites['12,21'];S.party[0].hp=1;await route4SiteTalk(G.map,rest);ck(S.party[0].hp===maxHP(S.party[0]),'rest');
    let h=G.map.route4Sites['5,11'],n=S.bag[h.item]||0;await route4SiteTalk(G.map,h);await route4SiteTalk(G.map,h);ck(S.bag[h.item]===n+1,'hidden once');
    await doWarp(G.map.warps['26,22']);ck(G.map.id===ROUTE4_INNER,'actual gorge warp');const sites=G.map.route4Sites;
@@ -55,7 +58,7 @@ const {chromium,webkit,devices}=require('playwright'),assert=require('node:asser
    return{topo,fronts,motions,trainers:5,abilities:6,actualCapture:true,actualEvolution:true,repair:true,save:true,approved:approved.length};
   });
   fs.mkdirSync('test-results/route4',{recursive:true});await page.locator('canvas').first().screenshot({path:'test-results/route4/'+engine+'-battle.png'});
-  for(const [label,id,x,y,hour] of [['forest','2,1',15,6,12],['bridge','2,1',20,17,12],['waterfall','2,1',6,14,12],['flowers','2,1',24,27,17],['gorge','a:route4-gorge:2,1',23,13,12],['night','a:route4-gorge:2,1',20,13,22]]){
+  for(const [label,id,x,y,hour] of [['forest','2,1',15,6,12],['bridge','2,1',20,17,12],['waterfall','2,1',12,14,12],['flowers','2,1',24,27,17],['gorge','a:route4-gorge:2,1',23,13,12],['night','a:route4-gorge:2,1',20,13,22]]){
    await page.evaluate(({id,x,y,hour})=>{BT=null;G.scene='world';G.hour=hour;G.fade=0;loadMap(id,x,y,0);G.banner=null;render();},{id,x,y,hour});await page.locator('canvas').first().screenshot({path:'test-results/route4/'+engine+'-'+label+'.png'});
   }
   assert.deepEqual(errors,[]);assert.equal(data.fronts,13);assert.equal(data.motions,416);results.push({engine,...data});await browser.close();browser=null;
