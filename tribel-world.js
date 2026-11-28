@@ -66,7 +66,7 @@ function genTribelMap(zone,cell=CELLS[TRIBEL_KEY]){
  for(const [z,tid,pid,x,y,cls,team,pair] of TRIBEL_TRAINERS.filter(t=>t[0]===zone)){tribelSet(m,x,y,T.GRASS);m.objs.push({k:'npc',role:'tribeltrainer',tid,pid,spr:pSpr(pid),name:pFull(pid),cls,x,y,dir:2,tribelPair:pair||null,team:team.map(([sp,lv])=>({sp,lv})),money:pair?150:220,los:0});}
  // Ensure rock reward is adjacent to walkable terrain.
  if(zone==='main')tribelSet(m,23,4,T.GRASS);
- return m;
+ m.tribelFlowers=m.tribelFlowers.filter(([x,y])=>m.t[y*32+x]===T.FLOWER);return m;
 }
 function tribelSafeSpawn(m,x,y){const ok=(a,b)=>Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0&&a<m.W&&b<m.H&&!SOLID[m.t[b*m.W+a]]&&!m.objs.some(o=>o.x===a&&o.y===b);return ok(x,y)?[x,y]:[15,29];}
 async function tribelTrainerTalk(o){

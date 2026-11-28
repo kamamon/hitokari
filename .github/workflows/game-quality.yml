@@ -32,5 +32,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v110-route2-reports
+          name: v112-tribel-reports
           path: test-results/
