@@ -434,6 +434,7 @@ function person(id){
   if(typeof MOMI_NAMES!=='undefined'&&MOMI_NAMES[id]){const p=MOMI_NAMES[id],q=id-101;return{id,name:p.name,role:p.role,group:id<=100?-1:(q/100)|0,dist:id<=100?0:((q%100)>>1)+1};}
   if(id<=100){const k=PEOPLE_KEY[id-1];return{id,name:k[0],role:id===10?'ミチシルベ村 ジムリーダー':k[1],group:-1,dist:0};}
   const q=id-101,g=(q/100)|0,j=q%100;
+  const guest=typeof MOMI_GUEST_NAMES!=='undefined'&&MOMI_GUEST_NAMES[id];if(guest)return{id,name:PEOPLE_NAMES[q].split(' ')[0]+' '+guest.name,role:guest.theme,group:g,j,dist:(j>>1)+1};
   const original=PEOPLE_NAMES[q],alias=typeof HARU_NAMES!=='undefined'&&HARU_NAMES[id];return{id,name:alias?original.split(' ')[0]+' '+alias:original,role:PEOPLE_EXC[id]||REGION_ROLES[g][j%10],group:g,j,dist:(j>>1)+1};      // 各地区に 職群ごと2人
 }
 const pFull=id=>person(id).name.replace(' ','');
@@ -523,7 +524,7 @@ function drawChar(g,spr,dir,fr,x,y,hCut){
 function drawHumanBig(g,id,dir,pose,sc,x,y,al){
   const pid=sprPid(id)||(typeof id==='number'?id:2),h=30*sc;
   if(id==='pl'){const cv=plCanvas();if(cv){const w=h*cv.width/cv.height;g.save();if(al!=null&&al<1)g.globalAlpha=Math.max(0,al);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(cv,x-w/2,y-h,w,h);g.restore();return;}}
-  drawPerson(g,pid,x,y,h,{al});
+  if(momiLeaderBig(g,pid,pose,x,y,h,al))return;drawPerson(g,pid,x,y,h,{al});
 }
 function charInvalidate(){PL_CV=null;}
 function charCacheTrim(){trimIndividualCaches();}
@@ -540,7 +541,7 @@ function drawSpeaker(id,y,text){      // y=メッセージ枠の上はし
   const p=person(id),nm=p.name.replace(' ','');
   win(2,y-72,50,58,'#eef3f8');
   ctx.save();ctx.beginPath();ctx.rect(5,y-69,44,52);ctx.clip();
-  const F=momiFace(id,text)||(FACESET[id]?picOK('face/'+pSpr(id)+'_'+faceEx(text)+'.webp'):null);
+  const F=momiFace(id,text)||(!MOMI_NAMES[id]&&FACESET[id]?picOK('face/'+pSpr(id)+'_'+faceEx(text)+'.webp'):null);
   if(F){smooth(ctx);ctx.drawImage(F,1,y-67,52,52);}
   const P=F?{st:0}:chrPic(id);if(P.st===1){const w=40,h=w/chrAsp(id);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(P.img,27-w/2,y-68,w,h);}
   ctx.restore();
@@ -3226,6 +3227,7 @@ function drawRows(g,m,camx,camy,byRow,drawEnt,skip){
     if(inr&&tr){
       const R=rn.rows[ey];let any=false;
       for(const r of R){if(r.tone)continue;const sx=r.x-camx,sy=r.y-camy;if(sx<-28||sx>LW+28||sy<-6||sy>LH+52)continue;
+        if(m.momi&&!m.indoor){g.setTransform(K,0,0,K,0,0);if(momiDrawPine(g,r,sx,sy))continue;}
         const a=r.big?tr.bg:tr.sm,sw=(r.big?tr.bsw:tr.ssw)[r.v],k=sw?wind(t,r.x,r.y)*0.034*sw:0;any=true;
         g.setTransform(K,0,-k*K,K,Math.round(sx*K),Math.round(sy*K));
         g.drawImage(a,r.v*a.cw*K,0,a.cw*K,a.ch*K,-(a.cw>>1),r.big?-47:-33,a.cw,a.ch);}
@@ -5393,7 +5395,7 @@ async function wearScreen(){
 /* ---------- 仕立て屋：その地区だけの 13着 ---------- */
 const wearStock=d=>{const a=[];for(let n=1;n<=650;n++)if((n-1)%50===d-1)a.push(n);return a;};
 async function wearShop(o){
-  const d=(G.map.cell&&G.map.cell.dist)||1,stock=wearStock(d).filter(n=>n!==451),g=pGiven(o.pid);
+  const d=(G.map.cell&&G.map.cell.dist)||1,stock=wearStock(d).filter(n=>n!==451&&n!==452),g=pGiven(o.pid);
   await msg(g+'「いらっしゃい。'+G.map.cell.name+'だけの 衣装を そろえているよ。」');
   let idx=0;
   for(;;){
@@ -5663,6 +5665,7 @@ async function gymBattle(o){
   if(r==='lose'){await blackout();return;}
   S.badges[k]=1;HitokariUpgrade.noteMatch(S,'g:'+k);sfx('get');
   await msg(k===1?'ハルク「いい 勝負だった！ 君と 相棒の 最初の 年輪が 刻まれたな！」':g+'「みごと！ '+GYM_TOWN[k]+'ジムの バッジを わたそう。」');
+  if(k===1)momiFanfare();
   const bw={draw(){const s=44,x=LW/2-s/2,y=LH-MSG_H-s-12;ctx.fillStyle='rgba(255,246,214,0.85)';ctx.beginPath();ctx.arc(LW/2,y+s/2,s*0.62,0,6.3);ctx.fill();drawBadge(ctx,gymLegacyId(k)-1,x,y+Math.sin(G.t/14)*1.5,s);}};UI.push(bw);      // バッジの絵
   await msg(S.name+'は 「'+(k===1?'年輪':GYM_TOWN[k])+'バッジ」を 手に入れた！\n（'+CIRCUITS[c]+' '+badgeIn(c)+'個／ぜんぶで '+badgeCount()+'個）');popW(bw);
   const D=TYPE_MOVES[t].dmg,tm=k===1&&ITEMS['tm'+moveId('せんこうづき')]?'tm'+moveId('せんこうづき'):'tm'+D[Math.min(D.length-1,gymAce(k)<30?1:2)];bagAdd(tm);await msg(S.name+'は '+ITEMS[tm].n+'を もらった！');
@@ -5912,7 +5915,7 @@ function activeObjs(m){
     if(o.k==='item'&&S.flags['i:'+m.id+':'+o.iid])continue;
     if(o.k==='legend'&&(S.flags['L:'+o.sp]||(o.needFlag&&!S.flags[o.needFlag])||(o.sp===SP_OWARI&&S.flags['s:owari']&&!S.flags.champ)))continue;
     if(o.k==='starter'&&S.starter)continue;
-    const a=Object.assign({ox:0,oy:0,alert:0},o);if(o.haruActor&&!haruSpawn(m,a,out))continue;if(o.momiActor&&!momiSpawn(m,a,out))continue;if(o.role==='momicafeguest'){a.pid=MomiCafe.guest(MomiCafe.day()).pid;a.spr=pSpr(a.pid);}a.homeX=a.x;a.homeY=a.y;
+    const a=Object.assign({ox:0,oy:0,alert:0},o);if(o.haruActor&&!haruSpawn(m,a,out))continue;if(o.momiActor&&!momiSpawn(m,a,out))continue;if(o.role==='momicafeguest'){a.pid=MomiCafe.guest(momiCafeDay()).pid;a.spr=pSpr(a.pid);}a.homeX=a.x;a.homeY=a.y;
     if(o.k==='legend')a.absent=o.sp!==SP_OWARI&&!S.flags['A:'+o.sp];      // 伝説の道具を 使うまでは 装置だけ
     if(o.k==='npc'){
       if(o.role==='resident'){if(!residentAvailable(a.pid))continue;const pos=residentSchedulePosition(a.pid,a.residentSlot,npcMinutes());a.x=pos.x;a.y=pos.y;a.dir=pos.dir;resolveResidentSpawn(m,a,out);}

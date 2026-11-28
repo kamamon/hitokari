@@ -14,6 +14,7 @@ jobs:
       - run: node --test tests/emerald-core.test.cjs
       - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium webkit
+      - run: node tests/momino-browser.cjs
       - run: node tests/browser-smoke.cjs
       - run: node tests/expansion-browser.cjs
       - run: node tests/individual-world-browser.cjs
@@ -33,5 +34,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v113-route3-reports
+          name: v114-momino-reports
           path: test-results/

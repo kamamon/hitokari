@@ -21,6 +21,7 @@ const MOMI_PEOPLE=[
  {id:1903,key:'guide',name:'葉月 ハズキ',role:'街の案内人',color:'#b0a26d',skin:'#d5ad89',hair:'#62584b',schedule:[[0,-1,3,14],[360,-1,3,14],[720,-1,10,17],[1020,-1,12,22]]}
 ];
 const MOMI_NAMES=Object.fromEntries(MOMI_PEOPLE.map(p=>[p.id,p]));
+const MOMI_GUEST_NAMES=Object.fromEntries(MomiCafe.roster.map(g=>[g.pid,g]));
 const MOMI_PETS=[
  {id:'horse',sp:546,x:9,y:7,targets:[[9,7],[10,9],[11,7]]},{id:'badger',sp:11,x:9,y:5,targets:[[9,5],[10,6]]},
  {id:'mouse',sp:451,x:22,y:13,targets:[[22,13],[21,12]]},{id:'bird',sp:717,x:22,y:7,targets:[[22,7],[21,6]]},
@@ -98,10 +99,11 @@ function momiInterior(cell,slot){
  if(slot===0){momiRect(m,1,2,7,1,T.COUNTER);set(3,1,T.HEALM);set(9,1,T.PC);prop(2,5,'bench','診療所の 待合席。');prop(8,5,'planter','観葉植物。');}
  else if(slot===1){momiRect(m,1,2,5,1,T.COUNTER);prop(8,4,'crate','道具の 箱。');prop(2,5,'barrel','旅の 品物。');}
  else if(slot===3){prop(2,3,'workbench','木工台。');prop(8,3,'sawhorse','作業台。');prop(2,6,'woodstack','木材の 束。');prop(8,6,'toolbox','職人の 工具。');}
- else if(slot===4){momiRect(m,3,4,5,2,T.RUG);prop(2,4,'trainingPost','練習用の 柱。');prop(8,4,'trainingPost','練習用の 柱。');prop(8,2,'board','相性と 交代の 学習。');}
+ else if(slot===4){momiRect(m,3,4,5,2,T.RUG);prop(2,4,'trainingPost','練習用の 柱。');prop(8,4,'trainingPost','練習用の 柱。');prop(8,2,'board','相性と 交代の 学習。');momiSite(m,8,2,'training');}
  else if(slot===5){momiRect(m,2,2,5,1,T.COUNTER);prop(2,4,'cafeTable','年輪の テーブル。');prop(8,4,'cafeTable','年輪の テーブル。');prop(2,6,'stool','カフェの 椅子。');prop(8,6,'stool','カフェの 椅子。');prop(8,2,'coffee','焙煎した 木の実の 香り。');momiRect(m,4,5,3,3,T.RUG);m.objs.push({k:'npc',role:'momicafeguest',x:5,y:6,dir:2,pid:MomiCafe.guest(MomiCafe.day()).pid,spr:pSpr(MomiCafe.guest(MomiCafe.day()).pid)});}
  else if(slot===6){momiRect(m,2,2,5,1,T.COUNTER);prop(2,5,'bikeRack','組み立て中の 自転車。');prop(8,5,'toolbox','万能工具の 試作品。');prop(8,3,'wheel','予備の 車輪。');}
  else{prop(2,5,'bed','住民の ベッド。');prop(7,3,'cafeTable','木の テーブル。');prop(8,6,'planter','小さな モミノキ。');}
+ const extras={0:[[1,4,'bottle'],[9,4,'bell']],1:[[1,4,'basket'],[9,5,'shelfSign']],3:[[1,4,'stackedBoards'],[9,4,'hammer'],[1,7,'chisel'],[9,7,'measuringTape']],4:[[1,6,'dumbbell'],[9,6,'target']],5:[[1,7,'cup'],[9,7,'cake'],[1,3,'menuBoard']],6:[[1,4,'pump'],[9,4,'wrench'],[1,7,'spareWheel'],[9,7,'toolCabinet']],7:[[1,3,'lantern'],[9,3,'woodenRing']],8:[[1,3,'floorMat']]}[slot]||[];for(const [x,y,id] of extras)if(!SOLID[m.t[y*m.W+x]]&&!m.objs.some(o=>o.x===x&&o.y===y))prop(x,y,id,'街の 職人が 作った 品だ。');
  momiTemplates(m,slot);for(const o of m.objs)if(o.momiActor&&SOLID[m.t[o.y*W+o.x]])set(o.x,o.y,T.FLOOR);
  set(5,H-1,T.MAT);set(5,H-2,T.FLOOR);m.warps['5,'+(H-1)]={map:MOMI_KEY,x:b.cx,y:b.doorY+1,dir:2};return m;
 }
@@ -123,7 +125,7 @@ function tickMomi(canInput){
  const m=G.map;if(!m?.momi)return;
  for(const o of G.objs){if(!o.momiActor||!o.npcMove)continue;const z=o.npcMove;z.t++;const f=Math.min(1,z.t/z.duration);o.ox=(z.x-o.x)*16*f;o.oy=(z.y-o.y)*16*f;if(f>=1){o.x=z.x;o.y=z.y;o.ox=o.oy=0;o.npcMove=null;}}
  if(!canInput||G.busy||G.t%6!==0)return;
- const guest=G.objs.find(o=>o.role==='momicafeguest');if(guest){const v=MomiCafe.guest(MomiCafe.day());if(guest.pid!==v.pid){guest.pid=v.pid;guest.spr=pSpr(v.pid);chrPreload(guest.spr);}}
+ const guest=G.objs.find(o=>o.role==='momicafeguest');if(guest){const v=MomiCafe.guest(momiCafeDay());if(guest.pid!==v.pid){guest.pid=v.pid;guest.spr=pSpr(v.pid);chrPreload(guest.spr);}}
  for(const o of G.objs.slice())if(o.momiActor&&!o.npcMove&&momiTarget(o)?.map!==m.id&&Math.abs(o.x-G.pl.x)+Math.abs(o.y-G.pl.y)>2)removeObj(o);
  for(const z of m.objs)if(z.momiActor&&!G.objs.some(o=>o.momiActor===z.momiActor)){const o={...z,ox:0,oy:0,alert:0};if(momiSpawn(m,o,G.objs)){if(o.spr)chrPreload(o.spr);G.objs.push(o);}}
  const walkers=G.objs.filter(o=>o.momiActor&&!['nurse','clerk','momipupil','momicafeguest'].includes(o.role)&&(!m.indoor||o.momiActor==='keeper'));if(!walkers.length)return;
@@ -190,24 +192,31 @@ async function momiTalk(o){const q=momiState();switch(o.momiActor){
  case'guide':await msg('ハズキ「北は ジム。南は 第4街道。年輪カフェでは 1日1回 勝負が できるよ。」');return;
  default:await msg(pGiven(o.pid)+'「ようこそ モミノキ街へ！」');
 }}
-async function momiSiteTalk(site){const q=momiState();if(site.kind==='wood'){if(!q.woodStarted){await msg('木工房の 材木だ。職人に 話を 聞こう。');return;}q.woodMarks=q.woodMarks||[];if(!q.woodMarks.includes(site.i)){q.woodMarks.push(site.i);sfx('get');saveGame();}await msg('材木の 確認 '+q.woodMarks.length+'/3。');}else if(site.kind==='bike')await msg('自転車の 試乗コースの 印だ。');}
+async function momiSiteTalk(site){const q=momiState();if(site.kind==='training')return momiTraining();if(site.kind==='wood'){if(!q.woodStarted){await msg('木工房の 材木だ。職人に 話を 聞こう。');return;}q.woodMarks=q.woodMarks||[];if(!q.woodMarks.includes(site.i)){q.woodMarks.push(site.i);sfx('get');saveGame();}await msg('材木の 確認 '+q.woodMarks.length+'/3。');}else if(site.kind==='bike')await msg('自転車の 試乗コースの 印だ。');}
 function momiInteract(m,x,y){if(!m.momi)return false;const s=m.momiSites?.[x+','+y];if(!s)return false;run(()=>momiSiteTalk(s));return true;}
 function momiBikeStep(m,p){if(!m.momi||m.indoor||!S.badges[1]||!riding())return;const q=momiState(),v=m.momiSites[p.x+','+p.y];if(!q.bikeStarted||q.bikeDone||v?.kind!=='bike')return;q.bikeMarks=q.bikeMarks||[];if(q.bikeMarks.includes(v.i))return;q.bikeMarks.push(v.i);sfx('get');if(q.bikeMarks.length===3){q.bikeDone=true;S.own[452]=1;S.flags['k:wear']=1;S.own[401]=1;S.own[601]=1;bagAdd('I0154');G.banner={text:'試乗 合格！ 年輪の帽子を 入手',t:140};}else G.banner={text:'試乗 '+q.bikeMarks.length+'/3',t:80};saveGame();}
 function momiArrivalReady(m){return m.id===MOMI_KEY&&S.flags.dex&&!S.flags['momi:intro'];}
 async function momiArrival(){S.flags['momi:intro']=1;await sayAs(4,'ここが 最初の ジムか！ どっちが 先に バッジを 取れるか、競争だな！');saveGame();}
 function momiDrawGround(g,m,cx,cy){
  g.save();if(m.momiGym){for(let y=1;y<16;y++)for(let x=1;x<12;x++){if(m.t[y*m.W+x]!==T.FLOOR)continue;let px=x*16-cx,py=y*16-cy;if(px<-16||px>LW||py<-16||py>LH)continue;g.fillStyle=(x+y)%2?'#d4b88d':'#dcc299';g.fillRect(px,py,16,16);g.strokeStyle='#bd9c73';g.lineWidth=.45;g.strokeRect(px,py,16,16);}}
- if(!m.indoor){for(let y=Math.max(0,Math.floor(cy/16));y<=Math.min(31,Math.floor(cy/16)+15);y++)for(let x=Math.max(0,Math.floor(cx/16));x<=Math.min(31,Math.floor(cx/16)+16);x++){if(m.t[y*32+x]!==T.PATH)continue;const px=x*16-cx,py=y*16-cy;if(!drawCell(g,'obj/momino/ground.svg',6,32,32,(x*13+y*7)%12,px,py,16,16)){g.fillStyle='#d6c9ac';g.fillRect(px,py,16,16);}}
+ if(!m.indoor){for(let y=Math.max(0,Math.floor(cy/16));y<=Math.min(31,Math.floor(cy/16)+15);y++)for(let x=Math.max(0,Math.floor(cx/16));x<=Math.min(31,Math.floor(cx/16)+16);x++){const v=m.t[y*32+x];if(v!==T.PATH&&v!==T.GRASS)continue;const px=x*16-cx,py=y*16-cy;if(!drawCell(g,'obj/momino/ground.svg',6,32,32,(x*13+y*7)%12+(v===T.PATH?0:12),px,py,16,16)&&v===T.PATH){g.fillStyle='#d6c9ac';g.fillRect(px,py,16,16);}}
   const px=16*16-cx,py=17*16-cy;g.strokeStyle='#b49973';g.lineWidth=1.1;for(let r=9;r<=34;r+=8){g.beginPath();g.arc(px,py,r,0,Math.PI*2);g.stroke();}g.beginPath();g.moveTo(px-34,py);g.lineTo(px+34,py);g.moveTo(px,py-34);g.lineTo(px,py+34);g.stroke();
   if(S.badges[1])for(const [j,[x,y]] of MOMI_BIKE.entries()){let px=x*16-cx,py=y*16-cy;g.fillStyle='#d6b66c';g.fillRect(px+2,py+2,12,12);g.fillStyle='#5b543f';g.font='bold 8px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(String(j+1),px+8,py+8);}
  }
  g.restore();
 }
-const MOMI_PROPS=['lamp','bench','planter','woodstack','sawhorse','crate','barrel','signpost','bikeRack','pinecone','log','trainingPost','workbench','toolbox','board','cafeTable','stool','coffee','wheel','bed'];
+const MOMI_PROPS=['lamp','bench','planter','woodstack','sawhorse','crate','barrel','signpost','bikeRack','pinecone','log','trainingPost','workbench','toolbox','board','cafeTable','stool','coffee','wheel','bed','basket','shelfSign','lantern','stackedBoards','hammer','chisel','measuringTape','woodenRing','cup','cake','menuBoard','bottle','wrench','pump','spareWheel','toolCabinet','floorMat','dumbbell','target','bell'];
 function momiDrawProp(g,o,x,y){const i=MOMI_PROPS.indexOf(o.id),z=o.id==='lamp'?28:o.id==='trainingPost'?26:22;if(i>=0&&!drawCell(g,'obj/momino/props.svg',5,48,48,i,x+8-z/2,y+16-z,z,z)){g.fillStyle='#927856';g.fillRect(x+2,y+4,12,10);}}
 function momiDrawPet(g,o,x,y){drawHaruPet(g,o,x,y);}
 function momiDrawLights(g,m,cx,cy){if(m.indoor||dayPhase()!==3)return;g.save();for(const o of m.objs.filter(o=>o.id==='lamp')){const x=o.x*16+8-cx,y=o.y*16-4-cy;if(x<-24||x>LW+24||y<-24||y>LH+24)continue;const grad=g.createRadialGradient(x,y,0,x,y,24);grad.addColorStop(0,'rgba(255,224,140,.42)');grad.addColorStop(1,'rgba(255,224,140,0)');g.fillStyle=grad;g.fillRect(x-24,y-24,48,48);}g.restore();}
-function momiDrawHUD(m){if(UI.length||G.banner&&G.banner.t>0)return;if(m.momiGym)return;if(m.id===MOMI_CAFE){const q=momiCafeInfo();ctx.fillStyle='rgba(65,51,39,.83)';ctx.fillRect(4,4,166,15);tx('年輪カフェ '+(q.available?'本日 挑戦可':'本日 対戦済み'),9,7,'#fff1d2',8);}else if(!m.indoor){ctx.fillStyle='rgba(40,64,48,.8)';ctx.fillRect(4,4,95,15);tx('森と鍛錬の 街',9,7,'#fff2d6',8);}}
+function momiDrawHUD(m){if(UI.length||G.banner&&G.banner.t>0)return;if(m.momiGym)return;if(m.id===MOMI_CAFE){const available=MomiCafe.available(momiState().cafe,momiCafeDay());ctx.fillStyle='rgba(65,51,39,.83)';ctx.fillRect(4,4,166,15);tx('年輪カフェ '+(available?'本日 挑戦可':'本日 対戦済み'),9,7,'#fff1d2',8);}else if(!m.indoor){ctx.fillStyle='rgba(40,64,48,.8)';ctx.fillRect(4,4,95,15);tx('森と鍛錬の 街',9,7,'#fff2d6',8);}}
 function momiPortraitPath(id){return MOMI_NAMES[id]?'obj/momino/people/p'+id+'.svg':null;}
 function momiFace(id,text){if(id!==11)return null;let n=faceEx(text);if(/考え|基礎/.test(text||''))n=4;else if(/最後|力を/.test(text||''))n=5;else if(/休ん|大切/.test(text||''))n=6;else if(/バッジ/.test(text||''))n=7;return picOK('obj/momino/people/face-'+n+'.svg');}
 function momiDrawWalker(g,id,dir,fr,x,y){if(!MOMI_NAMES[id])return false;const f=fr>=10?(fr-10)%3:fr===1?1:fr===2?2:0;return drawCell(g,'obj/momino/people/walk'+id+'.svg',3,96,144,dir*3+f,x+8-9,y+19-27,18,27);}
+
+function momiDrawPine(g,r,x,y){const w=r.big?39:30,h=r.big?52:40;return drawCell(g,'obj/momino/pines.svg',4,96,128,r.v%4,x-w/2,y-h+4,w,h);}
+function momiLeaderBig(g,pid,pose,x,y,h,al){
+ if(pid!==11)return false;const n=BT?.o?.momiGym?BT.result==='win'?9:BT.fx?.trX!==null&&BT.fx?.trX>10?5:1:Math.max(0,Math.min(11,pose||0)),im=picOK('obj/momino/people/leader-'+n+'.svg');if(!im)return false;
+ g.save();if(al!=null)g.globalAlpha=Math.max(0,al);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(im,x-h/3,y-h,h*2/3,h);g.restore();return true;
+}
+function momiFanfare(){if(!SND||!AC)return;try{const now=AC.currentTime,notes=[72,76,79,84,83,79,84];notes.forEach((n,i)=>{const o=AC.createOscillator(),g=AC.createGain(),t=now+i*.105;o.type='triangle';o.frequency.value=440*2**((n-69)/12);g.gain.setValueAtTime(.045,t);g.gain.linearRampToValueAtTime(0,t+.22);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+.24);});}catch(e){}}

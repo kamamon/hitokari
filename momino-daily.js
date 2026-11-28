@@ -15,7 +15,7 @@ const MomiCafe=(()=>{
  function day(now=Date.now()){return Math.floor((now+JST)/DAY);}
  function dateLabel(d){return new Date(d*DAY).toISOString().slice(0,10);}
  function guest(d){return roster[((d%roster.length)+roster.length)%roster.length];}
- function normalize(r){return r&&typeof r==='object'&&Number.isInteger(r.lastDay)?{lastDay:r.lastDay,result:['started','win','lose','aborted'].includes(r.result)?r.result:'started',attempts:Math.max(1,Math.floor(Number(r.attempts)||1)),wins:Math.max(0,Math.min(Math.floor(Number(r.wins)||0),Math.max(1,Math.floor(Number(r.attempts)||1))))}:{lastDay:-1,result:'none',attempts:0,wins:0};}
+ function normalize(r){return r&&typeof r==='object'&&Number.isInteger(r.lastDay)&&r.lastDay>=0?{lastDay:r.lastDay,result:['started','win','lose','aborted'].includes(r.result)?r.result:'started',attempts:Math.max(1,Math.floor(Number(r.attempts)||1)),wins:Math.max(0,Math.min(Math.floor(Number(r.wins)||0),Math.max(1,Math.floor(Number(r.attempts)||1))))}:{lastDay:-1,result:'none',attempts:0,wins:0};}
  function available(r,d=day()){return Number.isInteger(d)&&d>normalize(r).lastDay;}
  function claim(r,d=day()){const q=normalize(r);if(!available(q,d))return null;return{lastDay:d,result:'started',attempts:q.attempts+1,wins:q.wins};}
  function finish(r,d,result){const q=normalize(r);if(q.lastDay!==d||q.result!=='started')return q;return{...q,result:result==='win'?'win':result==='lose'?'lose':'aborted',wins:q.wins+(result==='win'?1:0)};}

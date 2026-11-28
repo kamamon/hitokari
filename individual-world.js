@@ -15,7 +15,7 @@ const INDIVIDUAL_FIELDS=new Map(SORANE_FIELD_DATA.map(x=>[x[0],x]));
 const NPC_ZONES=['住居区','中央広場','仕事区','交流庭園'];
 const NPC_RESIDENTS=Array.from({length:51},()=>[]);
 for(const p of SORANE_NPC_DATA){if(p[0]>=10&&p[0]<=59)p[3]=gymNumberForLegacy(p[0]-9);if(HARU_NAMES[p[0]])p[1]=person(p[0]).name;const local=HARU_PEOPLE.find(x=>x.id===p[0]);if(local){p[8]=local.schedule.map(([minute,slot],j)=>[minute,slot<0?1:slot===0||slot===1||slot===2||slot===3?2:0,slot<0?'ハルサキ村の 散歩・活動':local.role==='nurse'?'診療':local.role==='clerk'?'接客':local.role==='harutailor'?'仕立て':local.key==='mentor'?'冒険教室':'家で 休息']);}}
-for(const p of SORANE_NPC_DATA){const q=MOMI_NAMES[p[0]];if(q){p[1]=q.name;p[8]=q.schedule.map(([minute,slot])=>[minute,slot<0?1:slot>=7?0:2,q.role+' の 日課']);}NPC_RESIDENTS[p[3]].push(p[0]);}
+for(const p of SORANE_NPC_DATA){const q=MOMI_NAMES[p[0]];if(q){p[1]=q.name;p[8]=q.schedule.map(([minute,slot])=>[minute,slot<0?1:slot>=7?0:2,q.name+' '+q.role+' の 日課']);}if(MOMI_GUEST_NAMES[p[0]])p[1]=person(p[0]).name;NPC_RESIDENTS[p[3]].push(p[0]);}
 function npcProfile(id){return SORANE_NPC_DATA[id-1]||SORANE_NPC_DATA[0];}
 function npcMinutes(){if(G.hour!=null)return((Math.floor(G.hour*60)%1440)+1440)%1440;const d=new Date();return d.getHours()*60+d.getMinutes();}
 function npcScheduleAt(id,minute=npcMinutes()){const p=npcProfile(id),events=p[8];let j=0;for(let i=1;i<events.length;i++)if(events[i][0]<=minute)j=i;const e=events[j];return{minute:e[0],zone:e[1],activity:e[2],next:events[(j+1)%events.length][0],index:j};}
