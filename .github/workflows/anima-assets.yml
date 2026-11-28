@@ -11,6 +11,8 @@ on:
       - 'route1-data.js'
       - 'mon/route2/**'
       - 'route2-data.js'
+      - 'mon/tribel/**'
+      - 'tribel-data.js'
       - 'tools/bake-anima-sheets.cjs'
       - '.github/workflows/anima-assets.yml'
   workflow_dispatch:
@@ -50,7 +52,7 @@ jobs:
           flags=()
           if [ "$PROFILE" = compact ]; then flags+=(--compact); fi
           if [ "$VIEW" = reverse ]; then flags+=(--back); fi
-          if [ "$SCOPE" = legacy-all ]; then flags+=(--all); else flags+=(--ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003,711,712,516,517,250,251,252,948,949,950,223,224,981,982,283,284,1179,1180); fi
+          if [ "$SCOPE" = legacy-all ]; then flags+=(--all); else flags+=(--ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003,711,712,516,517,250,251,252,948,949,950,223,224,981,982,283,284,1179,1180,546,547,265,266,1188,1189,1190,190,191,1062,1063); fi
           node tools/bake-anima-sheets.cjs "${flags[@]}" --out=anima-sheets
       - uses: actions/upload-artifact@v4
         with:
@@ -68,7 +70,7 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
-      - run: node tools/bake-anima-runtime.cjs --ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003,711,712,516,517,250,251,252,948,949,950,223,224,981,982,283,284,1179,1180 --out=anima-runtime-pack
+      - run: node tools/bake-anima-runtime.cjs --ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003,711,712,516,517,250,251,252,948,949,950,223,224,981,982,283,284,1179,1180,546,547,265,266,1188,1189,1190,190,191,1062,1063 --out=anima-runtime-pack
       - uses: actions/upload-artifact@v4
         with:
           name: anima-v110-runtime-atlas-pack

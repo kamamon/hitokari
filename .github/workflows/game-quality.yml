@@ -26,10 +26,11 @@ jobs:
       - run: node tests/route1-browser.cjs
       - run: node tests/route2-browser.cjs
       - run: node tests/harusaki-browser.cjs
-      - run: node tools/bake-anima-sheets.cjs --ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003,711,712,516,517,250,251,252,948,949,950,223,224,981,982,283,284,1179,1180 --out=test-results/anima-motion/full-sheets
-      - run: node tools/bake-anima-runtime.cjs --ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003,711,712,516,517,250,251,252,948,949,950,223,224,981,982,283,284,1179,1180 --out=test-results/anima-motion/runtime-sample
+      - run: node tests/tribel-browser.cjs
+      - run: node tools/bake-anima-sheets.cjs --ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003,711,712,516,517,250,251,252,948,949,950,223,224,981,982,283,284,1179,1180,546,547,265,266,1188,1189,1190,190,191,1062,1063 --out=test-results/anima-motion/full-sheets
+      - run: node tools/bake-anima-runtime.cjs --ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003,711,712,516,517,250,251,252,948,949,950,223,224,981,982,283,284,1179,1180,546,547,265,266,1188,1189,1190,190,191,1062,1063 --out=test-results/anima-motion/runtime-sample
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: v110-route2-reports
+          name: v112-tribel-reports
           path: test-results/
