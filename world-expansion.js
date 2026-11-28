@@ -12,6 +12,7 @@ const expSet=(m,x,y,v)=>{m.t[y*m.W+x]=v;};
 function expFloor(m,x,y,v=T.GRASS){if(x>=0&&y>=0&&x<m.W&&y<m.H)expSet(m,x,y,v);}
 function expHeight(m,x,y){return m.elevation&&x>=0&&y>=0&&x<m.W&&y<m.H?m.elevation[y*m.W+x]:0;}
 function gymPuzzleSpec(k){
+ if(k===1)return momiGymSpec();
  const r=RNG('gym-puzzle-v2:'+gymLegacyId(k)),mode=(gymLegacyId(k)-1)%10,type=GYM_TYPES[k],n=mode===3?6:4,order=r.shuffle(Array.from({length:n},(_,i)=>i)),spec={k,mode,type,n,name:GYM_TOWN[k]+'・'+EXP_GYM_MODES[mode],order,clue:'',target:null};
  if(mode===0||mode===6||mode===8){spec.target=order.slice(0,mode===8?3:4);spec.clue=(mode===8?'45歩以内に ':'')+spec.target.map(i=>EXP_SIGNS[i]).join(' → ');}
  if(mode===1){spec.target=1+r.int(14);spec.clue='点灯：'+order.filter(i=>spec.target&(1<<i)).map(i=>EXP_SIGNS[i]).join('・');}
@@ -41,7 +42,7 @@ function gymApply(spec,st,i,steps=0){
  else if(mode===5||mode===9){st.values[i]=(st.values[i]+1)%(mode===5?3:4);st.done=st.values.every((v,j)=>v===spec.target[j]);}
  return st;
 }
-function gymPuzzleState(m){const v=expansionState().gyms,k=m.gymPuzzle.k;return v[k]||(v[k]=freshGymState(m.gymPuzzle));}
+function gymPuzzleState(m){const v=expansionState().gyms,k=m.gymPuzzle.k;if(m.gymPuzzle.revision&&v[k]?.revision!==m.gymPuzzle.revision)v[k]={...freshGymState(m.gymPuzzle),revision:m.gymPuzzle.revision};return v[k]||(v[k]=freshGymState(m.gymPuzzle));}
 function gymPuzzleSolved(m){return !m.gymPuzzle||!!S.badges[m.gymPuzzle.k]||!!gymPuzzleState(m).done;}
 function decorateGym(m){const k=m.cell.gym,spec=gymPuzzleSpec(k);m.gymPuzzle=spec;
  for(let y=1;y<m.H-1;y++)for(let x=1;x<m.W-1;x++)expSet(m,x,y,T.FLOOR);
@@ -72,7 +73,7 @@ function findPortal(m,x0,y0){const a=[];for(let y=3;y<m.H-3;y++)for(let x=3;x<m.
 function portalAt(m,kind,x,y,label){const p=findPortal(m,x,y);if(p)expPut(m,p[0],p[1],{kind:'portal',area:kind,label,returnX:p[0],returnY:p[1]});return p;}
 function decorateExpansionMap(m){
  if(m.advDecorated)return;m.advDecorated=true;
- if(m.advArea||m.haru||m.tribel||m.route3)return;
+ if(m.advArea||m.haru||m.tribel||m.route3||m.momi)return;
  if(m.bk==='gym'){decorateGym(m);return;}
  if(!m.indoor&&m.cell&&m.cell.kind==='town'){
   const k=m.cell.gym?gymLegacyId(m.cell.gym):m.cell.dist||1;
@@ -321,7 +322,7 @@ function drawExpansionTerrain(g,m,camx,camy){
  else if(k==='dive'||k==='surface'){g.fillStyle=k==='dive'?'#246d86':'#72cad4';g.fillRect(px,py,16,16);expIcon(g,k,px,py,16);}
  else if(k==='coral'){g.strokeStyle=['#dc8c89','#8dbac4','#b0a6d7'][a.tone];g.lineWidth=1.5;g.beginPath();g.moveTo(px+8,py+15);g.lineTo(px+8,py+5);g.moveTo(px+8,py+10);g.lineTo(px+3,py+5);g.moveTo(px+8,py+8);g.lineTo(px+13,py+3);g.stroke();}
  else if(k==='gymgate'){if(!gymPuzzleSolved(m)){g.fillStyle='#514f65';g.fillRect(px,py,16,16);g.strokeStyle='#e9cb84';g.strokeRect(px+1,py+1,14,14);for(let i=3;i<16;i+=4)g.fillRect(px+i,py+2,1,12);}else{g.fillStyle='#72ac92';g.fillRect(px,py+12,16,3);}}
- else if(k==='gymplate'){const s=m.gymPuzzle,q=gymPuzzleState(m),i=a.i;let c='#b9c5c1',label=EXP_SIGNS[i];if(s.mode===1||s.mode===2||s.mode===4){c=q.mask&(1<<i)?'#f0c36a':'#75858a';if(s.mode===4)label=String(s.weights[i]);}else if(s.mode===3){if(q.open===i||q.matched.includes(i))c=['#5fa8d0','#d96e6a','#e7bd64'][s.target[i]];}else if(s.mode===5)c=['#5fa8d0','#d96e6a','#e7bd64'][q.values[i]];else if(s.mode===9)label=['↑','→','↓','←'][q.values[i]];else if(s.mode===7){const qn=s.questions[Math.min(q.progress,2)];label=TK[qn.options[i]];}
+ else if(k==='gymplate'){const s=m.gymPuzzle,q=gymPuzzleState(m),i=a.i;let c='#b9c5c1',label=s.labels?.[i]||EXP_SIGNS[i];if(s.mode===1||s.mode===2||s.mode===4){c=q.mask&(1<<i)?'#f0c36a':'#75858a';if(s.mode===4)label=String(s.weights[i]);}else if(s.mode===3){if(q.open===i||q.matched.includes(i))c=['#5fa8d0','#d96e6a','#e7bd64'][s.target[i]];}else if(s.mode===5)c=['#5fa8d0','#d96e6a','#e7bd64'][q.values[i]];else if(s.mode===9)label=['↑','→','↓','←'][q.values[i]];else if(s.mode===7){const qn=s.questions[Math.min(q.progress,2)];label=TK[qn.options[i]];}
   if(q.done)c='#69b68c';g.fillStyle='#34474d';g.fillRect(px+1,py+1,14,14);g.fillStyle=c;g.fillRect(px+2,py+2,12,12);g.fillStyle='#23393f';g.font='bold 9px '+FONT;g.textAlign='center';g.textBaseline='middle';g.fillText(label,px+8,py+8);}
  else if(k==='berry'){const q=expansionState().plots[m.id+':'+expKey(x,y)],stage=fruitStage(q,S.steps);g.fillStyle='#7b5a43';g.fillRect(px+1,py+2,14,12);g.fillStyle='#bc946e';g.fillRect(px+2,py+3,12,10);if(stage){g.fillStyle='#4b8e57';g.fillRect(px+7,py+4,2,9);g.beginPath();g.ellipse(px+5,py+6,3,2,-.5,0,6.3);g.ellipse(px+10,py+6,3,2,.5,0,6.3);g.fill();if(stage===3){g.fillStyle=EXP_FRUITS[q.type].color;for(let i=0;i<3;i++){g.beginPath();g.arc(px+4+i*4,py+5+(i%2)*3,2.3,0,6.3);g.fill();}}}}
  else if(k==='furniture'){const i=expansionState().decor[a.slot]||0;if(i){g.fillStyle=['','#ad7953','#5eaa75','#e7b95e','#a49be8','#79b2ce','#a75678','#e5bd71'][i];g.fillRect(px+1,py+2,14,12);g.strokeStyle='#39434d';g.strokeRect(px+1,py+2,14,12);g.fillStyle='#fff4d8';g.fillRect(px+4,py+4,8,3);}else expIcon(g,'empty',px,py,16,'#c2c6ba');}
@@ -330,7 +331,7 @@ function drawExpansionTerrain(g,m,camx,camy){
  const atlasIndex={cliff:0,stairs:1,ledge:2,bridge:3,fall:4,dive:5,baseSite:7}[k];if(atlasIndex!==undefined&&k!=='fall')drawCell(g,'obj/expansion-terrain.svg',8,64,64,atlasIndex,px,py,16,16);
  }}
 function drawExpansionAtmosphere(g,m){if(m.advArea==='undersea'){g.fillStyle='rgba(24,101,139,.24)';g.fillRect(0,0,LW,LH);if(!reducedFx()){g.strokeStyle='rgba(180,246,250,.4)';g.lineWidth=.6;for(let i=0;i<13;i++){const x=(i*47+Math.sin(G.t/30+i)*7+LW)%LW,y=LH-((G.t*.5+i*29)%LH);g.beginPath();g.arc(x,y,1+(i%3)*.5,0,6.3);g.stroke();}}}}
-function drawExpansionHUD(m){if(UI.length)return;if(m.gymPuzzle){const s=m.gymPuzzle,st=gymPuzzleState(m);ctx.fillStyle='rgba(27,42,53,.84)';ctx.fillRect(2,2,236,17);tx(EXP_GYM_MODES[s.mode]+(gymPuzzleSolved(m)?'　解除済':s.mode===8&&st.start>=0?'　あと '+Math.max(0,45-(S.steps-st.start))+'歩':''),8,5,'#f7e4aa',9);}
+function drawExpansionHUD(m){if(UI.length)return;if(m.gymPuzzle){const s=m.gymPuzzle,st=gymPuzzleState(m);ctx.fillStyle='rgba(27,42,53,.84)';ctx.fillRect(2,2,236,17);tx((m.momiGym?'年輪の四灯':EXP_GYM_MODES[s.mode])+(gymPuzzleSolved(m)?'　解除済':s.mode===8&&st.start>=0?'　あと '+Math.max(0,45-(S.steps-st.start))+'歩':''),8,5,'#f7e4aa',9);}
  else if(m.advArea&&['ridge','river','coast','undersea'].includes(m.advArea)){const z=expHeight(m,G.pl.x,G.pl.y);ctx.fillStyle='rgba(27,42,53,.75)';ctx.fillRect(4,2,67,14);tx(m.advArea==='undersea'?'海底 探索':'高度 '+z+'段',9,4,'#f3ebcc',8);}}
 function drawExpansionPlayer(g,p,x,y){const q=p.moving?p.prog/16:0,frame=p.moving?10+((((p.stepN||0)&1)*2+(p.prog>=8?1:0)+1)&3):10;const running=p.moving&&p.spd>=4&&!reducedFx();g.save();g.translate(x+8,y+19);if(!reducedFx()){const bob=p.moving?-Math.abs(Math.sin(q*Math.PI))*(running?2:0.9):Math.sin(G.t/22)*.18;g.translate(0,bob);if(running)g.transform(1,0,(p.dir===1?-.055:p.dir===3?.055:0),1.02,0,0);}drawChar(g,'pl',p.dir,frame,-8,-19);g.restore();}
 function drawExpansionNPC(g,o,x,y){const walk=!!o.npcMove||!!(o.ox||o.oy);g.save();g.translate(x+8,y+19);if(walk&&!reducedFx()){const f=o.npcMove?o.npcMove.t/(o.npcMove.duration||12):G.t/12;g.translate(0,-Math.abs(Math.sin(f*Math.PI))*1.15);g.scale(1+Math.sin(f*Math.PI*2)*.015,1-Math.sin(f*Math.PI*2)*.025);}drawChar(g,o.spr,o.dir,walk?walkFr(G.t>>3):0,-8,-19);g.restore();}

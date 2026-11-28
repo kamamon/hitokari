@@ -89,6 +89,7 @@ body.land #bC{right:auto;left:max(8px,env(safe-area-inset-left));top:7%;bottom:a
 <script src="route2-data.js"></script>
 <script src="tribel-data.js"></script>
 <script src="route3-data.js"></script>
+<script src="momino-daily.js"></script>
 <script>
 /* ソラネ地方の人物2000・道具200（tools/parse_sorane.py → gen_sorane.py）。絵は chr/C0001.webp など */
 const PEOPLE_KEY=[["綴森 ハクノ","アニマ博士"],["晴路 ソウ","主人公・男"],["晴路 アオ","主人公・女"],["飛鳥 リオト","幼なじみのライバル"],["名取 コトネア","研究を志すライバル"],["遠野 ナギル","旅慣れたライバル"],["紙野 メモリ","博士の調査助手"],["織部 イトミ","仕立て工房の案内人"],["道具屋 ツクル","道具開発の相棒"],["芽久保 イトハ","ジムリーダー"],["百瀬 ハルク","ジムリーダー"],["露原 ネイロ","ジムリーダー"],["琥野 セキト","ジムリーダー"],["虹井 マユカ","ジムリーダー"],["風巻 ソウリ","ジムリーダー"],["雨宮 ネムジ","ジムリーダー"],["白部 リツカ","ジムリーダー"],["夢代 トワリ","ジムリーダー"],["暁野 ガレン","ジムリーダー"],["汐瀬 ミオリ","ジムリーダー"],["渦井 クラウ","ジムリーダー"],["珊瑚田 ニイナ","ジムリーダー"],["音見 タクト","ジムリーダー"],["滴森 コノエ","ジムリーダー"],["蛍野 アキセ","ジムリーダー"],["月城 シュウガ","ジムリーダー"],["村雨 リキョウ","ジムリーダー"],["凪野 ツバト","ジムリーダー"],["真珠野 オリエ","ジムリーダー"],["火輪 センジ","ジムリーダー"],["大金 レント","ジムリーダー"],["砂上 ヒナギ","ジムリーダー"],["黒良 ゴウト","ジムリーダー"],["稲妻 チヨリ","ジムリーダー"],["岩戸 アラム","ジムリーダー"],["竜石 サライ","ジムリーダー"],["湯森 ユキト","ジムリーダー"],["赤錆 カナメ","ジムリーダー"],["天露 フユラ","ジムリーダー"],["星辺 ユラノ","ジムリーダー"],["雪渡 トキエ","ジムリーダー"],["森林 イツキナ","ジムリーダー"],["影笠 ミツユ","ジムリーダー"],["眠里 ウズネ","ジムリーダー"],["羽雪 ライハ","ジムリーダー"],["白銀 トウマル","ジムリーダー"],["花間 エリネ","ジムリーダー"],["鹿角 ミノルカ","ジムリーダー"],["夢織 セラト","ジムリーダー"],["空橋 リンセ","ジムリーダー"],["白爪 ガクヤ","ジムリーダー"],["影坊 ナツメル","ジムリーダー"],["月読 オトセ","ジムリーダー"],["岩根 ジュエン","ジムリーダー"],["菖蒲 カイリネ","ジムリーダー"],["虫音 シキノ","ジムリーダー"],["火山場 ロクア","ジムリーダー"],["依代 ミクリ","ジムリーダー"],["天界 セイラオ","ジムリーダー"],["大地堂 ガクエン","四天王・地脈"],["海原 ミナサ","四天王・潮流"],["天鳥 ライゼン","四天王・天候"],["記原 シオネ","四天王・記憶"],["巡野 アステル","チャンピオン"],["無地野 レムナ","静環団の代表"],["時雨 ユノカ","静環団・観測幹部"],["鉄見 ガドル","静環団・構造幹部"],["眠野 モイラ","静環団・記録幹部"],["路白 シノク","静環団の元調査員"],["晴路 アサヨ","主人公の家族・保護者"],["晴路 ユウジン","主人公の家族・地図職人"],["飛鳥 トメオ","幼なじみの祖父"],["芽吹 ミイナ","主人公の妹分"],["白井 セネル","巡環診療所の主任"],["高森 バルク","広域レンジャー隊長"],["波間 シエナ","海底探査船の船長"],["風読 コウリ","飛行船の機関士"],["石守 ラング","地底案内人"],["星詠 ツズリ","天文台の館長"],["月舟 ノクタ","月影の海の語り部"],["朝凪 ヒオリ","夜明けの観測者"],["根守 ヴィオ","原初の谷の世話人"],["繭崎 イロア","虹膜洞窟の研究員"],["土還 キノア","古い森の土壌学者"],["夢津 ルミエ","夢の海の案内役"],["銀記 オルノ","記憶回廊の司書"],["分岐 サトリ","境界に現れる旅人"],["円庭 マキオ","リーグ委員長"],["写野 フレア","旅の写真記者"],["継橋 ハルマ","復旧工事のまとめ役"],["宿里 ユリエ","巡回宿の女将"],["古市 レキオ","移動古道具屋"],["音海 リセト","合奏祭の進行役"],["手島 ユノル","静環団の新人"],["星環 モナカ","巡環図鑑の編集者"],["風港 エルド","遠方から来た交換使節"],["小径 チカル","迷子の道案内人"],["輪木 サナラ","五圏連絡所の調整役"],["古灯 クニル","旧巡回路の灯守"],["道守 シキエ","世界巡回のベテラン"]];
@@ -112,7 +113,7 @@ const BOOK_LEG=[[1201,"星明かりだけが届く空の裂け目","星々が進
 
 'use strict';
 /* ================= core.js : 乱数・タイプ・技・特性・道具 ================= */
-const VERSION='1.13';
+const VERSION='1.14';
 const SHINY_RATE=8192;           // 色違いの確率 1/8192（原作準拠）
 const PARTY_MAX=6;               // 手持ちは6匹まで
 
@@ -430,8 +431,10 @@ const hDark=(c,t)=>hMix(c,'#2b1f45',t==null?0.28:t),hLite=(c,t)=>hMix(c,'#fff6e0
 /* ---------- 名前と役割 ---------- */
 const N_PEOPLE=2000,JOB_NAME=['新人トレーナー','学生','研究','救助','診療','商業','職人','農林','海','鉱山','交通','料理','芸術','競技','探索','リーグ','伝承','静環団','住民'];
 function person(id){
+  if(typeof MOMI_NAMES!=='undefined'&&MOMI_NAMES[id]){const p=MOMI_NAMES[id],q=id-101;return{id,name:p.name,role:p.role,group:id<=100?-1:(q/100)|0,dist:id<=100?0:((q%100)>>1)+1};}
   if(id<=100){const k=PEOPLE_KEY[id-1];return{id,name:k[0],role:id===10?'ミチシルベ村 ジムリーダー':k[1],group:-1,dist:0};}
   const q=id-101,g=(q/100)|0,j=q%100;
+  const guest=typeof MOMI_GUEST_NAMES!=='undefined'&&MOMI_GUEST_NAMES[id];if(guest)return{id,name:PEOPLE_NAMES[q].split(' ')[0]+' '+guest.name,role:guest.theme,group:g,j,dist:(j>>1)+1};
   const original=PEOPLE_NAMES[q],alias=typeof HARU_NAMES!=='undefined'&&HARU_NAMES[id];return{id,name:alias?original.split(' ')[0]+' '+alias:original,role:PEOPLE_EXC[id]||REGION_ROLES[g][j%10],group:g,j,dist:(j>>1)+1};      // 各地区に 職群ごと2人
 }
 const pFull=id=>person(id).name.replace(' ','');
@@ -447,12 +450,12 @@ const CHR_PIC=new Map(),CHR_DIR='chr/';
 function chrPic(id){
   let P=CHR_PIC.get(id);
   if(P){CHR_PIC.delete(id);CHR_PIC.set(id,P);return P;}
-  P={st:0,img:new Image()};P.img.onload=()=>{P.st=1;};P.img.onerror=()=>{P.st=2;};P.img.src=CHR_DIR+pSpr(id)+'.webp';
+  P={st:0,img:new Image()};P.img.onload=()=>{P.st=1;};P.img.onerror=()=>{P.st=2;};P.img.src=(typeof momiPortraitPath==='function'&&momiPortraitPath(id))||CHR_DIR+pSpr(id)+'.webp';
   CHR_PIC.set(id,P);
   trimIndividualCaches();
   return P;
 }
-const chrAsp=id=>(PEOPLE_ASP.charCodeAt(id-1)-48+25)/100;      // 幅÷高さ
+const chrAsp=id=>typeof MOMI_NAMES!=='undefined'&&MOMI_NAMES[id]?2/3:(PEOPLE_ASP.charCodeAt(id-1)-48+25)/100;      // 幅÷高さ
 function chrPreload(spr){const id=sprPid(spr);if(id)chrPic(id);}
 // 足もとの中央(cx,fy)に 高さhで描く。o.cut=上からこの高さ分だけ（泳いでいるとき） o.al=濃さ
 function drawPerson(g,id,cx,fy,h,o){
@@ -505,6 +508,7 @@ function drawBike(g,cx,fy){
 }
 function drawChar(g,spr,dir,fr,x,y,hCut){
   const id=sprPid(spr)||2,cx=x+8,fy=y+19;
+  if(!hCut&&spr!=='pl'&&momiDrawWalker(g,id,dir,fr,x,y))return;
   if(hCut){drawChibi(g,id,dir,cx,y+12,hCut+1);return;}
   // fr: 0=立ち 1,2=歩き 3,4=自転車 10〜13=歩きの4コマ（主人公）
   const ride=spr==='pl'&&(fr===3||fr===4),bob=ride?((fr&1)?-0.6:0):(fr===1||fr===2?-1:0);
@@ -520,7 +524,7 @@ function drawChar(g,spr,dir,fr,x,y,hCut){
 function drawHumanBig(g,id,dir,pose,sc,x,y,al){
   const pid=sprPid(id)||(typeof id==='number'?id:2),h=30*sc;
   if(id==='pl'){const cv=plCanvas();if(cv){const w=h*cv.width/cv.height;g.save();if(al!=null&&al<1)g.globalAlpha=Math.max(0,al);g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';g.drawImage(cv,x-w/2,y-h,w,h);g.restore();return;}}
-  drawPerson(g,pid,x,y,h,{al});
+  if(momiLeaderBig(g,pid,pose,x,y,h,al))return;drawPerson(g,pid,x,y,h,{al});
 }
 function charInvalidate(){PL_CV=null;}
 function charCacheTrim(){trimIndividualCaches();}
@@ -537,7 +541,7 @@ function drawSpeaker(id,y,text){      // y=メッセージ枠の上はし
   const p=person(id),nm=p.name.replace(' ','');
   win(2,y-72,50,58,'#eef3f8');
   ctx.save();ctx.beginPath();ctx.rect(5,y-69,44,52);ctx.clip();
-  const F=FACESET[id]?picOK('face/'+pSpr(id)+'_'+faceEx(text)+'.webp'):null;
+  const F=momiFace(id,text)||(!MOMI_NAMES[id]&&FACESET[id]?picOK('face/'+pSpr(id)+'_'+faceEx(text)+'.webp'):null);
   if(F){smooth(ctx);ctx.drawImage(F,1,y-67,52,52);}
   const P=F?{st:0}:chrPic(id);if(P.st===1){const w=40,h=w/chrAsp(id);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(P.img,27-w/2,y-68,w,h);}
   ctx.restore();
@@ -570,7 +574,7 @@ function picThen(path,fn){const P=pic(path);if(P.st===1||P.st===2)return;const o
 function smooth(g){g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';}
 // 升目に ならべた絵から i番目を描く
 function drawCell(g,path,cols,cw,ch,i,x,y,w,h){const im=picOK(path);if(!im)return false;smooth(g);g.drawImage(im,(i%cols)*cw,((i/cols)|0)*ch,cw,ch,x,y,w,h);return true;}
-const drawBadge=(g,i,x,y,s)=>drawCell(g,'ui/badges.webp',10,72,72,i,x,y,s,s);        // 0〜49 バッジ / 50〜54 圏の紋 / 55 リーグ / 56 静環団
+const drawBadge=(g,i,x,y,s)=>{if(i===1){const im=picOK('obj/momino/badge.svg');if(im){g.drawImage(im,x,y,s,s);return true;}}return drawCell(g,'ui/badges.webp',10,72,72,i,x,y,s,s);};        // 0〜49 バッジ / 50〜54 圏の紋 / 55 リーグ / 56 静環団
 const UICON={fairy:17,phys:18,spec:19,stat:20,psn:21,par:22,slp:23,brn:24,frz:25,sun:26,rain:27,sand:28,hail:29,dex:30,mon:31,bag:32,wear:33,map:34,chart:35,ranch:36,rec:37,opt:38,bike:39,ok:40,back:41,dpad:42};
 const drawUIcon=(g,i,x,y,s)=>drawCell(g,'ui/expansion-icons.svg',10,64,64,i,x,y,s,s)||drawCell(g,'ui/icons.webp',10,56,56,i,x,y,s,s);          // 0〜16 タイプ、あとは UICON
 const drawFxP=(g,i,x,y,s)=>drawCell(g,'ui/expansion-fx.svg',17,64,64,i,x,y,s,s)||drawCell(g,'ui/fx.webp',17,64,64,i,x,y,s,s);               // タイプ*2+(0|1)
@@ -1121,6 +1125,7 @@ function genTrainer(r,cell,tid,o){
     money:lv*r.range(20,36),los:o.los||3,x:0,y:0,dir:2};
 }
 function gymTeam(k){
+  if(k===1&&typeof MOMI_GYM_TEAM!=='undefined')return MOMI_GYM_TEAM.map(({sp,lv})=>({sp,lv}));
   const t=GYM_TYPES[k],ace=gymAce(k),n=ace<16?2:ace<34?3:ace<52?4:5,r=RNG('gym'+k);
   let cand=FAMS.filter(f=>!f.legend&&!f.starter&&!f.rareRoute1&&(f.t1===t||(f.t2===t&&f.t2From===0)));
   r.shuffle(cand);cand.sort((a,b)=>(b.book?9:b.n)-(a.book?9:a.n));cand=cand.slice(0,Math.max(n,5));r.shuffle(cand);
@@ -1434,7 +1439,7 @@ function genHall(cell,f){
 
 /* ---------- 町 ---------- */
 function townBuildings(cell){
-  if(cell.key==='0,2')return haruBuildings();
+  if(cell.key==='0,2')return haruBuildings();if(cell.key==='2,0')return momiBuildings();
   const r=RNG('bld'+cell.key),kinds=['heal'];
   if(cell.size==='league')kinds.push('shop','league');
   else{
@@ -1449,7 +1454,7 @@ function townBuildings(cell){
 const ROOF_OF={house:T.ROOF,heal:T.ROOF_H,shop:T.ROOF_S,gym:T.ROOF_G,lab:T.ROOF_X,home:T.ROOF,league:T.ROOF_X};
 function healSpot(cell){const b=townBuildings(cell)[0];return{map:cell.key,x:b.x+2,y:b.y+4};}
 function genTown(cell){
-  if(cell.key==='0,2')return genHaruTown(cell);
+  if(cell.key==='0,2')return genHaruTown(cell);if(cell.key==='2,0')return momiTown(cell);
   const r=RNG('map'+cell.key),m=newMap(cell.key,cell,MW,MH,T.GRASS),t=m.t;
   m.border=T.TREE;
   const set=(x,y,v)=>{t[y*MW+x]=v;};
@@ -1498,7 +1503,7 @@ function room(id,cell,w,h){
   return m;
 }
 function genInterior(cell,slot){
-  if(cell.key==='0,2')return genHaruInterior(cell,slot);
+  if(cell.key==='0,2')return genHaruInterior(cell,slot);if(cell.key==='2,0')return momiInterior(cell,slot);
   const b=townBuildings(cell)[slot],id=cell.key+':b'+slot,r=RNG('int'+id);
   const out={map:cell.key,x:b.x+2,y:b.y+4,dir:2};
   let m;const S=(x,y,v)=>{m.t[y*m.W+x]=v;};
@@ -2262,8 +2267,8 @@ let MUSIC=null;
 function initAudio(){try{if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();MUSIC=SoraneAudio.create(AC);}if(AC.state!=='running')AC.resume().catch(()=>{});}catch(e){AC=null;MUSIC=null;}}
 function currentCue(){
   if(G.scene==='title')return'title';
-  if(G.scene==='battle'&&BT){if(BT.result==='win'||BT.result==='caught')return'victory';if(BT.o.legend||BT.o.facility||BT.env.kind==='dojo'||BT.env.kind==='league')return'boss';return BT.wild?'wild':'trainer';}
-  const m=G.map;if(!m)return'title';if(m.haru&&!m.indoor)return dayPhase()===3?'harusaki-night':'harusaki-day';if(m.tribel)return dayPhase()===3?'tribel-night':'tribel-day';if(m.indoor)return'indoor';if(m.pal==='cave')return'cave';if(G.pl.surf||m.cell&&m.cell.kind==='sea')return'sea';return m.cell&&m.cell.kind==='town'?'town':'road';
+  if(G.scene==='battle'&&BT){if(BT.result==='win'||BT.result==='caught')return BT.o.momiGym?'momi-victory':'victory';if(BT.o.momiGym)return'momi-battle';if(BT.o.legend||BT.o.facility||BT.env.kind==='dojo'||BT.env.kind==='league')return'boss';return BT.wild?'wild':'trainer';}
+  const m=G.map;if(!m)return'title';if(m.haru&&!m.indoor)return dayPhase()===3?'harusaki-night':'harusaki-day';if(m.tribel)return dayPhase()===3?'tribel-night':'tribel-day';if(m.momiGym)return'momi-gym';if(m.momi)return dayPhase()===3?'momi-night':'momi-day';if(m.indoor)return'indoor';if(m.pal==='cave')return'cave';if(G.pl.surf||m.cell&&m.cell.kind==='sea')return'sea';return m.cell&&m.cell.kind==='town'?'town':'road';
 }
 function audioTick(){haruAmbientAudio();tribelAmbientAudio();if(MUSIC&&AC){const o=S&&S.opts||{};try{MUSIC.tick(currentCue(),Number.isFinite(o.musicVol)?o.musicVol/100:0.4,o.music!==0&&!document.hidden);}catch(e){MUSIC.stop();MUSIC=null;console.warn('music',e);}}}
 function fieldWeather(m){return m?SoraneAudio.naturalWeather(m,hashStr('climate:'+m.id)):null;}
@@ -2999,9 +3004,9 @@ function drawObjTile(g,m,v,x,y,mx,my){
 // 建物の絵（家は 町ごとに 赤・青・黄を 入れかえる）
 const BLDT=new Uint8Array(64);for(const t of [T.ROOF,T.ROOF_H,T.ROOF_S,T.ROOF_G,T.ROOF_X,T.WALL,T.WINDOW,T.DOOR])BLDT[t]=1;
 function bldKey(m,b){return b.kind==='house'?'house'+((b.slot*7+(m.cell?m.cell.fx*3+m.cell.fy:0))%3):b.kind;}
-function bldPic(m,b){return b.haruArt?scnPic('obj/harusaki/'+b.haruArt+'.svg',1):scnPic('obj/b_'+bldKey(m,b)+'.webp',1);}
-function bldPicAt(m,mx,my){for(const b of m.blds)if(mx>=b.x&&mx<b.x+5&&my>=b.y&&my<b.y+4)return bldPic(m,b);return null;}
-function bldBox(m,b){if(b.haruArt)return{w:80,h:64,l:b.x*16,t:b.y*16};const a=ASSET.BLD_ASP[bldKey(m,b)]||0.7;let w=a<0.6?94:90,h=w*a;if(h>74){h=74;w=h/a;}return{w,h,l:b.x*16+40-w/2,t:b.y*16+66-h};}
+function bldPic(m,b){if(b.momiArt)return scnPic('obj/momino/'+b.momiArt+'.svg',1);return b.haruArt?scnPic('obj/harusaki/'+b.haruArt+'.svg',1):scnPic('obj/b_'+bldKey(m,b)+'.webp',1);}
+function bldPicAt(m,mx,my){for(const b of m.blds)if(mx>=b.x&&mx<b.x+(b.bw||5)&&my>=b.y&&my<b.y+(b.bh||4))return bldPic(m,b);return null;}
+function bldBox(m,b){if(b.momiArt)return{w:b.bw*16,h:b.bh*16,l:b.x*16,t:b.y*16};if(b.haruArt)return{w:80,h:64,l:b.x*16,t:b.y*16};const a=ASSET.BLD_ASP[bldKey(m,b)]||0.7;let w=a<0.6?94:90,h=w*a;if(h>74){h=74;w=h/a;}return{w,h,l:b.x*16+40-w/2,t:b.y*16+66-h};}
 // 室内の床・壁・じゅうたんの模様
 function inTex(m,g,ox,oy){
   if(!m.indoor)return null;
@@ -3177,10 +3182,10 @@ const ROOFC={house:'#b0603a',home:'#b0603a',heal:'#cc4040',shop:'#3470c8',gym:'#
 const DOORC={heal:'#a8483a',shop:'#3a7a6a',gym:'#5a5a80',lab:'#5a7a8a',league:'#9a7a30'};
 function drawBuildings(g,m,camx,camy){
   for(const b of m.blds){
-    const x=b.x*16-camx,y=b.y*16-camy;if(x<-96||x>LW+16||y<-80||y>LH+24)continue;
+    const x=b.x*16-camx,y=b.y*16-camy;if(x<-(b.bw||6)*16||x>LW+16||y<-(b.bh||5)*16||y>LH+24)continue;
     const im=bldPic(m,b);
     if(im){const B=bldBox(m,b);      // 素材集の建物の絵（扉が 入口のマスに 来るように）
-      g.fillStyle='rgba(30,22,48,0.2)';g.beginPath();g.ellipse(x+40,y+64.5,B.w*0.47,4.2,0,0,6.2832);g.fill();
+      g.fillStyle='rgba(30,22,48,0.2)';g.beginPath();g.ellipse(B.l-camx+B.w/2,B.t-camy+B.h+.5,B.w*0.47,4.2,0,0,6.2832);g.fill();
       smooth(g);g.drawImage(im,B.l-camx,B.t-camy,B.w,B.h);continue;}
     const c=ROOFC[b.kind]||'#b0603a';
     g.fillStyle='rgba(255,255,255,0.14)';g.beginPath();g.moveTo(x,y+32);g.lineTo(x,y);g.lineTo(x+10,y);g.closePath();g.fill();
@@ -3222,6 +3227,7 @@ function drawRows(g,m,camx,camy,byRow,drawEnt,skip){
     if(inr&&tr){
       const R=rn.rows[ey];let any=false;
       for(const r of R){if(r.tone)continue;const sx=r.x-camx,sy=r.y-camy;if(sx<-28||sx>LW+28||sy<-6||sy>LH+52)continue;
+        if(m.momi&&!m.indoor){g.setTransform(K,0,0,K,0,0);if(momiDrawPine(g,r,sx,sy))continue;}
         const a=r.big?tr.bg:tr.sm,sw=(r.big?tr.bsw:tr.ssw)[r.v],k=sw?wind(t,r.x,r.y)*0.034*sw:0;any=true;
         g.setTransform(K,0,-k*K,K,Math.round(sx*K),Math.round(sy*K));
         g.drawImage(a,r.v*a.cw*K,0,a.cw*K,a.ch*K,-(a.cw>>1),r.big?-47:-33,a.cw,a.ch);}
@@ -3291,13 +3297,14 @@ function battleEnv(o){
     else if(m.pal==='cave'){const f=m.id.indexOf(':f')>=0?+m.id.split(':f')[1]:0;e.kind=(m.cell&&m.cell.kind==='dung'&&floorType(m.cell,f)==='hall')?'shrine':'cave';}
     else{e.kind=PALS[m.pal]?m.pal:'plain';e.tall=v===T.TALL;}
   }
-  e.key=[e.kind,e.pal,e.tall?1:0,e.type||0,e.n||0,e.sub||''].join('|');
+  if(m?.momiGym)e.momiScene='dojo';else if(m?.id==='2,0:b5')e.momiScene='cafe';else if(m?.momi)e.momiScene=m.indoor?'training':'plaza';
+  e.key=[e.kind,e.pal,e.tall?1:0,e.type||0,e.n||0,e.sub||'',e.momiScene||''].join('|');
   return e;
 }
 let BBG=null;
 const BG_PIC={plain:'plain',forest:'forest',coast:'coast',swamp:'swamp',desert:'desert',volcano:'volcano',ruin:'ruin',snow:'snow',peak:'peak',water:'water',cave:'cave',shrine:'tower',dojo:'gym',league:'league'};
 function battleBG(e){
-  const pk=BG_PIC[e.kind],im=pk?picOK('bg/'+pk+'.webp'):null,key=e.key+(im?'|pic':'');
+  const pk=BG_PIC[e.kind],im=e.momiScene?picOK('obj/momino/battle-'+(e.momiScene==='plaza'?'training':e.momiScene)+'.svg'):pk?picOK('bg/'+pk+'.webp'):null,key=e.key+(im?'|pic':'');
   if(BBG&&BBG.key===key&&BBG.k===K)return BBG.cv;
   const c=document.createElement('canvas');c.width=(LW+32)*K;c.height=(LH+32)*K;const g=c.getContext('2d');
   g.setTransform(K,0,0,K,16*K,16*K);g.lineJoin='round';g.lineCap='round';
@@ -4404,7 +4411,7 @@ function aiPick(B){
         if(e.k==='st'){
           if(e.st==='cnf')v=B.ps.conf?0:28;
           else if(!me.st&&ab!==18&&!(e.st==='brn'&&ty.includes(1))&&!(e.st==='frz'&&ty.includes(5))&&!(e.st==='psn'&&(ty.includes(7)||ty.includes(16))))v=e.st==='slp'?42:27;
-        }else if(e.k==='stage'){const st=e.who==='self'?B.fs:B.ps,x=st[e.stat];v=(e.n>0&&x>=6||e.n<0&&x<=-6||route2BlocksAccuracy(e.who==='self'?f:me,e.stat,e.n)||e.who==='foe'&&e.n<0&&route3RootAvailable(B,me))?0:Math.max(0,30-Math.abs(x)*7)*(hp<0.3?0.3:1);}
+        }else if(e.k==='stage'){const st=e.who==='self'?B.fs:B.ps,x=st[e.stat];v=B.o.momiGym&&e.who==='foe'&&e.n<0&&x<=-1?0:(e.n>0&&x>=6||e.n<0&&x<=-6||route2BlocksAccuracy(e.who==='self'?f:me,e.stat,e.n)||e.who==='foe'&&e.n<0&&route3RootAvailable(B,me))?0:Math.max(0,30-Math.abs(x)*7)*(hp<0.3?0.3:1);}
         else if(e.k==='heal')v=hp<0.45?72:hp<0.65?38:0;
         else if(e.k==='protect')v=B.fs.protN?1:B.weather||B.ps.seed||me.st==='psn'||me.st==='brn'?22:5;
         else if(e.k==='seed')v=B.ps.seed||ty.includes(4)?0:32;
@@ -4431,6 +4438,7 @@ async function entryAbility(B,s){
 }
 async function sendFoe(B){
   const f=bmon(B,1);B.fs=newStg();B.hpShow[1]=f.hp;B.fx.foeA=1;B.fx.foeY=0;B.fx.foeX=120;markSeen(f.sp);
+  if(B.o.momiGym&&f.sp===546)await say('ハルク「よし、最後は こいつだ！ 思いっきり 駆け抜けろ！」');
   await say(B.o.trainer.name+'は '+SP[f.sp].name+'を くりだした！');
   startIndividualMotion(f,'enter');await tween(260,p=>{B.fx.foeX=120*(1-p);});
   ring(188,74,'255,255,255',{flat:0.3,dr:2.4,w:2});
@@ -4638,7 +4646,7 @@ async function battle(o){
       if(!B.wild){await say('人の アニマとは 絆を 結べない！');}
       else if(await tryCatch(B,act.id)){await giveExp(B);B.result='caught';break;}
     }
-    if(swap>=0&&!B.result){await say(B.o.trainer.name+'は '+monName(bmon(B,1))+'を もどした！');startIndividualMotion(bmon(B,1),'withdraw');await tween(180,p=>{B.fx.foeX=120*p;});await route3Withdraw(bmon(B,1));B.fi=swap;B.lastSwitch=B.turnN||0;await sendFoe(B);}
+    if(swap>=0&&!B.result){await say(B.o.trainer.name+'は '+monName(bmon(B,1))+'を もどした！');startIndividualMotion(bmon(B,1),'withdraw');await tween(180,p=>{B.fx.foeX=120*p;});await route3Withdraw(bmon(B,1));B.fi=swap;B.lastSwitch=B.turnN||0;if(B.o.momiGym)B.momiSwitched=true;await sendFoe(B);}
     if(act.t==='move'&&swap>=0){await useMove(B,0,act.i);}
     else if(act.t==='move'){
       const fi=aiPick(B),mv=act.i<0?STRUGGLE:MOVES[me.mv[act.i].id],fmv=fi<0?STRUGGLE:MOVES[bmon(B,1).mv[fi].id];
@@ -5330,7 +5338,7 @@ function autoSave(){if(S&&S.opts.auto!==0&&G.scene==='world')saveGame();}
    主人公の絵の上に、えらんだ衣装を 位置を合わせて 重ねる。なにも えらばなければ もとの すがた。          */
 const WEAR_CATS=[{k:'hat',n:'帽子',a:401,b:500,p:500},{k:'acc',n:'アクセサリー',a:501,b:600,p:400},{k:'top',n:'トップス',a:1,b:200,p:900},{k:'bot',n:'ボトムス',a:201,b:300,p:700},{k:'shoe',n:'靴',a:301,b:400,p:600},{k:'bag',n:'バッグ',a:601,b:650,p:800}];
 const wearCat=n=>WEAR_CATS.find(c=>n>=c.a&&n<=c.b);
-const wearName=n=>{if(n===451)return'ハルサキの旅帽';const c=wearCat(n);return c.n+('00'+(n-c.a+1)).slice(-3);};
+const wearName=n=>{if(n===452)return'年輪の帽子';if(n===451)return'ハルサキの旅帽';const c=wearCat(n);return c.n+('00'+(n-c.a+1)).slice(-3);};
 const WEAR_PIC={};
 function wearPic(n){let P=WEAR_PIC[n];if(!P){P=WEAR_PIC[n]={st:0,img:new Image()};P.img.onload=()=>{P.st=1;PL_CV=null;};P.img.onerror=()=>{P.st=2;};P.img.src='wear/W'+('000'+n).slice(-4)+'.webp';}return P;}
 function drawWearPic(n,x,y,sz){const P=wearPic(n);if(P.st!==1)return;const w=P.img.width,h=P.img.height,f=sz/Math.max(w,h);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(P.img,x+(sz-w*f)/2,y+(sz-h*f)/2,w*f,h*f);}
@@ -5387,7 +5395,7 @@ async function wearScreen(){
 /* ---------- 仕立て屋：その地区だけの 13着 ---------- */
 const wearStock=d=>{const a=[];for(let n=1;n<=650;n++)if((n-1)%50===d-1)a.push(n);return a;};
 async function wearShop(o){
-  const d=(G.map.cell&&G.map.cell.dist)||1,stock=wearStock(d).filter(n=>n!==451),g=pGiven(o.pid);
+  const d=(G.map.cell&&G.map.cell.dist)||1,stock=wearStock(d).filter(n=>n!==451&&n!==452),g=pGiven(o.pid);
   await msg(g+'「いらっしゃい。'+G.map.cell.name+'だけの 衣装を そろえているよ。」');
   let idx=0;
   for(;;){
@@ -5516,7 +5524,7 @@ async function talk(o){
     S.flags['i:'+mid+':'+o.iid]=1;bagAdd(o.item);removeObj(o);sfx('get');
     await msg(S.name+'は '+ITEMS[o.item].n+'を 見つけた！');return;
   }
-  if(o.k==='harupet')return haruPetTalk(o);
+  if(o.k==='harupet'||o.k==='momipet')return haruPetTalk(o);if(o.k==='momiprop')return msg(o.say||'街の 景色を 楽しもう。');
   if(o.k==='haruprop'||o.k==='harublock')return msg(o.say||'村の 景色を 楽しもう。');
   if(o.k==='legend')return legendTalk(o);
   if(o.k==='starter')return starterTalk(o);
@@ -5526,6 +5534,9 @@ async function talk(o){
   switch(o.role){
    case'civ':await civTalk(o);await expansionCivDialogue(o);break;
    case'harusaki':await haruTalk(o);break;
+   case'momiresident':await momiTalk(o);break;
+   case'momipupil':await momiPupil(o);break;
+   case'momicafeguest':await momiCafeBattle();break;
    case'tribeltrainer':await tribelTrainerTalk(o);break;
    case'tribelguide':await tribelGuideTalk(o);break;
    case'harutailor':await haruTailor(o);break;
@@ -5649,14 +5660,15 @@ async function gymBattle(o){
   const k=o.gym,t=GYM_TYPES[k],L=gymLeader(k),g=pGiven(gymLeaderPid(k)),c=circOf(k);
   if(!S.badges[k]&&G.map.gymPuzzle&&!gymPuzzleSolved(G.map)){await msg('先に ジムの 仕掛けを 解こう。');return;}
   if(S.badges[k]){if(await gymRematch(k))return;await msg(g+'「相棒との 時間を 大切にね。いつか また 腕を ためそう。」');return;}
-  await msg(GYM_TOWN[k]+'ジム リーダー '+L+'\n'+g+'「'+(GYM_SAY[gymLegacyId(k)]||GYM_SAY2[gymLegacyId(k)%GYM_SAY2.length])+'」');
-  const r=await battle({double:k%5===0,trainer:{name:'ジムリーダーの '+L,team:mkTeam(gymTeam(k),Math.min(31,14+Math.floor(k/3))),money:gymAce(k)*100,spr:pSpr(gymLeaderPid(k))}});
+  await msg(GYM_TOWN[k]+'ジム リーダー '+L+'\n'+g+'「'+(k===1?'大事なのは 道具や 力の 使い方だ。旅で 身につけた 力を 見せてくれ！':GYM_SAY[gymLegacyId(k)]||GYM_SAY2[gymLegacyId(k)%GYM_SAY2.length])+'」');
+  const r=await battle({momiGym:k===1,double:k%5===0,trainer:{name:'ジムリーダーの '+L,team:k===1?momiGymParty():mkTeam(gymTeam(k),Math.min(31,14+Math.floor(k/3))),money:gymAce(k)*100,spr:pSpr(gymLeaderPid(k))}});
   if(r==='lose'){await blackout();return;}
   S.badges[k]=1;HitokariUpgrade.noteMatch(S,'g:'+k);sfx('get');
-  await msg(g+'「みごと！ '+GYM_TOWN[k]+'ジムの バッジを わたそう。」');
+  await msg(k===1?'ハルク「いい 勝負だった！ 君と 相棒の 最初の 年輪が 刻まれたな！」':g+'「みごと！ '+GYM_TOWN[k]+'ジムの バッジを わたそう。」');
+  if(k===1)momiFanfare();
   const bw={draw(){const s=44,x=LW/2-s/2,y=LH-MSG_H-s-12;ctx.fillStyle='rgba(255,246,214,0.85)';ctx.beginPath();ctx.arc(LW/2,y+s/2,s*0.62,0,6.3);ctx.fill();drawBadge(ctx,gymLegacyId(k)-1,x,y+Math.sin(G.t/14)*1.5,s);}};UI.push(bw);      // バッジの絵
-  await msg(S.name+'は 「'+GYM_TOWN[k]+'バッジ」を 手に入れた！\n（'+CIRCUITS[c]+' '+badgeIn(c)+'個／ぜんぶで '+badgeCount()+'個）');popW(bw);
-  const D=TYPE_MOVES[t].dmg,tm='tm'+D[Math.min(D.length-1,gymAce(k)<30?1:2)];bagAdd(tm);await msg(S.name+'は '+ITEMS[tm].n+'を もらった！');
+  await msg(S.name+'は 「'+(k===1?'年輪':GYM_TOWN[k])+'バッジ」を 手に入れた！\n（'+CIRCUITS[c]+' '+badgeIn(c)+'個／ぜんぶで '+badgeCount()+'個）');popW(bw);
+  const D=TYPE_MOVES[t].dmg,tm=k===1&&ITEMS['tm'+moveId('せんこうづき')]?'tm'+moveId('せんこうづき'):'tm'+D[Math.min(D.length-1,gymAce(k)<30?1:2)];bagAdd(tm);await msg(S.name+'は '+ITEMS[tm].n+'を もらった！');
   if(badgeIn(c)===2&&c<5)await msg(g+'「'+CIRCUITS[c]+'の バッジが 2個 そろったね。圏の さかいの 連絡所で 通行章を もらえるよ。」');
   if(leagueOK()&&!S.flags['m:lg']){S.flags['m:lg']=1;await msg('五つの 圏で バッジが 2個ずつ そろった！\n巡環リーグへの 関所を 通れるように なった。');}
   const o2=SPEAKER;await milestones();SPEAKER=o2;
@@ -5889,7 +5901,7 @@ function newSave(name){return{v:4,pc:2,met:{},rot:{},rec:{},wear:{},own:{},name,
 function saveGame(){if(!S||!G.map||facilityActive)return false;const p=G.pl;S.map=G.map.id;S.x=p.x;S.y=p.y;S.dir=p.dir;S.surf=p.surf;S.fly=p.fly?1:0;return persistGameSave(S);}
 function loadSave(){for(const k of [SAVE_KEY,BACKUP_KEY]){try{const d=JSON.parse(localStorage.getItem(k));if(isValidGameSave(d))return d;}catch(e){}}return null;}
 function startFromSave(){   // 古いきろくにも 新しい項目を おぎなう
-  migrateHaruSave(S);
+  migrateHaruSave(S);momiMigrate(S);
   S.opts=Object.assign({snd:1,fast:0,follow:1,share:1,dn:1,auto:1,music:S.opts&&S.opts.snd===0?0:1,musicVol:40,reduceFx:0},S.opts||{});if(!S.pc)S.pc=2;S.met=S.met||{};S.rot=S.rot||{};S.rec=S.rec||{};S.wear=S.wear||{};S.own=S.own||{};
   if(S.badges&&S.badges[1]&&!S.bag.k_bike)S.bag.k_bike=1;
   S.party=S.party.filter(m=>SP[m.sp]);S.box=(S.box||[]).filter(m=>SP[m.sp]);HitokariUpgrade.progress(S);const nursery=nurseryFor();for(const m of S.party.concat(S.box,nursery.parents.map(p=>p.mon),nursery.egg?[nursery.egg.mon]:[]))HitokariUpgrade.bond(m);S.v=4;
@@ -5903,7 +5915,7 @@ function activeObjs(m){
     if(o.k==='item'&&S.flags['i:'+m.id+':'+o.iid])continue;
     if(o.k==='legend'&&(S.flags['L:'+o.sp]||(o.needFlag&&!S.flags[o.needFlag])||(o.sp===SP_OWARI&&S.flags['s:owari']&&!S.flags.champ)))continue;
     if(o.k==='starter'&&S.starter)continue;
-    const a=Object.assign({ox:0,oy:0,alert:0},o);if(o.haruActor&&!haruSpawn(m,a,out))continue;a.homeX=a.x;a.homeY=a.y;
+    const a=Object.assign({ox:0,oy:0,alert:0},o);if(o.haruActor&&!haruSpawn(m,a,out))continue;if(o.momiActor&&!momiSpawn(m,a,out))continue;if(o.role==='momicafeguest'){a.pid=MomiCafe.guest(momiCafeDay()).pid;a.spr=pSpr(a.pid);}a.homeX=a.x;a.homeY=a.y;
     if(o.k==='legend')a.absent=o.sp!==SP_OWARI&&!S.flags['A:'+o.sp];      // 伝説の道具を 使うまでは 装置だけ
     if(o.k==='npc'){
       if(o.role==='resident'){if(!residentAvailable(a.pid))continue;const pos=residentSchedulePosition(a.pid,a.residentSlot,npcMinutes());a.x=pos.x;a.y=pos.y;a.dir=pos.dir;resolveResidentSpawn(m,a,out);}
@@ -5923,12 +5935,12 @@ function activeObjs(m){
 function loadMap(id,x,y,dir){
   let m;try{m=getMap(id);}catch(e){console.error(e);m=null;}
   if(!m){const h=homeSpot();m=getMap(h.map);x=h.x;y=h.y;}
-  if(m.starterDesk&&!S.starter)for(const id of STARTERS)monPreload(id);if(m.haru)for(const o of m.objs)if(o.k==='harupet')monPreload(o.sp);
+  if(m.starterDesk&&!S.starter)for(const id of STARTERS)monPreload(id);if(m.haru||m.momi)for(const o of m.objs)if(o.k==='harupet'||o.k==='momipet')monPreload(o.sp);
   if(m.cell)for(const L of [(m.advEnc||m.cell).land,(m.advEnc||m.cell).water])if(L)for(const fid of L)if(FAMS[fid])FAMS[fid].ids.forEach(monPreload);      // この場所に出る子の 原画を 先に読む
   if(S&&S.party)for(const q of S.party)monPreload(q.sp);
   if(m.cell&&m.cell.kind==='town'&&G.cellKey!==undefined&&G.cellKey!==m.cell.key&&S){S.rot=S.rot||{};S.rot[m.cell.key]=(S.rot[m.cell.key]||0)+1;}      // 人物図鑑2000人を維持するため、住民の巡回を維持
   G.cellKey=m.cell?m.cell.key:null;chrPreload('pl');
-  G.map=m;if(m.haru){[x,y]=haruSafeSpawn(m,x,y);}if(m.tribel){[x,y]=tribelSafeSpawn(m,x,y);}if(m.route3){[x,y]=route3SafeSpawn(m,x,y);}const p=G.pl;p.x=x;p.y=y;if(dir!=null)p.dir=dir;p.moving=false;p.prog=0;p.turn=0;p.idle=9;
+  G.map=m;if(m.haru){[x,y]=haruSafeSpawn(m,x,y);}if(m.tribel){[x,y]=tribelSafeSpawn(m,x,y);}if(m.route3){[x,y]=route3SafeSpawn(m,x,y);}if(m.momi){[x,y]=momiSafeSpawn(m,x,y);}const p=G.pl;p.x=x;p.y=y;if(dir!=null)p.dir=dir;p.moving=false;p.prog=0;p.turn=0;p.idle=9;
   if(m.t[y*m.W+x]!==T.WATER)p.surf=false;
   p.fly=false;p.alt=0;mountPreload();
   G.objs=activeObjs(m);folReset();charCacheTrim();
@@ -5965,7 +5977,7 @@ function tryMove(d){
 }
 function worldTick(canInput){
   const p=G.pl;
-  tickExpansionNPC(canInput);tickResidentSchedules(canInput);tickHaru(canInput);
+  tickExpansionNPC(canInput);tickResidentSchedules(canInput);tickHaru(canInput);tickMomi(canInput);
   if(G.banner&&G.banner.t>0)G.banner.t--;
   if(G.t%60===0&&S)S.time++;
   {const ta=p.fly?1:0,a=p.alt||0;if(a!==ta){p.alt=Math.abs(ta-a)<0.03?ta:a+(ta-a)*0.14;if(!p.fly){if(p.alt===0){sfx('step');}else return;}}}      // 上がる・降りる うごき（降りきるまでは 動けない）
@@ -5998,13 +6010,14 @@ function seenBy(){return trainerSightHits()[0]||null;}
 function onStep(){
   const p=G.pl,m=G.map,v=m.t[p.y*m.W+p.x];
   S.steps++;if(p.fly)return;
-  nurseryAdvance();
+  nurseryAdvance();momiBikeStep(m,p);
   expansionStep(m,p);if(m.haru&&!m.indoor&&expAt(m,p.x,p.y)?.kind==='bridge')sfx('haruBridge');
   if(S.steps%128===0)for(const a of S.party)if(a.hp>0)HitokariUpgrade.bond(a,1);      // 空の上では 野生にも トレーナーにも 出会わない
   folArrive();if(p.surf&&v!==T.WATER){p.surf=false;folReset();}
   scnStep(m,p.x,p.y,p.dir,p.spd>2);
   const w=m.warps[p.x+','+p.y];
   if(w&&(v===T.DOOR||v===T.MAT||v===T.LADDER)){run(()=>doWarp(w));return;}
+  if(momiArrivalReady(m)){run(momiArrival);return;}
   if(expansionChapterReady(m)){run(()=>expansionChapter(m));return;}
   const sight=trainerSightHits();if(sight.length){const tr=sight[0];if(m.route3){run(()=>route3TrainerTalk(tr,true));return;}if(sight.length>1&&sight[1].role==='trainer'&&tr.role==='trainer'&&S.party.filter(m=>m.hp>0).length>=2)run(()=>pairedTrainerEncounter(sight.slice(0,2)));else run(()=>trainerEncounter(tr));return;}
   const n=nurseryFor();if(n.egg&&n.egg.held&&n.egg.walk>=HitokariUpgrade.EGG_HATCH){run(hatchNurseryEgg);return;}
@@ -6066,6 +6079,7 @@ function interact(){
   const p=G.pl,m=G.map,fx=p.x+DX[p.dir],fy=p.y+DY[p.dir];
   if(p.fly){run(flyLand);return;}
   const inb=fx>=0&&fy>=0&&fx<m.W&&fy<m.H,v=inb?m.t[fy*m.W+fx]:-1;
+  if(momiInteract(m,fx,fy))return;
   if(tribelInteract(m,fx,fy))return;
   if(haruInteract(m,fx,fy))return;
   if(expansionInteract(m,fx,fy))return;
@@ -6148,14 +6162,14 @@ function entPicFor(m){
   return n.kind==='dung'?(n.style==='shrine'?'tower':n.style==='road'?'cave':'ruin'):n.pal==='cave'?'cave':null;
 }
 /* ---------- フィールドの描画 ---------- */
-const BLD_MARK={heal:'診',shop:'店',gym:'ジ',lab:'研',league:'巡',home:'家',harulodge:'旅',harutailor:'服',haruflower:'花'};
+const BLD_MARK={heal:'診',shop:'店',gym:'ジ',lab:'研',league:'巡',home:'家',harulodge:'旅',harutailor:'服',haruflower:'花',momiwood:'木',momitrain:'鍛',momicafe:'茶',momibike:'輪'};
 function drawWorldPix(){
   const m=G.map,p=G.pl,g=wctx;if(!m)return;
   const ppx=p.x*16+(p.moving?DX[p.dir]*p.prog:0),ppy=p.y*16+(p.moving?DY[p.dir]*p.prog:0);
   let camx=Math.round((ppx-112)*K)/K,camy=Math.round((ppy-96)*K)/K;
   if(m.W*16<=LW)camx=Math.round((m.W*16-LW)/2);if(m.H*16<=LH)camy=Math.round((m.H*16-LH)/2);
   G.camx=camx;G.camy=camy;
-  drawGround(g,m,camx,camy);if(m.haru)drawHaruGround(g,m,camx,camy);else if(m.tribel)drawTribelGround(g,m,camx,camy);else if(m.route3)drawRoute3Ground(g,m,camx,camy);else drawIndividualTerrain(g,m,camx,camy);drawExpansionTerrain(g,m,camx,camy);
+  drawGround(g,m,camx,camy);if(m.haru)drawHaruGround(g,m,camx,camy);else if(m.tribel)drawTribelGround(g,m,camx,camy);else if(m.route3)drawRoute3Ground(g,m,camx,camy);else if(m.momi)momiDrawGround(g,m,camx,camy);else drawIndividualTerrain(g,m,camx,camy);drawExpansionTerrain(g,m,camx,camy);
   // 人物と置き物を行ごとにまとめ、木や草むらと奥→手前の順で重ねる
   const byRow={},put=e=>{const r=Math.round(e.y/16);(byRow[r]||(byRow[r]=[])).push(e);};
   const skip={};   // 道具が落ちているマスは手前の草をかぶせない（見つけやすく）
@@ -6182,6 +6196,7 @@ function drawWorldPix(){
     }
     const o=e.o,x=o.x*16+(o.ox||0)-camx,y=o.y*16+(o.oy||0)-camy;
     if(x<-32||y<-32||x>LW+16||y>LH+16)return;
+    if(o.k==='momiprop'){momiDrawProp(g,o,x,y);return;}if(o.k==='momipet'){momiDrawPet(g,o,x,y);return;}
     if(o.k==='haruprop'){drawHaruProp(g,o,x,y);return;}
     if(o.k==='harupet'){drawHaruPet(g,o,x,y);return;}
     if(o.k==='item'){if(!drawTileObj(g,TOBJ.drop,x+1.5,y+0.5,13,13))drawIcon(g,0,x,y);}
@@ -6206,7 +6221,7 @@ function drawWorldPix(){
     if(!drawMount(g,'fly',p.dir,x+8,y+5-h))drawChar(g,'pl',p.dir,0,x,y-6-h);
     if(a>0.9&&!p.moving&&landable(p.x,p.y)){const k=0.5+0.5*Math.sin(G.t/7);g.strokeStyle='rgba(255,255,255,'+(0.45+0.35*k)+')';g.lineWidth=0.8;g.beginPath();g.ellipse(x+8,y+13,6+k*1.5,2.4+k*0.6,0,0,6.3);g.stroke();}      // 降りられる しるし
   }
-  drawAmbient(g,m,camx,camy);drawDayNight(g,m,camx,camy);drawFieldClimate(g,m);drawExpansionAtmosphere(g,m);if(m.haru)drawHaruLights(g,m,camx,camy);if(m.tribel)drawTribelAtmosphere(g,m,camx,camy);
+  drawAmbient(g,m,camx,camy);drawDayNight(g,m,camx,camy);drawFieldClimate(g,m);drawExpansionAtmosphere(g,m);if(m.haru)drawHaruLights(g,m,camx,camy);if(m.tribel)drawTribelAtmosphere(g,m,camx,camy);if(m.momi)momiDrawLights(g,m,camx,camy);
 }
 function drawFieldClimate(g,m){
   const w=fieldWeather(m);if(!w)return;
@@ -6216,7 +6231,7 @@ function drawFieldClimate(g,m){
   else if(w==='sun'){g.fillStyle='rgba(246,185,86,.09)';g.fillRect(0,0,LW,LH);}
 }
 function drawWorldUI(){
-  const m=G.map;if(!m)return;drawExpansionHUD(m);drawIndividualMapHUD(m);if(m.haru)drawHaruHUD(m);if(m.tribel)drawTribelHUD(m);if(m.route3)drawRoute3HUD(m);
+  const m=G.map;if(!m)return;drawExpansionHUD(m);drawIndividualMapHUD(m);if(m.haru)drawHaruHUD(m);if(m.tribel)drawTribelHUD(m);if(m.route3)drawRoute3HUD(m);if(m.momi)momiDrawHUD(m);
   for(const b of m.blds){
     if(!BLD_MARK[b.kind]||b.kind==='house'||b.kind==='home')continue;
     let x=(b.x+2)*16-G.camx+8,y=b.y*16-G.camy+9,r=9,fs=12;
@@ -6346,7 +6361,7 @@ async function gymRematch(k){
   const key='g:'+k;
   if(badgeCount()<4||!HitokariUpgrade.rematchReady(S,key,512))return false;
   if(!(await confirmYN(GYM_TOWN[k]+'ジムに 再挑戦しますか？')))return true;
-  const team=rematchTeam(gymTeam(k),key,[GYM_TYPES[k]],S.flags.champ?5:3);
+  const team=k===1?momiRematchTeam():rematchTeam(gymTeam(k),key,[GYM_TYPES[k]],S.flags.champ?5:3);
   const r=await battle({trainer:{name:'ジムリーダーの '+gymLeader(k)+'（再戦）',team:mkTeam(team,26),money:Math.min(4000,gymAce(k)*75),spr:pSpr(gymLeaderPid(k))}});
   HitokariUpgrade.noteMatch(S,key,r==='win');
   if(r==='lose')await blackout();else{await msg('再戦の 記録が 旅の 手帳に きざまれた！');saveGame();}return true;
@@ -6463,6 +6478,7 @@ window.addEventListener('load',()=>{
 <script src="harusaki.js"></script>
 <script src="tribel-world.js"></script>
 <script src="route3-world.js"></script>
+<script src="momino.js"></script>
 <script src="data/anima-motion.js"></script>
 <script src="data/npc-schedules.js"></script>
 <script src="data/field-designs.js"></script>

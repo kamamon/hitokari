@@ -9,11 +9,13 @@ for(const c of [WORLD.gymTown[1],WORLD.gymTown[50]]){const areas=c.gym===1?['rid
 {const d=SORANE_FIELD_DATA.find(x=>x[0]===TRIBEL_KEY);if(d){d[4]='風の大草原';d[7]=[];d[8]=[];d[9]=null;}}
 addHaruFieldProfile('a:tribel-lake:0,0','トリベル平原・しずく湖','plain','tribel-lake','風と湖');addHaruFieldProfile('a:tribel-hill:0,0','トリベル平原・風見の丘','plain','tribel-hill','風の展望台');
 {const d=SORANE_FIELD_DATA.find(x=>x[0]===ROUTE3_KEY);if(d){d[4]='トレーナーと草むらの分岐路';d[7]=[];d[8]=[];d[9]=null;}}
+for(const b of momiBuildings()){const id=momiMap(b.slot),d=SORANE_FIELD_DATA.find(x=>x[0]===id);if(d){d[1]=b.label;d[3]=b.kind;d[4]='木工と鍛錬';d[7]=[];d[8]=[];d[9]=null;}else addHaruFieldProfile(id,b.label,'plain',b.kind,'木工と鍛錬');}
+{const d=SORANE_FIELD_DATA.find(x=>x[0]===MOMI_KEY);if(d){d[4]='年輪広場';d[7]=[];d[8]=[];d[9]=null;}}
 const INDIVIDUAL_FIELDS=new Map(SORANE_FIELD_DATA.map(x=>[x[0],x]));
 const NPC_ZONES=['住居区','中央広場','仕事区','交流庭園'];
 const NPC_RESIDENTS=Array.from({length:51},()=>[]);
 for(const p of SORANE_NPC_DATA){if(p[0]>=10&&p[0]<=59)p[3]=gymNumberForLegacy(p[0]-9);if(HARU_NAMES[p[0]])p[1]=person(p[0]).name;const local=HARU_PEOPLE.find(x=>x.id===p[0]);if(local){p[8]=local.schedule.map(([minute,slot],j)=>[minute,slot<0?1:slot===0||slot===1||slot===2||slot===3?2:0,slot<0?'ハルサキ村の 散歩・活動':local.role==='nurse'?'診療':local.role==='clerk'?'接客':local.role==='harutailor'?'仕立て':local.key==='mentor'?'冒険教室':'家で 休息']);}}
-for(const p of SORANE_NPC_DATA)NPC_RESIDENTS[p[3]].push(p[0]);
+for(const p of SORANE_NPC_DATA){const q=MOMI_NAMES[p[0]];if(q){p[1]=q.name;p[8]=q.schedule.map(([minute,slot])=>[minute,slot<0?1:slot>=7?0:2,q.name+' '+q.role+' の 日課']);}if(MOMI_GUEST_NAMES[p[0]])p[1]=person(p[0]).name;NPC_RESIDENTS[p[3]].push(p[0]);}
 function npcProfile(id){return SORANE_NPC_DATA[id-1]||SORANE_NPC_DATA[0];}
 function npcMinutes(){if(G.hour!=null)return((Math.floor(G.hour*60)%1440)+1440)%1440;const d=new Date();return d.getHours()*60+d.getMinutes();}
 function npcScheduleAt(id,minute=npcMinutes()){const p=npcProfile(id),events=p[8];let j=0;for(let i=1;i<events.length;i++)if(events[i][0]<=minute)j=i;const e=events[j];return{minute:e[0],zone:e[1],activity:e[2],next:events[(j+1)%events.length][0],index:j};}
@@ -66,7 +68,7 @@ async function scheduledResidentTalk(o){const p=npcProfile(o.pid),e=npcScheduleA
 function drawNPCScheduleCard(id){const p=npcProfile(id),e=npcScheduleAt(id);screenBG('生活予定　C'+String(id).padStart(4,'0'));win(4,18,232,34);tx(p[1]+'　'+p[2],10,23,'#2a2233',9);tx(GYM_TOWN[p[3]]+'　現在 '+formatNpcTime(npcMinutes()),10,36,'#5a5560',8);win(4,56,232,146);for(let i=0;i<p[8].length;i++){const row=p[8][i],y=61+i*15;if(i===e.index){ctx.fillStyle='#f4d98a';ctx.fillRect(7,y-1,226,14);}tx(formatNpcTime(row[0]),10,y,'#364b53',8);tx(NPC_ZONES[row[1]],48,y,'#364b53',8);tx(row[2].slice(0,18),97,y,'#2a2233',8);}}
 function fieldProfile(id){return INDIVIDUAL_FIELDS.get(id)||null;}
 function applyIndividualFieldDesign(m){
- const d=fieldProfile(m.id);if(!d||m.individualDesign)return;m.individualDesign=d;if(m.haru||m.tribel||m.route3)return;const blocked=(x,y)=>occupied(m,x,y)||!!m.warps[expKey(x,y)]||!!expAt(m,x,y);
+ const d=fieldProfile(m.id);if(!d||m.individualDesign)return;m.individualDesign=d;if(m.haru||m.tribel||m.route3||m.momi)return;const blocked=(x,y)=>occupied(m,x,y)||!!m.warps[expKey(x,y)]||!!expAt(m,x,y);
  for(const [x,y,t] of d[7])if(x>0&&y>0&&x<m.W-1&&y<m.H-1&&!blocked(x,y)&&[T.ROCK,T.TREE].includes(m.t[y*m.W+x]))expSet(m,x,y,t);
  if(d[9]){const [x,y,label]=d[9];if(x>0&&y>0&&x<m.W-1&&y<m.H-1&&!blocked(x,y)&&!SOLID[m.t[y*m.W+x]])expPut(m,x,y,{kind:'landmark',label:m.name+'・'+label,design:d[6]});}
  addLinkedTrainerPair(m);

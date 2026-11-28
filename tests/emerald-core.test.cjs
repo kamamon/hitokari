@@ -12,7 +12,7 @@ test('legacy and malformed saves',()=>{const m={sp:1,lv:5,hp:18,exp:100,nat:2,iv
 test('nursery steps - compatible, uncollected, held',()=>{const n={parents:[{steps:19999},{steps:0}],pairSteps:0,egg:null};h.tickNursery(n,false);assert.equal(n.pairSteps,0);for(let i=0;i<300;i++)h.tickNursery(n,true);assert.equal(n.pairSteps,256);assert.equal(n.parents[0].steps,20000);n.egg={held:false,walk:0};h.tickNursery(n,true);assert.equal(n.egg.walk,0);n.egg.held=true;for(let i=0;i<600;i++)h.tickNursery(n,true);assert.equal(n.egg.walk,512);});
 test('three independent inherited stats and evolution fallback',()=>{const r=h.inheritIV(Array(6).fill(31),Array(6).fill(31),()=>0);assert.equal(r.filter(x=>x===31).length,3);assert.equal(h.earlyEvolution({lv:20,bond:199},25,{early:5,bond:200,phase:3},3),false);assert.equal(h.earlyEvolution({lv:20,bond:200},25,{early:5,bond:200,phase:3},0),false);assert.equal(h.earlyEvolution({lv:20,bond:200},25,{early:5,bond:200,phase:3},3),true);assert.equal(h.earlyEvolution({lv:25,bond:70},25,{early:5,bond:200,phase:3},0),true);});
 
-test('all original music cues and deterministic climate',()=>{const a=require('../audio-engine.js');assert.equal(Object.keys(a.tracks).length,14);for(const t of Object.keys(a.tracks))for(let i=0;i<64;i++){const v=a.notes(t,i);assert.ok(v.duration>0);assert.ok(v.notes.every(n=>Number.isFinite(n.midi)&&n.vol>0&&n.len>0));}assert.equal(a.naturalWeather({cell:{kind:'route',prog:5},pal:'snow'},2),'hail');assert.equal(a.naturalWeather({cell:{kind:'town',prog:5},pal:'snow'},2),null);assert.equal(a.naturalWeather({cell:{kind:'route',prog:3},pal:'snow'},2),null);assert.equal(a.naturalWeather({cell:{kind:'route',prog:10},pal:'desert'},8),null);});
+test('all original music cues and deterministic climate',()=>{const a=require('../audio-engine.js');assert.equal(Object.keys(a.tracks).length,19);for(const t of Object.keys(a.tracks))for(let i=0;i<64;i++){const v=a.notes(t,i);assert.ok(v.duration>0);assert.ok(v.notes.every(n=>Number.isFinite(n.midi)&&n.vol>0&&n.len>0));}assert.equal(a.naturalWeather({cell:{kind:'route',prog:5},pal:'snow'},2),'hail');assert.equal(a.naturalWeather({cell:{kind:'town',prog:5},pal:'snow'},2),null);assert.equal(a.naturalWeather({cell:{kind:'route',prog:3},pal:'snow'},2),null);assert.equal(a.naturalWeather({cell:{kind:'route',prog:10},pal:'desert'},8),null);});
 
 test('expansion script and asset syntax',()=>{for(const p of ['advanced-combat.js','world-expansion.js','animation-enhancement.js'])new vm.Script(fs.readFileSync(p,'utf8'),{filename:p});for(const p of ['ui/expansion-icons.svg','ui/expansion-fx.svg','obj/expansion-terrain.svg'])assert.match(fs.readFileSync(p,'utf8'),/<svg[\s\S]+<\/svg>/);});
 
@@ -46,4 +46,14 @@ test('tribel 50 approved species and 22 distinct artwork views',()=>{
 test('route3 approved art, six exact weights and no duplicate ids',()=>{
  const a=JSON.parse(fs.readFileSync('data/anima-approval.json','utf8')),man=JSON.parse(fs.readFileSync('mon/route3/manifest.json','utf8'));assert.equal(a.route3.land.length,6);assert.equal(a.route3.land.flatMap(f=>f.ids).length,13);assert.equal(man.length,13);assert.equal(new Set(man.map(f=>f.id)).size,13);assert.deepEqual(a.route3.land.map(f=>f.weight),[26,22,18,15,12,7]);for(const f of man){const b=fs.readFileSync(f.path);assert.equal(b.length,f.size);assert.equal(b.subarray(0,4).toString(),'RIFF');assert.equal(b.subarray(8,12).toString(),'WEBP');}
  const ctx=vm.createContext({});vm.runInContext(fs.readFileSync('route3-data.js','utf8')+'\nthis.ids=Array.from({length:100},(_,i)=>route3Roll(i).ids[0]);',ctx);assert.deepEqual([11,241,376,370,274,61].map(id=>ctx.ids.filter(x=>x===id).length),[26,22,18,15,12,7]);
+});
+
+test('Momino cafe daily JST boundary, reload, refusal after loss and scaling',()=>{
+ const d=require('../momino-daily.js'),a=d.day(Date.UTC(2026,10,28,14,59,59)),b=d.day(Date.UTC(2026,10,28,15,0,0));
+ assert.equal(b,a+1);assert.equal(d.dateLabel(a),'2026-11-28');assert.equal(d.dateLabel(b),'2026-11-29');assert.equal(new Set(Array.from({length:7},(_,i)=>d.guest(a+i).pid)).size,7);
+ assert.equal(d.normalize(null).attempts,0);assert.equal(d.normalize(d.normalize(null)).attempts,0);
+ let q=d.claim(null,a);assert.equal(q.attempts,1);assert.equal(q.result,'started');assert.equal(d.claim(JSON.parse(JSON.stringify(q)),a),null);
+ q=d.finish(q,a,'lose');assert.equal(q.wins,0);assert.equal(d.available(q,a),false);assert.equal(d.available(q,a-1),false);
+ q=d.claim(q,b);assert.equal(q.attempts,2);q=d.finish(q,b,'win');assert.equal(q.wins,1);assert.equal(d.finish(q,b,'win').wins,1);
+ assert.equal(d.difficulty(0).count,2);assert.equal(d.difficulty(1).count,3);assert.equal(d.difficulty(10).count,4);assert.equal(d.difficulty(50).ace,65);
 });
