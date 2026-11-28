@@ -110,7 +110,7 @@ const BOOK_LEG=[[1201,"星明かりだけが届く空の裂け目","星々が進
 
 'use strict';
 /* ================= core.js : 乱数・タイプ・技・特性・道具 ================= */
-const VERSION='1.10';
+const VERSION='1.11';
 const SHINY_RATE=8192;           // 色違いの確率 1/8192（原作準拠）
 const PARTY_MAX=6;               // 手持ちは6匹まで
 
@@ -428,9 +428,9 @@ const hDark=(c,t)=>hMix(c,'#2b1f45',t==null?0.28:t),hLite=(c,t)=>hMix(c,'#fff6e0
 /* ---------- 名前と役割 ---------- */
 const N_PEOPLE=2000,JOB_NAME=['新人トレーナー','学生','研究','救助','診療','商業','職人','農林','海','鉱山','交通','料理','芸術','競技','探索','リーグ','伝承','静環団','住民'];
 function person(id){
-  if(id<=100){const k=PEOPLE_KEY[id-1];return{id,name:k[0],role:k[1],group:-1,dist:0};}
+  if(id<=100){const k=PEOPLE_KEY[id-1];return{id,name:k[0],role:id===10?'ミチシルベ村 ジムリーダー':k[1],group:-1,dist:0};}
   const q=id-101,g=(q/100)|0,j=q%100;
-  return{id,name:PEOPLE_NAMES[q],role:PEOPLE_EXC[id]||REGION_ROLES[g][j%10],group:g,j,dist:(j>>1)+1};      // 各地区に 職群ごと2人
+  const original=PEOPLE_NAMES[q],alias=typeof HARU_NAMES!=='undefined'&&HARU_NAMES[id];return{id,name:alias?original.split(' ')[0]+' '+alias:original,role:PEOPLE_EXC[id]||REGION_ROLES[g][j%10],group:g,j,dist:(j>>1)+1};      // 各地区に 職群ごと2人
 }
 const pFull=id=>person(id).name.replace(' ','');
 const pGiven=id=>person(id).name.split(' ')[1];
@@ -873,7 +873,9 @@ const CIRCUITS=['','芽吹き圏','潮風圏','炉峰圏','星霜圏','環都圏
 const N_GYM=50;
 const GYM_TYPES=[-1,4,0,11,12,10,9,8,3,10,1, 2,15,12,0,4,11,16,7,9,10, 1,16,8,15,3,6,14,2,13,5, 10,5,4,13,7,9,16,10,0,14, 3,6,15,10,12,2,11,1,13,14];        // ジム1〜50のタイプ（素材集の 地区一覧どおり。フェアリーは 念）
 const GYM_TOWN=['','ハルサキ村','モミノキ街','ツユクサ野','コハク丘','ナナイロ市','カザハナ台','アメツチ里','シラベル町','ユメミ堂','アカツキ門','シオミ港','ウズナギ湾','サンゴ庭','オトナミ町','シズク島','ホタル浜','ツキシロ岬','ムラサメ里','ナギノ空港','シンジュ都','ヒノワ町','オオガネ区','スナアカ盆地','クログラ坑','イナヅマ塔','イワトビ峠','リュウセキ湖','ユゲモリ湯','アカサビ跡','テンロ高原','ホシノベ原','ユキワタ谷','シンリン輪','カゲカサ森','ネムリ沼','ハネユキ峰','シロガネ苑','ハナノマ宮','シカツノ台','ユメオリ館','ソラハシ都','シロツメ区','カゲボウ通','ツキヨミ堂','イワネ歴区','アヤメ運河','ムシノネ園','カザンバ市','ヨスガ霊園','テンカイ門'];      // 地区1〜50の名前（素材集の 正式名）
-const gymLeader=k=>pFull(9+k);      // 人物図鑑 C0010〜C0059
+// Keep each original gym's leader, type and badge art when moving the first gym.
+const gymLegacyId=k=>k===50?1:k+1,gymNumberForLegacy=k=>k===1?50:k-1,gymLeaderPid=k=>9+gymLegacyId(k);
+const gymLeader=k=>pFull(gymLeaderPid(k));      // 人物図鑑 C0010〜C0059
 const circOf=k=>Math.ceil(k/10);
 const ROAD_GATE={6:'shrub',12:'crack',15:'sea',27:'boulder'};      // 本道の 道具でこえる場所（街道の番号）
 const NEEDP={none:0,shrub:6,crack:12,sea:15,boulder:27};
@@ -1052,6 +1054,13 @@ function genMacro(seed,pNew){
   const late=landAreas.filter(a=>a.prog>=38&&a.prog<=48&&!a.branch);
   for(let i=0;i<STARTERS.length;i++)if(late.length)late[(i*3)%late.length].rare=famOf(SP[STARTERS[i]]).id;
   setRoute1Encounters();setRoute2Encounters();
+  // Harusaki is a peaceful transit town. Move its former gym to Michishirube,
+  // renumber challenges in their existing world order without altering ecology, paths or gates.
+  const old=WORLD.gymTown.slice(1),haru=old[0],last=WORLD.main[50];
+  haru.gym=0;haru.noGym=1;last.noGym=0;
+  const reordered=old.slice(1).concat(last);GYM_TYPES.push(GYM_TYPES.splice(1,1)[0]);
+  for(let k=1;k<=N_GYM;k++){const c=reordered[k-1];c.gym=k;WORLD.gymTown[k]=c;GYM_TOWN[k]=c.name;}
+  for(const c of Object.values(CELLS)){let best=Infinity;for(let k=1;k<=N_GYM;k++){const d=Math.abs(WORLD.gymTown[k].prog-c.prog);if(d<best){best=d;c.dist=k;}}c.circ=circOf(c.dist);}
 })();
 
 const ENC_W=[30,25,20,12,8,5,3,2,2,2];
@@ -1419,6 +1428,7 @@ function genHall(cell,f){
 
 /* ---------- 町 ---------- */
 function townBuildings(cell){
+  if(cell.key==='0,2')return haruBuildings();
   const r=RNG('bld'+cell.key),kinds=['heal'];
   if(cell.size==='league')kinds.push('shop','league');
   else{
@@ -1433,6 +1443,7 @@ function townBuildings(cell){
 const ROOF_OF={house:T.ROOF,heal:T.ROOF_H,shop:T.ROOF_S,gym:T.ROOF_G,lab:T.ROOF_X,home:T.ROOF,league:T.ROOF_X};
 function healSpot(cell){const b=townBuildings(cell)[0];return{map:cell.key,x:b.x+2,y:b.y+4};}
 function genTown(cell){
+  if(cell.key==='0,2')return genHaruTown(cell);
   const r=RNG('map'+cell.key),m=newMap(cell.key,cell,MW,MH,T.GRASS),t=m.t;
   m.border=T.TREE;
   const set=(x,y,v)=>{t[y*MW+x]=v;};
@@ -1461,7 +1472,7 @@ function genTown(cell){
   if(bl.length<=12)for(let y=24;y<=25;y++)for(let x=24;x<=26;x++)set(x,y,T.WATER);
   // 町の人
   const nN=cell.size==='village'?3:cell.size==='town'?5:6;let nid=0;
-  const keys=(KEY_TOWN[cell.main===0?0:cell.gym||-1]||[]).slice();
+  const keys=(KEY_TOWN[cell.main===0?0:cell.gym&&gymLegacyId(cell.gym)!==1?gymLegacyId(cell.gym):-1]||[]).slice();
   for(let i=0,tries=0;i<nN+keys.length&&tries<300;tries++){
     const x=r.range(4,27),y=r.range(4,27);let ok=t[y*MW+x]===T.GRASS&&!occupied(m,x,y);
     for(let dy=-1;dy<=1&&ok;dy++)for(let dx=-1;dx<=1;dx++)if(SOLID[t[(y+dy)*MW+x+dx]]||occupied(m,x+dx,y+dy))ok=false;
@@ -1481,6 +1492,7 @@ function room(id,cell,w,h){
   return m;
 }
 function genInterior(cell,slot){
+  if(cell.key==='0,2')return genHaruInterior(cell,slot);
   const b=townBuildings(cell)[slot],id=cell.key+':b'+slot,r=RNG('int'+id);
   const out={map:cell.key,x:b.x+2,y:b.y+4,dir:2};
   let m;const S=(x,y,v)=>{m.t[y*m.W+x]=v;};
@@ -1501,7 +1513,7 @@ function genInterior(cell,slot){
     for(let y=3;y<=13;y++){for(let x=1;x<=3;x++)S(x,y,T.IWALL);for(let x=9;x<=11;x++)S(x,y,T.IWALL);}
     S(4,14,T.STATUE);S(8,14,T.STATUE);for(let y=2;y<=15;y++)S(6,y,T.RUG);
     S(6,16,T.MAT);m.warps['6,16']=out;
-    m.objs.push({k:'npc',role:'leader',gym:k,x:6,y:1,dir:2,pid:9+k,spr:pSpr(9+k)});
+    m.objs.push({k:'npc',role:'leader',gym:k,x:6,y:1,dir:2,pid:gymLeaderPid(k),spr:pSpr(gymLeaderPid(k))});
     const nT=cell.prog<4?1:cell.prog<24?2:3,ys=[11,8,5];
     for(let i=0;i<nT;i++){
       const tr=genTrainer(r,cell,i,{gym:true,types:[GYM_TYPES[k]],los:4,bonus:2,n:cell.prog<8?2:3});
@@ -1529,7 +1541,7 @@ function genInterior(cell,slot){
     S(4,7,T.MAT);m.warps['4,7']=out;
     const hi=townBuildings(cell).filter(x=>x.kind==='house').findIndex(x=>x.slot===slot);
     const o={k:'npc',role:'civ',nid:0,ps:6+hi*2,x:r.range(2,3),y:r.range(2,4),dir:2,spr:'C0101'};r.int(18);r.pick(TALK);
-    if(cell.gym===6&&hi===0){o.gift='k_rod';o.gtext='つりが 好きでね。きみにも この つりざおを あげよう。水辺に向かって 使うんだ。';}
+    if(cell.gym&&gymLegacyId(cell.gym)===6&&hi===0){o.gift='k_rod';o.gtext='つりが 好きでね。きみにも この つりざおを あげよう。水辺に向かって 使うんだ。';}
     else if(r.chance(0.4)){o.gift=itemFor(r,cell.prog,r.chance(0.25));o.gtext='旅の おともに これを 持っていきなさい。';}
     m.objs.push(o);
     if(r.chance(0.35)){m.objs.push({k:'npc',role:'civ',nid:1,ps:7+hi*2,x:6,y:5,dir:3,spr:'C0101'});r.int(18);r.pick(TALK);}
@@ -2233,7 +2245,7 @@ const held={up:0,down:0,left:0,right:0,a:0,b:0};
 const SFX={sel:[660,0.04,'square',0.04],ok:[880,0.07,'square',0.05],cancel:[330,0.07,'square',0.04],hit:[150,0.12,'sawtooth',0.1,-80],
  hit2:[220,0.18,'sawtooth',0.12,-140],weak:[110,0.1,'triangle',0.1],faint:[320,0.5,'triangle',0.1,-260],lvup:[523,0.14,'square',0.06,420],
  heal:[620,0.32,'sine',0.1,320],bump:[90,0.06,'square',0.04],door:[240,0.1,'triangle',0.08,120],seal:[700,0.09,'square',0.06,220],
- get:[784,0.26,'square',0.06,300],alert:[980,0.18,'square',0.06]};
+ get:[784,0.26,'square',0.06,300],alert:[980,0.18,'square',0.06],haruBird:[1250,.12,'sine',.018,340],haruWater:[420,.17,'sine',.012,-180],haruWind:[170,.34,'triangle',.009,45],haruBell:[1046,.3,'sine',.028,-10],haruPet:[690,.11,'sine',.025,260],haruGarden:[540,.22,'triangle',.025,200],haruBridge:[180,.05,'triangle',.022,-30],haruNight:[940,.09,'sine',.012,-140]};
 function sfx(n){
   if(!SND||!AC)return;const d=SFX[n];if(!d)return;
   try{const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.type=d[2];o.frequency.setValueAtTime(d[0],t);
@@ -2245,9 +2257,9 @@ function initAudio(){try{if(!AC){AC=new(window.AudioContext||window.webkitAudioC
 function currentCue(){
   if(G.scene==='title')return'title';
   if(G.scene==='battle'&&BT){if(BT.result==='win'||BT.result==='caught')return'victory';if(BT.o.legend||BT.o.facility||BT.env.kind==='dojo'||BT.env.kind==='league')return'boss';return BT.wild?'wild':'trainer';}
-  const m=G.map;if(!m)return'title';if(m.indoor)return'indoor';if(m.pal==='cave')return'cave';if(G.pl.surf||m.cell&&m.cell.kind==='sea')return'sea';return m.cell&&m.cell.kind==='town'?'town':'road';
+  const m=G.map;if(!m)return'title';if(m.haru&&!m.indoor)return dayPhase()===3?'harusaki-night':'harusaki-day';if(m.indoor)return'indoor';if(m.pal==='cave')return'cave';if(G.pl.surf||m.cell&&m.cell.kind==='sea')return'sea';return m.cell&&m.cell.kind==='town'?'town':'road';
 }
-function audioTick(){if(MUSIC&&AC){const o=S&&S.opts||{};try{MUSIC.tick(currentCue(),Number.isFinite(o.musicVol)?o.musicVol/100:0.4,o.music!==0&&!document.hidden);}catch(e){MUSIC.stop();MUSIC=null;console.warn('music',e);}}}
+function audioTick(){haruAmbientAudio();if(MUSIC&&AC){const o=S&&S.opts||{};try{MUSIC.tick(currentCue(),Number.isFinite(o.musicVol)?o.musicVol/100:0.4,o.music!==0&&!document.hidden);}catch(e){MUSIC.stop();MUSIC=null;console.warn('music',e);}}}
 function fieldWeather(m){return m?SoraneAudio.naturalWeather(m,hashStr('climate:'+m.id)):null;}
 function reducedFx(){return !!(S&&S.opts&&S.opts.reduceFx)||typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;}
 
@@ -2981,9 +2993,9 @@ function drawObjTile(g,m,v,x,y,mx,my){
 // 建物の絵（家は 町ごとに 赤・青・黄を 入れかえる）
 const BLDT=new Uint8Array(64);for(const t of [T.ROOF,T.ROOF_H,T.ROOF_S,T.ROOF_G,T.ROOF_X,T.WALL,T.WINDOW,T.DOOR])BLDT[t]=1;
 function bldKey(m,b){return b.kind==='house'?'house'+((b.slot*7+(m.cell?m.cell.fx*3+m.cell.fy:0))%3):b.kind;}
-function bldPic(m,b){return scnPic('obj/b_'+bldKey(m,b)+'.webp',1);}
+function bldPic(m,b){return b.haruArt?scnPic('obj/harusaki/'+b.haruArt+'.svg',1):scnPic('obj/b_'+bldKey(m,b)+'.webp',1);}
 function bldPicAt(m,mx,my){for(const b of m.blds)if(mx>=b.x&&mx<b.x+5&&my>=b.y&&my<b.y+4)return bldPic(m,b);return null;}
-function bldBox(m,b){const a=ASSET.BLD_ASP[bldKey(m,b)]||0.7;let w=a<0.6?94:90,h=w*a;if(h>74){h=74;w=h/a;}return{w,h,l:b.x*16+40-w/2,t:b.y*16+66-h};}
+function bldBox(m,b){if(b.haruArt)return{w:80,h:64,l:b.x*16,t:b.y*16};const a=ASSET.BLD_ASP[bldKey(m,b)]||0.7;let w=a<0.6?94:90,h=w*a;if(h>74){h=74;w=h/a;}return{w,h,l:b.x*16+40-w/2,t:b.y*16+66-h};}
 // 室内の床・壁・じゅうたんの模様
 function inTex(m,g,ox,oy){
   if(!m.indoor)return null;
@@ -5146,7 +5158,7 @@ function cardScreen(){
         for(let c=0;c<5;c++){if(!badgeIn(c+1))ctx.globalAlpha=0.3;drawBadge(ctx,50+c,11,113.6+c*16.4,14.2);ctx.globalAlpha=1;}      // 圏の紋
         for(let k=1;k<=50;k++){const x=28+((k-1)%10)*20.1,y=113+Math.floor((k-1)/10)*16.4,t2=GYM_TYPES[k];      // バッジ50個（5つの圏×10）
           if(!S.badges[k])ctx.globalAlpha=0.2;
-          if(!drawBadge(ctx,k-1,x,y,15.4)){ctx.fillStyle=S.badges[k]?TCOL[t2]:'#d8d4c8';ctx.beginPath();ctx.ellipse(x+7.7,y+7.7,6.6,6.6,0,0,6.3);ctx.fill();}
+          if(!drawBadge(ctx,gymLegacyId(k)-1,x,y,15.4)){ctx.fillStyle=S.badges[k]?TCOL[t2]:'#d8d4c8';ctx.beginPath();ctx.ellipse(x+7.7,y+7.7,6.6,6.6,0,0,6.3);ctx.fill();}
           ctx.globalAlpha=1;}
       }};
     UI.push(w);
@@ -5307,7 +5319,7 @@ function autoSave(){if(S&&S.opts.auto!==0&&G.scene==='world')saveGame();}
    主人公の絵の上に、えらんだ衣装を 位置を合わせて 重ねる。なにも えらばなければ もとの すがた。          */
 const WEAR_CATS=[{k:'hat',n:'帽子',a:401,b:500,p:500},{k:'acc',n:'アクセサリー',a:501,b:600,p:400},{k:'top',n:'トップス',a:1,b:200,p:900},{k:'bot',n:'ボトムス',a:201,b:300,p:700},{k:'shoe',n:'靴',a:301,b:400,p:600},{k:'bag',n:'バッグ',a:601,b:650,p:800}];
 const wearCat=n=>WEAR_CATS.find(c=>n>=c.a&&n<=c.b);
-const wearName=n=>{const c=wearCat(n);return c.n+('00'+(n-c.a+1)).slice(-3);};
+const wearName=n=>{if(n===451)return'ハルサキの旅帽';const c=wearCat(n);return c.n+('00'+(n-c.a+1)).slice(-3);};
 const WEAR_PIC={};
 function wearPic(n){let P=WEAR_PIC[n];if(!P){P=WEAR_PIC[n]={st:0,img:new Image()};P.img.onload=()=>{P.st=1;PL_CV=null;};P.img.onerror=()=>{P.st=2;};P.img.src='wear/W'+('000'+n).slice(-4)+'.webp';}return P;}
 function drawWearPic(n,x,y,sz){const P=wearPic(n);if(P.st!==1)return;const w=P.img.width,h=P.img.height,f=sz/Math.max(w,h);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(P.img,x+(sz-w*f)/2,y+(sz-h*f)/2,w*f,h*f);}
@@ -5364,8 +5376,8 @@ async function wearScreen(){
 /* ---------- 仕立て屋：その地区だけの 13着 ---------- */
 const wearStock=d=>{const a=[];for(let n=1;n<=650;n++)if((n-1)%50===d-1)a.push(n);return a;};
 async function wearShop(o){
-  const d=(G.map.cell&&G.map.cell.dist)||1,stock=wearStock(d),g=pGiven(o.pid);
-  await msg(g+'「いらっしゃい。'+GYM_TOWN[d]+'だけの 衣装を そろえているよ。」');
+  const d=(G.map.cell&&G.map.cell.dist)||1,stock=wearStock(d).filter(n=>n!==451),g=pGiven(o.pid);
+  await msg(g+'「いらっしゃい。'+G.map.cell.name+'だけの 衣装を そろえているよ。」');
   let idx=0;
   for(;;){
     const items=stock.map(n=>({label:wearName(n),right:S.own[n]?'もっている':wearCat(n).p+'G',dis:false}));
@@ -5493,6 +5505,8 @@ async function talk(o){
     S.flags['i:'+mid+':'+o.iid]=1;bagAdd(o.item);removeObj(o);sfx('get');
     await msg(S.name+'は '+ITEMS[o.item].n+'を 見つけた！');return;
   }
+  if(o.k==='harupet')return haruPetTalk(o);
+  if(o.k==='haruprop'||o.k==='harublock')return msg(o.say||'村の 景色を 楽しもう。');
   if(o.k==='legend')return legendTalk(o);
   if(o.k==='starter')return starterTalk(o);
   if(o.role!=='nurse'&&o.role!=='clerk')o.dir=(p.dir+2)%4;
@@ -5500,6 +5514,8 @@ async function talk(o){
   try{
   switch(o.role){
    case'civ':await civTalk(o);await expansionCivDialogue(o);break;
+   case'harusaki':await haruTalk(o);break;
+   case'harutailor':await haruTailor(o);break;
    case'resident':await scheduledResidentTalk(o);break;
    case'key':await keyTalk(o);break;
    case'guide':await guideTalk(o);break;
@@ -5616,15 +5632,15 @@ async function milestones(){      // バッジの数に応じて ツクルから
   if(n>=N_GYM&&!S.flags['m:all']){S.flags['m:all']=1;bagAdd('I0161');sfx('lvup');await msg('50の ジム すべてを 制覇した！\n'+S.name+'は 「'+ITEMS.I0161.n+'」を 手に入れた！');}
 }
 async function gymBattle(o){
-  const k=o.gym,t=GYM_TYPES[k],L=gymLeader(k),g=pGiven(9+k),c=circOf(k);
+  const k=o.gym,t=GYM_TYPES[k],L=gymLeader(k),g=pGiven(gymLeaderPid(k)),c=circOf(k);
   if(!S.badges[k]&&G.map.gymPuzzle&&!gymPuzzleSolved(G.map)){await msg('先に ジムの 仕掛けを 解こう。');return;}
   if(S.badges[k]){if(await gymRematch(k))return;await msg(g+'「相棒との 時間を 大切にね。いつか また 腕を ためそう。」');return;}
-  await msg(GYM_TOWN[k]+'ジム リーダー '+L+'\n'+g+'「'+(GYM_SAY[k]||GYM_SAY2[k%GYM_SAY2.length])+'」');
-  const r=await battle({double:k%5===0,trainer:{name:'ジムリーダーの '+L,team:mkTeam(gymTeam(k),Math.min(31,14+Math.floor(k/3))),money:gymAce(k)*100,spr:pSpr(9+k)}});
+  await msg(GYM_TOWN[k]+'ジム リーダー '+L+'\n'+g+'「'+(GYM_SAY[gymLegacyId(k)]||GYM_SAY2[gymLegacyId(k)%GYM_SAY2.length])+'」');
+  const r=await battle({double:k%5===0,trainer:{name:'ジムリーダーの '+L,team:mkTeam(gymTeam(k),Math.min(31,14+Math.floor(k/3))),money:gymAce(k)*100,spr:pSpr(gymLeaderPid(k))}});
   if(r==='lose'){await blackout();return;}
   S.badges[k]=1;HitokariUpgrade.noteMatch(S,'g:'+k);sfx('get');
   await msg(g+'「みごと！ '+GYM_TOWN[k]+'ジムの バッジを わたそう。」');
-  const bw={draw(){const s=44,x=LW/2-s/2,y=LH-MSG_H-s-12;ctx.fillStyle='rgba(255,246,214,0.85)';ctx.beginPath();ctx.arc(LW/2,y+s/2,s*0.62,0,6.3);ctx.fill();drawBadge(ctx,k-1,x,y+Math.sin(G.t/14)*1.5,s);}};UI.push(bw);      // バッジの絵
+  const bw={draw(){const s=44,x=LW/2-s/2,y=LH-MSG_H-s-12;ctx.fillStyle='rgba(255,246,214,0.85)';ctx.beginPath();ctx.arc(LW/2,y+s/2,s*0.62,0,6.3);ctx.fill();drawBadge(ctx,gymLegacyId(k)-1,x,y+Math.sin(G.t/14)*1.5,s);}};UI.push(bw);      // バッジの絵
   await msg(S.name+'は 「'+GYM_TOWN[k]+'バッジ」を 手に入れた！\n（'+CIRCUITS[c]+' '+badgeIn(c)+'個／ぜんぶで '+badgeCount()+'個）');popW(bw);
   const D=TYPE_MOVES[t].dmg,tm='tm'+D[Math.min(D.length-1,gymAce(k)<30?1:2)];bagAdd(tm);await msg(S.name+'は '+ITEMS[tm].n+'を もらった！');
   if(badgeIn(c)===2&&c<5)await msg(g+'「'+CIRCUITS[c]+'の バッジが 2個 そろったね。圏の さかいの 連絡所で 通行章を もらえるよ。」');
@@ -5806,7 +5822,7 @@ async function ending(){
   await sayAs(70,'アサヨ「おかえりなさい！ チャンピオンに なったんですって？ さすが わたしの 子ね！ 帰郷の 招待状、とどいて よかった。」');
 }
 /* ---------- 人物図鑑：出会った人の記録（圏 → 地区 → 人） ---------- */
-function distPeople(d){const a=[9+d];for(let g=0;g<19;g++)for(let k=0;k<2;k++)a.push(distPerson(d,g,k));return a;}
+function distPeople(d){const a=[gymLeaderPid(d)];for(let g=0;g<19;g++)for(let k=0;k<2;k++)a.push(distPerson(d,g,k));return a;}
 async function peopleScreen(){
   let ci=0;
   for(;;){
@@ -5843,7 +5859,7 @@ function peopleList(ids,title){
         if(met){drawPerson(ctx,id,190,160,Math.min(132,84/chrAsp(id)));}
         else tx('？',190,80,'#b8b4c4',30,'center');
         win(0,LH-38,LW,38);
-        if(met){const p=person(id);tx(p.name+'　'+p.role,8,LH-32,'#2a2233',9);tx(p.group>=0?CIRCUITS[circOf(p.dist)]+' 第'+p.dist+'地区 '+GYM_TOWN[p.dist]+'／'+JOB_NAME[p.group]:(id>=10&&id<=59?GYM_TOWN[id-9]+'ジム':'ソラネ地方'),8,LH-19,'#5a5560',8);}
+        if(met){const p=person(id);tx(p.name+'　'+p.role,8,LH-32,'#2a2233',9);tx(p.group>=0?CIRCUITS[circOf(p.dist)]+' 第'+p.dist+'地区 '+GYM_TOWN[p.dist]+'／'+JOB_NAME[p.group]:(id>=10&&id<=59?GYM_TOWN[gymNumberForLegacy(id-9)]+'ジム':'ソラネ地方'),8,LH-19,'#5a5560',8);}
         else tx('まだ 出会っていない。',8,LH-32,'#5a5560',9);
         tx((met?'A:予定　':'')+(i+1)+'／'+ids.length,232,LH-19,'#8a8590',7,'right');
       }});
@@ -5855,10 +5871,11 @@ function peopleList(ids,title){
 const SAVE_KEY='sorane_save_v1',RIVAL='リオト';
 const BACKUP_KEY=SAVE_KEY+'_backup_v1';
 const fillName=s=>s.replace(/\{n\}/g,S.name);
-function newSave(name){return{v:4,pc:2,met:{},rot:{},rec:{},wear:{},own:{},name,map:'',x:0,y:0,dir:2,surf:false,party:[],box:[],bag:{},money:3000,badges:{},flags:{},seen:{},caught:{},heal:null,visited:{},steps:0,repel:0,time:0,opts:{snd:1,fast:0,follow:1,share:1,dn:1,auto:1,music:1,musicVol:40,reduceFx:0},starter:0,rival:0,bikeOn:0};}
+function newSave(name){return{v:4,pc:2,met:{},rot:{},rec:{},wear:{},own:{},name,map:'',x:0,y:0,dir:2,surf:false,party:[],box:[],bag:{},money:3000,badges:{},flags:{'hsk:v111':1},seen:{},caught:{},heal:null,visited:{},steps:0,repel:0,time:0,opts:{snd:1,fast:0,follow:1,share:1,dn:1,auto:1,music:1,musicVol:40,reduceFx:0},starter:0,rival:0,bikeOn:0};}
 function saveGame(){if(!S||!G.map||facilityActive)return false;const p=G.pl;S.map=G.map.id;S.x=p.x;S.y=p.y;S.dir=p.dir;S.surf=p.surf;S.fly=p.fly?1:0;return persistGameSave(S);}
 function loadSave(){for(const k of [SAVE_KEY,BACKUP_KEY]){try{const d=JSON.parse(localStorage.getItem(k));if(isValidGameSave(d))return d;}catch(e){}}return null;}
 function startFromSave(){   // 古いきろくにも 新しい項目を おぎなう
+  migrateHaruSave(S);
   S.opts=Object.assign({snd:1,fast:0,follow:1,share:1,dn:1,auto:1,music:S.opts&&S.opts.snd===0?0:1,musicVol:40,reduceFx:0},S.opts||{});if(!S.pc)S.pc=2;S.met=S.met||{};S.rot=S.rot||{};S.rec=S.rec||{};S.wear=S.wear||{};S.own=S.own||{};
   if(S.badges&&S.badges[1]&&!S.bag.k_bike)S.bag.k_bike=1;
   S.party=S.party.filter(m=>SP[m.sp]);S.box=(S.box||[]).filter(m=>SP[m.sp]);HitokariUpgrade.progress(S);const nursery=nurseryFor();for(const m of S.party.concat(S.box,nursery.parents.map(p=>p.mon),nursery.egg?[nursery.egg.mon]:[]))HitokariUpgrade.bond(m);S.v=4;
@@ -5872,7 +5889,7 @@ function activeObjs(m){
     if(o.k==='item'&&S.flags['i:'+m.id+':'+o.iid])continue;
     if(o.k==='legend'&&(S.flags['L:'+o.sp]||(o.needFlag&&!S.flags[o.needFlag])||(o.sp===SP_OWARI&&S.flags['s:owari']&&!S.flags.champ)))continue;
     if(o.k==='starter'&&S.starter)continue;
-    const a=Object.assign({ox:0,oy:0,alert:0},o);a.homeX=a.x;a.homeY=a.y;
+    const a=Object.assign({ox:0,oy:0,alert:0},o);if(o.haruActor&&!haruSpawn(m,a,out))continue;a.homeX=a.x;a.homeY=a.y;
     if(o.k==='legend')a.absent=o.sp!==SP_OWARI&&!S.flags['A:'+o.sp];      // 伝説の道具を 使うまでは 装置だけ
     if(o.k==='npc'){
       if(o.role==='resident'){if(!residentAvailable(a.pid))continue;const pos=residentSchedulePosition(a.pid,a.residentSlot,npcMinutes());a.x=pos.x;a.y=pos.y;a.dir=pos.dir;resolveResidentSpawn(m,a,out);}
@@ -5892,12 +5909,12 @@ function activeObjs(m){
 function loadMap(id,x,y,dir){
   let m;try{m=getMap(id);}catch(e){console.error(e);m=null;}
   if(!m){const h=homeSpot();m=getMap(h.map);x=h.x;y=h.y;}
-  if(m.starterDesk&&!S.starter)for(const id of STARTERS)monPreload(id);
+  if(m.starterDesk&&!S.starter)for(const id of STARTERS)monPreload(id);if(m.haru)for(const o of m.objs)if(o.k==='harupet')monPreload(o.sp);
   if(m.cell)for(const L of [(m.advEnc||m.cell).land,(m.advEnc||m.cell).water])if(L)for(const fid of L)if(FAMS[fid])FAMS[fid].ids.forEach(monPreload);      // この場所に出る子の 原画を 先に読む
   if(S&&S.party)for(const q of S.party)monPreload(q.sp);
   if(m.cell&&m.cell.kind==='town'&&G.cellKey!==undefined&&G.cellKey!==m.cell.key&&S){S.rot=S.rot||{};S.rot[m.cell.key]=(S.rot[m.cell.key]||0)+1;}      // 人物図鑑2000人を維持するため、住民の巡回を維持
   G.cellKey=m.cell?m.cell.key:null;chrPreload('pl');
-  G.map=m;const p=G.pl;p.x=x;p.y=y;if(dir!=null)p.dir=dir;p.moving=false;p.prog=0;p.turn=0;p.idle=9;
+  G.map=m;if(m.haru){[x,y]=haruSafeSpawn(m,x,y);}const p=G.pl;p.x=x;p.y=y;if(dir!=null)p.dir=dir;p.moving=false;p.prog=0;p.turn=0;p.idle=9;
   if(m.t[y*m.W+x]!==T.WATER)p.surf=false;
   p.fly=false;p.alt=0;mountPreload();
   G.objs=activeObjs(m);folReset();charCacheTrim();
@@ -5934,7 +5951,7 @@ function tryMove(d){
 }
 function worldTick(canInput){
   const p=G.pl;
-  tickExpansionNPC(canInput);tickResidentSchedules(canInput);
+  tickExpansionNPC(canInput);tickResidentSchedules(canInput);tickHaru(canInput);
   if(G.banner&&G.banner.t>0)G.banner.t--;
   if(G.t%60===0&&S)S.time++;
   {const ta=p.fly?1:0,a=p.alt||0;if(a!==ta){p.alt=Math.abs(ta-a)<0.03?ta:a+(ta-a)*0.14;if(!p.fly){if(p.alt===0){sfx('step');}else return;}}}      // 上がる・降りる うごき（降りきるまでは 動けない）
@@ -6035,6 +6052,7 @@ function interact(){
   const p=G.pl,m=G.map,fx=p.x+DX[p.dir],fy=p.y+DY[p.dir];
   if(p.fly){run(flyLand);return;}
   const inb=fx>=0&&fy>=0&&fx<m.W&&fy<m.H,v=inb?m.t[fy*m.W+fx]:-1;
+  if(haruInteract(m,fx,fy))return;
   if(expansionInteract(m,fx,fy))return;
   let o=objAt(fx,fy);
   if(!o&&(v===T.COUNTER||v===T.TABLE))o=objAt(fx+DX[p.dir],fy+DY[p.dir]);
@@ -6059,6 +6077,7 @@ async function useTool(v,x,y){
   await msg({k_cut:'木こりの手斧で 茨を 切りはらった！',k_smash:'岩くだきの槌で 岩を 砕いた！',k_str:'力の籠手で 大岩を 押しのけた！'}[need]);
 }
 async function waterAct(){
+  if(G.map.haru){await msg('村の いけは アニマたちの 休む 場所だ。木橋を わたろう。');return;}
   const surf=hasItem('k_surf'),rod=hasItem('k_rod');
   if(!surf&&!rod){await msg('水が きらきら 光っている。');return;}
   const opts=[];if(surf)opts.push('アニマに 乗って 進む');if(rod)opts.push('釣りを する');opts.push('やめる');
@@ -6113,14 +6132,14 @@ function entPicFor(m){
   return n.kind==='dung'?(n.style==='shrine'?'tower':n.style==='road'?'cave':'ruin'):n.pal==='cave'?'cave':null;
 }
 /* ---------- フィールドの描画 ---------- */
-const BLD_MARK={heal:'診',shop:'店',gym:'ジ',lab:'研',league:'巡',home:'家'};
+const BLD_MARK={heal:'診',shop:'店',gym:'ジ',lab:'研',league:'巡',home:'家',harulodge:'旅',harutailor:'服',haruflower:'花'};
 function drawWorldPix(){
   const m=G.map,p=G.pl,g=wctx;if(!m)return;
   const ppx=p.x*16+(p.moving?DX[p.dir]*p.prog:0),ppy=p.y*16+(p.moving?DY[p.dir]*p.prog:0);
   let camx=Math.round((ppx-112)*K)/K,camy=Math.round((ppy-96)*K)/K;
   if(m.W*16<=LW)camx=Math.round((m.W*16-LW)/2);if(m.H*16<=LH)camy=Math.round((m.H*16-LH)/2);
   G.camx=camx;G.camy=camy;
-  drawGround(g,m,camx,camy);drawIndividualTerrain(g,m,camx,camy);drawExpansionTerrain(g,m,camx,camy);
+  drawGround(g,m,camx,camy);if(m.haru)drawHaruGround(g,m,camx,camy);else drawIndividualTerrain(g,m,camx,camy);drawExpansionTerrain(g,m,camx,camy);
   // 人物と置き物を行ごとにまとめ、木や草むらと奥→手前の順で重ねる
   const byRow={},put=e=>{const r=Math.round(e.y/16);(byRow[r]||(byRow[r]=[])).push(e);};
   const skip={};   // 道具が落ちているマスは手前の草をかぶせない（見つけやすく）
@@ -6147,6 +6166,8 @@ function drawWorldPix(){
     }
     const o=e.o,x=o.x*16+(o.ox||0)-camx,y=o.y*16+(o.oy||0)-camy;
     if(x<-32||y<-32||x>LW+16||y>LH+16)return;
+    if(o.k==='haruprop'){drawHaruProp(g,o,x,y);return;}
+    if(o.k==='harupet'){drawHaruPet(g,o,x,y);return;}
     if(o.k==='item'){if(!drawTileObj(g,TOBJ.drop,x+1.5,y+0.5,13,13))drawIcon(g,0,x,y);}
     else if(o.k==='starter'){if(!drawItemPic(51,x+1,y-4,14,g))drawIcon(g,1,x,y-3);}
     else if(o.k==='deco'){if(!objFit(g,o.f,x+8,y+16,16,25))drawIcon(g,0,x,y);}
@@ -6169,7 +6190,7 @@ function drawWorldPix(){
     if(!drawMount(g,'fly',p.dir,x+8,y+5-h))drawChar(g,'pl',p.dir,0,x,y-6-h);
     if(a>0.9&&!p.moving&&landable(p.x,p.y)){const k=0.5+0.5*Math.sin(G.t/7);g.strokeStyle='rgba(255,255,255,'+(0.45+0.35*k)+')';g.lineWidth=0.8;g.beginPath();g.ellipse(x+8,y+13,6+k*1.5,2.4+k*0.6,0,0,6.3);g.stroke();}      // 降りられる しるし
   }
-  drawAmbient(g,m,camx,camy);drawDayNight(g,m,camx,camy);drawFieldClimate(g,m);drawExpansionAtmosphere(g,m);
+  drawAmbient(g,m,camx,camy);drawDayNight(g,m,camx,camy);drawFieldClimate(g,m);drawExpansionAtmosphere(g,m);if(m.haru)drawHaruLights(g,m,camx,camy);
 }
 function drawFieldClimate(g,m){
   const w=fieldWeather(m);if(!w)return;
@@ -6179,7 +6200,7 @@ function drawFieldClimate(g,m){
   else if(w==='sun'){g.fillStyle='rgba(246,185,86,.09)';g.fillRect(0,0,LW,LH);}
 }
 function drawWorldUI(){
-  const m=G.map;if(!m)return;drawExpansionHUD(m);drawIndividualMapHUD(m);
+  const m=G.map;if(!m)return;drawExpansionHUD(m);drawIndividualMapHUD(m);if(m.haru)drawHaruHUD(m);
   for(const b of m.blds){
     if(!BLD_MARK[b.kind]||b.kind==='house'||b.kind==='home')continue;
     let x=(b.x+2)*16-G.camx+8,y=b.y*16-G.camy+9,r=9,fs=12;
@@ -6310,7 +6331,7 @@ async function gymRematch(k){
   if(badgeCount()<4||!HitokariUpgrade.rematchReady(S,key,512))return false;
   if(!(await confirmYN(GYM_TOWN[k]+'ジムに 再挑戦しますか？')))return true;
   const team=rematchTeam(gymTeam(k),key,[GYM_TYPES[k]],S.flags.champ?5:3);
-  const r=await battle({trainer:{name:'ジムリーダーの '+gymLeader(k)+'（再戦）',team:mkTeam(team,26),money:Math.min(4000,gymAce(k)*75),spr:pSpr(9+k)}});
+  const r=await battle({trainer:{name:'ジムリーダーの '+gymLeader(k)+'（再戦）',team:mkTeam(team,26),money:Math.min(4000,gymAce(k)*75),spr:pSpr(gymLeaderPid(k))}});
   HitokariUpgrade.noteMatch(S,key,r==='win');
   if(r==='lose')await blackout();else{await msg('再戦の 記録が 旅の 手帳に きざまれた！');saveGame();}return true;
 }
@@ -6423,6 +6444,7 @@ window.addEventListener('load',()=>{
 </script>
 <script src="advanced-combat.js"></script>
 <script src="world-expansion.js"></script>
+<script src="harusaki.js"></script>
 <script src="data/anima-motion.js"></script>
 <script src="data/npc-schedules.js"></script>
 <script src="data/field-designs.js"></script>

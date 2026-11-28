@@ -3,6 +3,8 @@ const createSoraneAudio=function musicFactory(){
   // Original short motifs, written specifically for Sorane. Notes are intervals in semitones.
   const tracks={
     title:{tempo:104,roots:[60,57,65,67],motif:[0,4,7,11,7,null,4,2,0,2,4,7,9,null,7,4],type:'triangle'},
+    'harusaki-day':{tempo:98,roots:[60,65,57,67],motif:[7,9,12,9,7,4,2,null,4,7,9,7,5,4,2,0],type:'triangle'},
+    'harusaki-night':{tempo:66,roots:[60,57,65,67],motif:[12,null,9,7,null,4,7,null,9,null,7,4,2,null,4,null],type:'sine'},
     town:{tempo:92,roots:[55,60,57,62],motif:[7,null,9,7,4,2,0,null,4,7,9,12,9,7,4,null],type:'sine'},
     road:{tempo:124,roots:[62,55,59,57],motif:[0,2,7,9,7,4,2,null,4,7,11,9,7,4,2,0],type:'triangle'},
     cave:{tempo:76,roots:[57,53,60,55],motif:[0,null,7,null,3,2,null,null,0,null,10,7,null,3,2,null],minor:true,type:'sine'},

@@ -2,12 +2,13 @@
 const INDIVIDUAL_FIELDS=new Map(SORANE_FIELD_DATA.map(x=>[x[0],x]));
 const NPC_ZONES=['住居区','中央広場','仕事区','交流庭園'];
 const NPC_RESIDENTS=Array.from({length:51},()=>[]);
+for(const p of SORANE_NPC_DATA){if(p[0]>=10&&p[0]<=59)p[3]=gymNumberForLegacy(p[0]-9);if(HARU_NAMES[p[0]])p[1]=person(p[0]).name;}
 for(const p of SORANE_NPC_DATA)NPC_RESIDENTS[p[3]].push(p[0]);
 function npcProfile(id){return SORANE_NPC_DATA[id-1]||SORANE_NPC_DATA[0];}
 function npcMinutes(){if(G.hour!=null)return((Math.floor(G.hour*60)%1440)+1440)%1440;const d=new Date();return d.getHours()*60+d.getMinutes();}
 function npcScheduleAt(id,minute=npcMinutes()){const p=npcProfile(id),events=p[8];let j=0;for(let i=1;i<events.length;i++)if(events[i][0]<=minute)j=i;const e=events[j];return{minute:e[0],zone:e[1],activity:e[2],next:events[(j+1)%events.length][0],index:j};}
 function formatNpcTime(t){return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');}
-function residentAvailable(id){if(id===plPid())return false;if(id>100)return true;if(id>=10&&id<=59)return !!S.badges[id-9]||!!S.flags.champ;return !!S.met[id]||!!S.flags.champ;}
+function residentAvailable(id){if(id===plPid())return false;if(id>100)return true;if(id>=10&&id<=59)return !!S.badges[gymNumberForLegacy(id-9)]||!!S.flags.champ;return !!S.met[id]||!!S.flags.champ;}
 function residentSchedulePosition(id,slot,minute=npcMinutes()){const p=npcProfile(id),e=npcScheduleAt(id,minute),i=slot%49,ox=e.zone%2?17:2,oy=e.zone>1?17:2;return{x:ox+(i%7)*2,y:oy+Math.floor(i/7)*2,dir:(p[7]+e.index)%4,zone:e.zone};}
 function addLifePortal(m){
  if(!m.cell||m.cell.kind!=='town'||m.indoor)return;let q=findPortal(m,15,17);
@@ -55,7 +56,7 @@ async function scheduledResidentTalk(o){const p=npcProfile(o.pid),e=npcScheduleA
 function drawNPCScheduleCard(id){const p=npcProfile(id),e=npcScheduleAt(id);screenBG('生活予定　C'+String(id).padStart(4,'0'));win(4,18,232,34);tx(p[1]+'　'+p[2],10,23,'#2a2233',9);tx(GYM_TOWN[p[3]]+'　現在 '+formatNpcTime(npcMinutes()),10,36,'#5a5560',8);win(4,56,232,146);for(let i=0;i<p[8].length;i++){const row=p[8][i],y=61+i*15;if(i===e.index){ctx.fillStyle='#f4d98a';ctx.fillRect(7,y-1,226,14);}tx(formatNpcTime(row[0]),10,y,'#364b53',8);tx(NPC_ZONES[row[1]],48,y,'#364b53',8);tx(row[2].slice(0,18),97,y,'#2a2233',8);}}
 function fieldProfile(id){return INDIVIDUAL_FIELDS.get(id)||null;}
 function applyIndividualFieldDesign(m){
- const d=fieldProfile(m.id);if(!d||m.individualDesign)return;m.individualDesign=d;const blocked=(x,y)=>occupied(m,x,y)||!!m.warps[expKey(x,y)]||!!expAt(m,x,y);
+ const d=fieldProfile(m.id);if(!d||m.individualDesign)return;m.individualDesign=d;if(m.haru)return;const blocked=(x,y)=>occupied(m,x,y)||!!m.warps[expKey(x,y)]||!!expAt(m,x,y);
  for(const [x,y,t] of d[7])if(x>0&&y>0&&x<m.W-1&&y<m.H-1&&!blocked(x,y)&&[T.ROCK,T.TREE].includes(m.t[y*m.W+x]))expSet(m,x,y,t);
  if(d[9]){const [x,y,label]=d[9];if(x>0&&y>0&&x<m.W-1&&y<m.H-1&&!blocked(x,y)&&!SOLID[m.t[y*m.W+x]])expPut(m,x,y,{kind:'landmark',label:m.name+'・'+label,design:d[6]});}
  addLinkedTrainerPair(m);
