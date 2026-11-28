@@ -1,160 +1,153 @@
 {
-  "horse": [
+  "version": 2,
+  "source": "approved two concept sheets",
+  "fronts": [
     {
-      "path": "mon/tribel/0546.webp",
-      "sha": "a46f8ff1bc191093e3a67f12615490dcfd080325",
-      "size": 30318,
-      "width": 390,
-      "height": 449
+      "id": 546,
+      "path": "mon/tribel/v2/0546.webp",
+      "size": 58890,
+      "sha": "91dc1cf8309d076d065b598838497b4d8420e116",
+      "width": 512,
+      "height": 512
     },
     {
-      "path": "mon/tribel/0547.webp",
-      "sha": "d74a4a782d5df51d0cde8c02e7bdee6a1f8e0e48",
-      "size": 76456,
-      "width": 566,
-      "height": 509
+      "id": 547,
+      "path": "mon/tribel/v2/0547.webp",
+      "size": 62162,
+      "sha": "48b050a713fe399b9b7cf86105e6a7eaac45b674",
+      "width": 512,
+      "height": 512
     },
     {
-      "path": "mon/tribel/b0546.webp",
-      "sha": "d6208c148439cc96d6f3878ea39616a280684c77",
-      "size": 27978,
-      "width": 340,
-      "height": 508
+      "id": 265,
+      "path": "mon/tribel/v2/0265.webp",
+      "size": 50624,
+      "sha": "81acdd1a65c4f47087f4477e4d3eec4907037cbd",
+      "width": 512,
+      "height": 512
     },
     {
-      "path": "mon/tribel/b0547.webp",
-      "sha": "6db56475a57f461c09edd694e137ccbc7a1a4182",
-      "size": 71834,
-      "width": 501,
-      "height": 566
+      "id": 266,
+      "path": "mon/tribel/v2/0266.webp",
+      "size": 42710,
+      "sha": "9ac295aeeecf7bfc782cfc44bcaaa86de9f5925c",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 1188,
+      "path": "mon/tribel/v2/1188.webp",
+      "size": 68614,
+      "sha": "91f27a528e24cb283037e35cefa19f0e6a26e740",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 1189,
+      "path": "mon/tribel/v2/1189.webp",
+      "size": 58362,
+      "sha": "fe5ab0d4ead901b85858a7d55d469f5d3135ba28",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 1190,
+      "path": "mon/tribel/v2/1190.webp",
+      "size": 51112,
+      "sha": "05e8740201006efffc15e5a29c9c27868ecf5973",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 849,
+      "path": "mon/tribel/v2/0849.webp",
+      "size": 63078,
+      "sha": "4b95f6635273b21a6713fb1dd0b859ded9a50fe6",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 850,
+      "path": "mon/tribel/v2/0850.webp",
+      "size": 53056,
+      "sha": "5a81926c8ad439386abe687983531278215af9b0",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 100,
+      "path": "mon/tribel/v2/0100.webp",
+      "size": 43344,
+      "sha": "32b58083e29d630a0bb5a54baf1487f07c4b5604",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 101,
+      "path": "mon/tribel/v2/0101.webp",
+      "size": 39688,
+      "sha": "98afb13cced00c353006f89d074fb8ec326044b1",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 190,
+      "path": "mon/tribel/v2/0190.webp",
+      "size": 59756,
+      "sha": "4078bb2ee484b520500008810faa087b100ab695",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 191,
+      "path": "mon/tribel/v2/0191.webp",
+      "size": 69496,
+      "sha": "965bf82e27672a696284c138e28f09a0dc4c3095",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 192,
+      "path": "mon/tribel/v2/0192.webp",
+      "size": 46012,
+      "sha": "34bc5af9806499e7f071646f90689b92c70f81bf",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 484,
+      "path": "mon/tribel/v2/0484.webp",
+      "size": 48578,
+      "sha": "f5951e3bd4b6b31330a9afcd563a803a488c7e23",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 485,
+      "path": "mon/tribel/v2/0485.webp",
+      "size": 41326,
+      "sha": "cee5d5f703e2a5dec9b0a3a8e370b907c1f5d822",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 1062,
+      "path": "mon/tribel/v2/1062.webp",
+      "size": 45918,
+      "sha": "dfdf7867be1b99f34338356ca63787c9d7e312ea",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "id": 1063,
+      "path": "mon/tribel/v2/1063.webp",
+      "size": 32092,
+      "sha": "2e243766d12de9417b531d827bbe8d97adb42ee2",
+      "width": 512,
+      "height": 512
     }
   ],
-  "vectors": [
-    {
-      "id": 265,
-      "back": false,
-      "path": "mon/tribel/0265.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 265,
-      "back": true,
-      "path": "mon/tribel/b0265.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 266,
-      "back": false,
-      "path": "mon/tribel/0266.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 266,
-      "back": true,
-      "path": "mon/tribel/b0266.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 1188,
-      "back": false,
-      "path": "mon/tribel/1188.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 1188,
-      "back": true,
-      "path": "mon/tribel/b1188.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 1189,
-      "back": false,
-      "path": "mon/tribel/1189.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 1189,
-      "back": true,
-      "path": "mon/tribel/b1189.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 1190,
-      "back": false,
-      "path": "mon/tribel/1190.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 1190,
-      "back": true,
-      "path": "mon/tribel/b1190.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 190,
-      "back": false,
-      "path": "mon/tribel/0190.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 190,
-      "back": true,
-      "path": "mon/tribel/b0190.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 191,
-      "back": false,
-      "path": "mon/tribel/0191.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 191,
-      "back": true,
-      "path": "mon/tribel/b0191.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 1062,
-      "back": false,
-      "path": "mon/tribel/1062.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 1062,
-      "back": true,
-      "path": "mon/tribel/b1062.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 1063,
-      "back": false,
-      "path": "mon/tribel/1063.svg",
-      "width": 640,
-      "height": 640
-    },
-    {
-      "id": 1063,
-      "back": true,
-      "path": "mon/tribel/b1063.svg",
-      "width": 640,
-      "height": 640
-    }
-  ]
+  "trueRear": [],
+  "rearMode": "reflected-front",
+  "legacy": "inactive historical files outside v2 directory"
 }

@@ -2,10 +2,10 @@
 const TRIBEL_MAPS={main:TRIBEL_KEY,lake:'a:tribel-lake:0,0',hill:'a:tribel-hill:0,0'};
 const TRIBEL_LABELS={meadow:'中央草原',deep:'草原の奥地',rock:'岩石地帯',flowers:'花畑',lake:'しずく湖',hill:'風見の丘'};
 const TRIBEL_TRAINERS=[
- ['main',201,103,18,25,'草原ランナー',[[546,7],[711,8]]],['main',202,203,25,9,'岩石の観察員',[[265,8],[765,9]]],
+ ['main',201,103,18,25,'草原ランナー',[[546,7],[849,8]]],['main',202,203,25,9,'岩石の観察員',[[265,8],[100,9]]],
  ['main',203,1403,21,22,'草原の双戦組',[[1188,8]],'grass'],['main',204,1404,24,22,'草原の双戦組',[[190,8]],'grass'],
- ['lake',205,303,23,7,'水辺の観察員',[[334,8],[717,9]]],['lake',206,403,24,24,'花畑の探索者',[[190,9],[283,10]]],
- ['hill',207,1503,10,6,'風見の双戦組',[[1062,10]],'hill'],['hill',208,1504,13,6,'風見の双戦組',[[546,11]],'hill']
+ ['lake',205,303,23,7,'水辺の観察員',[[484,8],[190,9]]],['lake',206,403,24,24,'花畑の探索者',[[190,9],[1188,10]]],
+ ['hill',207,1503,10,6,'風見の双戦組',[[1062,10]],'hill'],['hill',208,1504,13,6,'風見の双戦組',[[849,11]],'hill']
 ];
 function tribelSet(m,x,y,t){if(x>=0&&x<m.W&&y>=0&&y<m.H)m.t[y*m.W+x]=t;}
 function tribelRect(m,x,y,w,h,t){for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)tribelSet(m,i,j,t);}
@@ -39,7 +39,7 @@ function genTribelMap(zone,cell=CELLS[TRIBEL_KEY]){
   tribelBlock(m,13,23,'bench','旅人の 休憩所。');tribelBlock(m,11,23,'pot','花が きれいだ。');tribelSite(m,13,23,'rest','休憩所');
   tribelSite(m,24,4,'hidden','石の すきま',{item:'I0009',key:'rock'});tribelItem(m,10,7,'heal1',1);tribelItem(m,25,27,'fuda',2);
   m.objs.push({k:'npc',role:'tribelguide',guide:'double',pid:104,spr:pSpr(104),x:12,y:24,dir:2});
-  m.herd={y:27,x0:4,x1:10,ids:[546,546,547]};for(let x=4;x<=10;x++)tribelSet(m,x,27,T.GRASS);
+  m.herd={y:27,x0:4,x1:10,ids:[546,849,547]};for(let x=4;x<=10;x++)tribelSet(m,x,27,T.GRASS);
  }else if(zone==='lake'){
   tribelEllipse(m,12,12,9,8,T.WATER,r);tribelEllipse(m,9,12,2,1.6,T.ROCK,r);
   for(const [x,y,rx,ry] of [[6,5,3,3],[24,10,4,5],[8,24,4,3],[26,24,3,4]])for(let yy=y-ry;yy<=y+ry;yy++)for(let xx=x-rx;xx<=x+rx;xx++)if(xx>=2&&yy>=2&&xx<=29&&yy<=29&&m.t[yy*32+xx]===T.GRASS&&((xx-x)/rx)**2+((yy-y)/ry)**2<1)tribelSet(m,xx,yy,T.TALL);

@@ -1827,7 +1827,7 @@ function wcInit(){
 }
 // ---- 図鑑の原画（mon/001.webp 〜 500.webp）。使うときに 1体ずつ 読みこむ ----
 const MON_PIC=new Map(),MON_PIC_DIR='mon/';
-function monAssetPath(no,back=false){if(ROUTE3_IDS.has(no))return MON_PIC_DIR+'route3/'+String(no).padStart(4,'0')+'.webp';if(TRIBEL_IDS.has(no))return MON_PIC_DIR+'tribel/'+(back?'b':'')+String(no).padStart(4,'0')+(TRIBEL_HORSE.has(no)?'.webp':'.svg');if(ROUTE2_IDS.has(no))return MON_PIC_DIR+'route2/'+(back&&ROUTE2_REAR_IDS.has(no)?'b':'')+String(no).padStart(4,'0')+'.webp';if(ROUTE1_IDS.has(no))return MON_PIC_DIR+'route1/'+(back?'b':'')+String(no).padStart(4,'0')+'.webp';const selected=back?STARTER_REAR_SET.has(no):STARTER_FRONT_SET.has(no);return MON_PIC_DIR+(selected?'starter-v2/':'')+(back?'b':'')+String(no).padStart(4,'0')+'.webp';}
+function monAssetPath(no,back=false){if(ROUTE3_IDS.has(no))return MON_PIC_DIR+'route3/'+String(no).padStart(4,'0')+'.webp';if(TRIBEL_IDS.has(no))return MON_PIC_DIR+'tribel/v2/'+(back&&TRIBEL_REAR_IDS.has(no)?'b':'')+String(no).padStart(4,'0')+'.webp';if(ROUTE2_IDS.has(no))return MON_PIC_DIR+'route2/'+(back&&ROUTE2_REAR_IDS.has(no)?'b':'')+String(no).padStart(4,'0')+'.webp';if(ROUTE1_IDS.has(no))return MON_PIC_DIR+'route1/'+(back?'b':'')+String(no).padStart(4,'0')+'.webp';const selected=back?STARTER_REAR_SET.has(no):STARTER_FRONT_SET.has(no);return MON_PIC_DIR+(selected?'starter-v2/':'')+(back?'b':'')+String(no).padStart(4,'0')+'.webp';}
 function monPic(no){
  let P=MON_PIC.get(no);
  if(P){MON_PIC.delete(no);MON_PIC.set(no,P);return P;}
@@ -1837,7 +1837,7 @@ function monPic(no){
 }
 function monPreload(spId){const sp=SP[spId];if(sp&&sp.book){monPic(sp.book);if(typeof MONBACK!=='undefined'&&MONBACK[sp.book])pic(monAssetPath(sp.book,true));}}
 // 後ろ姿の絵がある子（27種）は 自分の側で それを使う
-const MONBACK={},MONBACK_CV=new Map();for(const n of ASSET.MON_BACK)if(!STARTER_FRONT_SET.has(n)&&!ROUTE2_IDS.has(n)&&!ROUTE3_IDS.has(n))MONBACK[n]=1;for(const n of STARTER_REAR_SET)MONBACK[n]=1;for(const n of ROUTE1_IDS)MONBACK[n]=1;for(const n of ROUTE2_REAR_IDS)MONBACK[n]=1;for(const n of TRIBEL_IDS)MONBACK[n]=1;
+const MONBACK={},MONBACK_CV=new Map();for(const n of ASSET.MON_BACK)if(!STARTER_FRONT_SET.has(n)&&!ROUTE2_IDS.has(n)&&!ROUTE3_IDS.has(n)&&!TRIBEL_IDS.has(n))MONBACK[n]=1;for(const n of STARTER_REAR_SET)MONBACK[n]=1;for(const n of ROUTE1_IDS)MONBACK[n]=1;for(const n of ROUTE2_REAR_IDS)MONBACK[n]=1;for(const n of TRIBEL_REAR_IDS)MONBACK[n]=1;
 function monBackCv(spId,shiny){
   const sp=SP[spId];if(!sp||!sp.book||!MONBACK[sp.book])return null;
   const P=pic(monAssetPath(sp.book,true));if(P.st!==1)return null;

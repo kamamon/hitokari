@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "total": 1212,
   "approved": [
     {
@@ -45,9 +45,9 @@
       ]
     }
   ],
-  "approvedSpecies": 63,
+  "approvedSpecies": 70,
   "defaultStatus": "hold-provisional",
-  "heldSpecies": 1149,
+  "heldSpecies": 1142,
   "next": {
     "map": "2,0",
     "name": "モミノキ街"
@@ -315,127 +315,255 @@
   "tribel": {
     "map": "0,0",
     "name": "トリベル平原",
+    "designRevision": 2,
     "land": [
       {
-        "id": 711,
-        "weight": 16
-      },
-      {
         "id": 546,
-        "weight": 14
-      },
-      {
-        "id": 717,
-        "weight": 12
+        "weight": 20
       },
       {
         "id": 265,
         "weight": 12
       },
       {
-        "id": 451,
-        "weight": 10
+        "id": 1188,
+        "weight": 12
       },
       {
-        "id": 1188,
+        "id": 849,
+        "weight": 17
+      },
+      {
+        "id": 100,
         "weight": 10
       },
       {
         "id": 190,
-        "weight": 9
+        "weight": 11
       },
       {
-        "id": 516,
-        "weight": 8
-      },
-      {
-        "id": 334,
-        "weight": 6
+        "id": 484,
+        "weight": 12
       },
       {
         "id": 1062,
-        "weight": 3
+        "weight": 6
       }
     ],
     "new": [
       {
+        "key": "leaf-crest",
         "ids": [
           546,
           547
         ],
         "names": [
-          "ノカケウマ",
-          "ハヤテウマ"
+          "ミドハク",
+          "ソウレイオ"
         ],
         "levels": [
           22
         ],
+        "types": [
+          [
+            0,
+            4
+          ],
+          [
+            0,
+            4
+          ]
+        ],
         "ability": 38
       },
       {
+        "key": "crystal-burrow",
         "ids": [
           265,
           266
         ],
         "names": [
-          "イシハリ",
-          "ハリガン"
+          "コウガリ",
+          "ガンソウガ"
         ],
         "levels": [
           25
         ],
+        "types": [
+          [
+            12
+          ],
+          [
+            12,
+            8
+          ]
+        ],
         "ability": 39
       },
       {
+        "key": "petal-lantern",
         "ids": [
           1188,
           1189,
           1190
         ],
         "names": [
-          "ヒノキツネ",
-          "ホムラギツネ",
-          "カガリオウ"
+          "ハナトワ",
+          "マユトワ",
+          "フロルヴェイル"
         ],
         "levels": [
           16,
           34
         ],
-        "ability": 40
-      },
-      {
-        "ids": [
-          190,
-          191
-        ],
-        "names": [
-          "ハナミツ",
-          "ミツフローラ"
-        ],
-        "levels": [
-          20
+        "types": [
+          [
+            11,
+            4
+          ],
+          [
+            11,
+            4
+          ],
+          [
+            11,
+            4
+          ]
         ],
         "ability": 41
       },
       {
+        "key": "golden-crown",
+        "ids": [
+          849,
+          850
+        ],
+        "names": [
+          "カナツノ",
+          "オウリシカ"
+        ],
+        "levels": [
+          24
+        ],
+        "types": [
+          [
+            4
+          ],
+          [
+            4,
+            8
+          ]
+        ],
+        "ability": 38
+      },
+      {
+        "key": "copper-shovel",
+        "ids": [
+          100,
+          101
+        ],
+        "names": [
+          "ドウホリ",
+          "ドウザンク"
+        ],
+        "levels": [
+          27
+        ],
+        "types": [
+          [
+            12
+          ],
+          [
+            12,
+            16
+          ]
+        ],
+        "ability": 39
+      },
+      {
+        "key": "orchid-moth",
+        "ids": [
+          190,
+          191,
+          192
+        ],
+        "names": [
+          "サキムシ",
+          "サキマユ",
+          "ランフローラ"
+        ],
+        "levels": [
+          17,
+          33
+        ],
+        "types": [
+          [
+            11
+          ],
+          [
+            11
+          ],
+          [
+            11,
+            9
+          ]
+        ],
+        "ability": 41
+      },
+      {
+        "key": "water-veil",
+        "ids": [
+          484,
+          485
+        ],
+        "names": [
+          "シズミル",
+          "アクアヴェル"
+        ],
+        "levels": [
+          26
+        ],
+        "types": [
+          [
+            2
+          ],
+          [
+            2,
+            9
+          ]
+        ],
+        "ability": 41
+      },
+      {
+        "key": "sail-drake",
         "ids": [
           1062,
           1063
         ],
         "names": [
-          "フワカゼ",
-          "カゼミタマ"
+          "ハクサイル",
+          "テンリューヴ"
         ],
         "levels": [
           32
         ],
+        "types": [
+          [
+            9
+          ],
+          [
+            9,
+            14
+          ]
+        ],
         "ability": 42
       }
     ],
-    "assetCount": 22,
-    "frontCount": 11,
-    "trueRearCount": 11,
-    "source": "4 cropped generated horse WebP; 18 original vector views; high resolution originals for vector art remain a future visual refinement",
+    "assetCount": 18,
+    "frontCount": 18,
+    "trueRearCount": 0,
+    "reflectedRearCount": 18,
+    "source": "Two user-approved original concept sheets, 18 individually cropped and alpha-matted 512×512 WebP sprites. Previous Tribel art retained only as inactive historical files. No true rear drawings supplied; use reflected front view.",
     "waterStatus": "hold-provisional",
     "maps": [
       "0,0",

@@ -5,7 +5,7 @@ const {chromium,webkit,devices}=require('playwright'),assert=require('node:asser
   browser=await api.launch({headless:true});const page=await browser.newPage(engine==='webkit'?{...devices['iPhone 13'],viewport:{width:390,height:844}}:{viewport:{width:960,height:720}}),errors=[];page.on('pageerror',e=>errors.push(String(e)));await page.goto(server.url);await page.waitForFunction(()=>typeof genRoute3==='function'&&typeof battleArtInfo==='function'&&UI.length>0);
   const data=await page.evaluate(async()=>{
    const ck=(v,m)=>{if(!v)throw Error(m);},eq=(a,b,m)=>ck(JSON.stringify(a)===JSON.stringify(b),m+' '+JSON.stringify(a)),random=Math.random;
-   eq(STARTERS,[2,3,1],'starters');ck(N_SPECIES===1212&&new Set(FAMS.flatMap(f=>f.ids)).size===1212,'dex identity');ck(ROUTE1_IDS.size===12&&ROUTE2_IDS.size===18&&TRIBEL_IDS.size===11&&ROUTE3_IDS.size===13,'63 approved');
+   eq(STARTERS,[2,3,1],'starters');ck(N_SPECIES===1212&&new Set(FAMS.flatMap(f=>f.ids)).size===1212,'dex identity');ck(ROUTE1_IDS.size===12&&ROUTE2_IDS.size===18&&TRIBEL_IDS.size===18&&ROUTE3_IDS.size===13,'70 approved');
    const c=CELLS[ROUTE3_KEY];eq(c.land,ROUTE3_LINES.map(f=>SP[f.ids[0]].fam),'roster');ck(CELLS['0,2'].gym===0&&WORLD.gymTown[1].name==='モミノキ街'&&WORLD.gymTown.length===51,'gym progression');
    const ids=ROUTE3_LINES.map(f=>f.ids[0]),counts=ids.map(()=>0);for(let i=0;i<100;i++){Math.random=()=>(i+.5)/100;const w=wildPick(c,'land',0);counts[ids.indexOf(w.sp)]++;ck(w.lv>=8&&w.lv<=11,'level');}Math.random=random;eq(counts,[26,22,18,15,12,7],'actual encounter weights');
    S=newSave('第3街道QA');Object.assign(S,homeSpot());S.party=[makeMon(19,75,{iv:31}),makeMon(21,75,{iv:31})];S.starter=2;S.flags.dex=1;S.opts.music=0;S.opts.snd=0;startFromSave();G.busy=true;UI.length=0;G.fade=0;
