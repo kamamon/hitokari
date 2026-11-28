@@ -26,10 +26,20 @@ function animaLabView(ids,index){
  });
 }
 async function waitAnimaArtwork(id,back=false){
- const p=monPic(SP[id].book);if(p.st===0){try{await p.img.decode();if(p.img.naturalWidth)p.st=1;}catch(e){if(!p.img.naturalWidth)throw Error('artwork '+id);}}
- if(p.st!==1)throw Error('artwork '+id);
- if(back&&MONBACK[SP[id].book]){const q=pic(monAssetPath(SP[id].book,true));try{if(q.st!==1){await q.img.decode();if(q.img.naturalWidth)q.st=1;}}catch(e){}}
- return (back&&monBackCv(id,false))||monCanvas(id,false,back,false);
+ const sp=SP[id],p=monPic(sp.book);p.pin=(p.pin||0)+1;
+ const decode=async q=>{try{await q.img.decode();}catch(e){if(!q.img.complete||!q.img.naturalWidth||!q.img.naturalHeight)throw e;}if(!q.img.naturalWidth||!q.img.naturalHeight||q.st===2)throw Error('artwork '+id);q.st=1;};
+ try{
+  await decode(p);
+  // Decoding can yield while other preloads fill the LRU. Render this exact
+  // decoded source instead of looking up a possibly evicted replacement.
+  MON_PIC.delete(sp.book);MON_PIC.set(sp.book,p);
+  let source=p,trueRear=false;
+  if(back&&MONBACK[sp.book]){const q=pic(monAssetPath(sp.book,true));try{await decode(q);source=q;trueRear=true;}catch(e){}}
+  const cv=document.createElement('canvas');cv.width=cv.height=MS;
+  const g=cv.getContext('2d');g.scale(MS/32,MS/32);drawMonPic(g,sp,source,false,back&&!trueRear);
+  if(trueRear)cv._animaView='rear';
+  return cv;
+ }finally{p.pin=Math.max(0,p.pin-1);trimIndividualCaches();}
 }
 async function buildAnimaSheet(id,opts={}){
  const rig=animaRig(id),back=!!opts.back,source=await waitAnimaArtwork(id,back),n=opts.frames||8,clips=opts.clips||AnimaSpriteEngine.clips,cell=opts.cell||160,art=cell*.68;

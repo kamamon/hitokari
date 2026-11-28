@@ -23,11 +23,17 @@ const {chromium,webkit,devices}=require('playwright'),assert=require('node:asser
    const trainers=maps.flatMap(m=>m.objs.filter(o=>o.role==='tribeltrainer'));ck(trainers.length===8&&trainers.filter(o=>o.tribelPair).length===4&&new Set(trainers.map(o=>o.tid)).size===8,'eight trainers');
    ck(validExpansionMapId(TRIBEL_MAPS.lake)&&validExpansionMapId(TRIBEL_MAPS.hill)&&!validExpansionMapId('a:tribel-lake:0,2'),'valid save ids');
    loadMap(TRIBEL_KEY,15,29,0);Math.random=()=>.99;ck(!wildEncounterPartner({...c,tribelZone:'deep'},'land',0,0,S.party[0],{sp:711,lv:9}), 'double probability rejected');Math.random=()=>.25;ck(wildEncounterPartner({...c,tribelZone:'deep'},'land',0,0,S.party[0],{sp:711,lv:9}),'deep 30% doubles');Math.random=random;
-   ck(ids.every(id=>TRIBEL_IDS.has(id))&&ids.length===8,'only eight approved base forms');let fronts=0,backs=0,motions=0;
+   ck(ids.every(id=>TRIBEL_IDS.has(id))&&ids.length===8,'only eight approved base forms');
+   // Deterministically reproduce an eviction at the await/decode boundary.
+   const forcedId=ids[0],book=SP[forcedId].book;MON_PIC.delete(book);const pending=monPic(book),originalDecode=pending.img.decode.bind(pending.img);
+   pending.img.decode=async()=>{await originalDecode();MON_PIC.delete(book);};
+   const forced=await waitAnimaArtwork(forcedId,true);pending.img.decode=originalDecode;const pixels=forced.getContext('2d').getImageData(0,0,forced.width,forced.height).data;
+   ck(forced.width===MS&&pixels.some((v,k)=>k%4===3&&v>32)&&monPic(book)===pending,'decoded artwork survives cache eviction');
+   let fronts=0,backs=0,motions=0;
    for(const f of TRIBEL_LINES)for(let j=0;j<f.ids.length;j++){const id=f.ids[j],sp=SP[id];eq(sp.name,f.names[j],'name');eq(sp.types,f.types[j],'types');eq(sp.base,f.base[j],'base stats');eq([sp.prev,sp.next,sp.evoLv],[f.ids[j-1]||0,f.ids[j+1]||0,f.levels[j]||0],'evolution');eq(abilityOptions(sp),[f.ability],'ability');ck(motionProfile(id)[1]===sp.name&&motionProfile(id)[2]===f.plans[j]&&animaRig(id)[15]===f.ids.length,'rig');
     if(sp.next){ck(!canEvolve(makeMon(id,sp.evoLv-1)),'before evolution');ck(canEvolve(makeMon(id,sp.evoLv)),'at evolution');}
     const front=await waitAnimaArtwork(id,false),rear=await waitAnimaArtwork(id,true);ck(monPic(sp.book).img.src.includes('/mon/tribel/')&&monPic(sp.book).st===1&&front.width===MS,'front actual '+id);ck(!MONBACK[id]&&rear._animaView!=='rear'&&monAssetPath(id,true)===monAssetPath(id),'reflected rear, no legacy art '+id);fronts++;backs++;
-    for(const view of [front,rear]){const a=view.getContext('2d').getImageData(0,0,view.width,view.height).data;let ink=0;for(let k=3;k<a.length;k+=4)if(a[k]>32)ink++;ck(ink>100&&ink<view.width*view.height*.9,'transparent artwork');}
+    for(const view of [front,rear]){const a=view.getContext('2d').getImageData(0,0,view.width,view.height).data;let ink=0;for(let k=3;k<a.length;k+=4)if(a[k]>32)ink++;ck(view.width===MS&&ink>100&&ink<view.width*view.height*.9,'transparent artwork '+id+' '+(view===front?'front':'reflected')+' '+view.width+'x'+view.height+' ink='+ink);}
     for(const clip of AnimaSpriteEngine.clips){const frame=AnimaSpriteEngine.getFrame(front,animaRig(id),clip,.43,{size:80,steps:8,budget:4*1048576});ck(frame&&frame.c.width>80,'motion '+id+' '+clip);motions++;}
    }
    eq(TRIBEL_LINES.map(f=>SP[f.ids.at(-1)].bst),TRIBEL_LINES.map(f=>f.base.at(-1).reduce((a,b)=>a+b,0)),'final stats');
