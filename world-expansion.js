@@ -102,7 +102,7 @@ function expSiteItem(m,x,y,id,iid){m.objs.push({k:'item',iid:'exp'+iid,x,y,item:
 function expSiteTrainer(m,x,y,dir,tid){const r=RNG('exp-trainer:'+m.id+':'+tid),o=genTrainer(r,m.cell,tid,{n:3,los:3,bonus:2});o.x=x;o.y=y;o.dir=dir;o.double=tid===91;if(o.double)o.cls='双戦 '+o.cls;m.objs.push(o);}
 function expansionEncounter(m,area){
  const c=m.cell,r=RNG('ecology:'+m.id),target=clamp(c.prog/50,0,1),types=area==='ridge'?[4,9,11,12,8]:area==='river'?[2,4,9,3]:area==='coast'?[2,9,5,12]:[2,5,10,13,16];
- const pool=FAMS.filter(f=>!f.legend&&!f.starter&&!f.one);
+ const pool=FAMS.filter(f=>!f.legend&&!f.starter&&!f.one&&!f.rareRoute1);
  const choose=(list,n)=>list.map(f=>({f,score:Math.abs(f.tier-target)+(types.includes(f.t1)||types.includes(f.t2)?0:.22)+r()*.04})).sort((a,b)=>a.score-b.score).slice(0,n).map(v=>v.f.id);
  const land=choose(pool.filter(f=>f.hab!=='water'),7),water=choose(pool.filter(f=>f.hab==='water'),6);
  return {...c,land,water,rare:null,lv:Math.max(3,c.lv),name:m.name};

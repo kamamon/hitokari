@@ -5,7 +5,7 @@ const {chromium,webkit,devices}=require('playwright'),assert=require('node:asser
   browser=await api.launch({headless:true});const page=await browser.newPage(engine==='webkit'?{...devices['iPhone 13'],viewport:{width:390,height:844}}:{viewport:{width:960,height:720}});const errors=[];page.on('pageerror',e=>errors.push(String(e)));await page.goto(server.url);await page.waitForFunction(()=>typeof starterResearchMenu==='function'&&typeof buildAnimaRuntimeAtlas==='function'&&UI.length>0);
   const data=await page.evaluate(async()=>{
    const ck=(v,m)=>{if(!v)throw Error(m);},equal=(a,b,m)=>ck(JSON.stringify(a)===JSON.stringify(b),m+' '+JSON.stringify(a));
-   equal(STARTERS,[2,3,1],'starter IDs');equal(STARTER_TRIO.map(f=>f.choice),['C','A','A'],'adopted options');ck(N_SPECIES===1212&&FAMS.filter(f=>f.starter).length===3&&MOVES.length===495,'counts');
+   equal(STARTERS,[2,3,1],'starter IDs');equal(STARTER_TRIO.map(f=>f.choice),['C','A','A'],'adopted options');ck(N_SPECIES===1212&&FAMS.filter(f=>f.starter).length===3&&MOVES.length===496,'counts');
    S=newSave('御三家QA');Object.assign(S,homeSpot());S.opts.snd=0;S.opts.music=0;S.flags.prof=1;S.flags.dex=1;startFromSave();G.busy=true;
    const home=WORLD.main[0],b=townBuildings(home).find(b=>b.kind==='lab'),lab=getMap(home.key+':b'+b.slot);equal(lab.objs.filter(o=>o.k==='starter').map(o=>[o.i,o.x,o.y]),[[0,4,5],[1,5,5],[2,6,5]],'lab three');
    let fronts=0,backs=0;

@@ -3,6 +3,8 @@
 const INDIVIDUAL_MOTION_EVENTS=new WeakMap();
 // Adopted designs override only their nine older motion profiles; retain all other original timelines.
 for(const f of STARTER_TRIO)for(let i=0;i<3;i++){const id=f.ids[i],p=SORANE_MOTION_DATA[id-1];p[1]=f.name[i];p[2]=f.plans[i];p[3]=f.eco[i];p[4]=f.plans[i]==='bird'?1:0;p[5]=f.plans[i]==='bird'?12:9;p[6]=(id*43+i*31)%360;p[7]=18+i*4;p[8]=Math.round((f.base[i][0]+f.base[i][2]+f.base[i][4])/3);p[9]=f.base[i][5];p[10]=p[10].map((d,j)=>Math.max(12,Math.round(d*(f.key==='fire'?.83:f.key==='grass'?1.14:1)+(id+j)%3)));}
+// Apply the approved route1 designs to the original nine per-species timing curves.
+for(const f of ROUTE1_LINES)for(let i=0;i<f.ids.length;i++){const id=f.ids[i],p=SORANE_MOTION_DATA[id-1];p[1]=f.names[i];p[2]=f.plans[i];p[3]=f.eco[i];p[4]=f.plans[i]==='bird'?1:0;p[5]=f.plans[i]==='bird'?12:9;p[6]=(id*37+i*43)%360;p[7]=18+i*4;p[8]=Math.round((f.base[i][0]+f.base[i][2]+f.base[i][4])/3);p[9]=f.base[i][5];p[10]=p[10].map((d,j)=>Math.max(12,Math.round(d*(f.key==='wind-bird'?.82:f.key==='earth-armor'?1.18:1)+(id+j)%3)));}
 function motionProfile(id){return SORANE_MOTION_DATA[id-1]||SORANE_MOTION_DATA[0];}
 function motionClipIndex(name){const i=SORANE_MOTION_CLIPS.indexOf(name);return i<0?0:i;}
 function animaRig(id){return ANIMA_RIG_DATA[id-1]||ANIMA_RIG_DATA[0];}
