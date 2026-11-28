@@ -11,6 +11,7 @@ addHaruFieldProfile('a:tribel-lake:0,0','トリベル平原・しずく湖','pla
 {const d=SORANE_FIELD_DATA.find(x=>x[0]===ROUTE3_KEY);if(d){d[4]='トレーナーと草むらの分岐路';d[7]=[];d[8]=[];d[9]=null;}}
 for(const b of momiBuildings()){const id=momiMap(b.slot),d=SORANE_FIELD_DATA.find(x=>x[0]===id);if(d){d[1]=b.label;d[3]=b.kind;d[4]='木工と鍛錬';d[7]=[];d[8]=[];d[9]=null;}else addHaruFieldProfile(id,b.label,'plain',b.kind,'木工と鍛錬');}
 {const d=SORANE_FIELD_DATA.find(x=>x[0]===MOMI_KEY);if(d){d[4]='年輪広場';d[7]=[];d[8]=[];d[9]=null;}}
+{const d=SORANE_FIELD_DATA.find(x=>x[0]===ROUTE4_KEY);if(d){d[4]='木漏れ日の渓流街道';d[7]=[];d[8]=[];d[9]=null;}}addHaruFieldProfile(ROUTE4_INNER,'第4街道・渓流の奥地','forest','route4-gorge','渓流と木橋');
 const INDIVIDUAL_FIELDS=new Map(SORANE_FIELD_DATA.map(x=>[x[0],x]));
 const NPC_ZONES=['住居区','中央広場','仕事区','交流庭園'];
 const NPC_RESIDENTS=Array.from({length:51},()=>[]);
@@ -68,7 +69,7 @@ async function scheduledResidentTalk(o){const p=npcProfile(o.pid),e=npcScheduleA
 function drawNPCScheduleCard(id){const p=npcProfile(id),e=npcScheduleAt(id);screenBG('生活予定　C'+String(id).padStart(4,'0'));win(4,18,232,34);tx(p[1]+'　'+p[2],10,23,'#2a2233',9);tx(GYM_TOWN[p[3]]+'　現在 '+formatNpcTime(npcMinutes()),10,36,'#5a5560',8);win(4,56,232,146);for(let i=0;i<p[8].length;i++){const row=p[8][i],y=61+i*15;if(i===e.index){ctx.fillStyle='#f4d98a';ctx.fillRect(7,y-1,226,14);}tx(formatNpcTime(row[0]),10,y,'#364b53',8);tx(NPC_ZONES[row[1]],48,y,'#364b53',8);tx(row[2].slice(0,18),97,y,'#2a2233',8);}}
 function fieldProfile(id){return INDIVIDUAL_FIELDS.get(id)||null;}
 function applyIndividualFieldDesign(m){
- const d=fieldProfile(m.id);if(!d||m.individualDesign)return;m.individualDesign=d;if(m.haru||m.tribel||m.route3||m.momi)return;const blocked=(x,y)=>occupied(m,x,y)||!!m.warps[expKey(x,y)]||!!expAt(m,x,y);
+ const d=fieldProfile(m.id);if(!d||m.individualDesign)return;m.individualDesign=d;if(m.haru||m.tribel||m.route3||m.momi||m.route4)return;const blocked=(x,y)=>occupied(m,x,y)||!!m.warps[expKey(x,y)]||!!expAt(m,x,y);
  for(const [x,y,t] of d[7])if(x>0&&y>0&&x<m.W-1&&y<m.H-1&&!blocked(x,y)&&[T.ROCK,T.TREE].includes(m.t[y*m.W+x]))expSet(m,x,y,t);
  if(d[9]){const [x,y,label]=d[9];if(x>0&&y>0&&x<m.W-1&&y<m.H-1&&!blocked(x,y)&&!SOLID[m.t[y*m.W+x]])expPut(m,x,y,{kind:'landmark',label:m.name+'・'+label,design:d[6]});}
  addLinkedTrainerPair(m);

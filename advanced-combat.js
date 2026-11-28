@@ -6,7 +6,7 @@ const doubleTarget=m=>DOUBLE_ADJACENT.has(m.name)?'all':DOUBLE_SPREAD.has(m.name
 function combatEffect(m,t){if(route3PriorityBlock(t,m))return 0;if(m.type<0)return 1;const ab=abilOf(t);return (m.type===8&&ab===2||m.type===2&&ab===9||m.type===3&&(ab===10||ab===33)||m.type===1&&(ab===11||ab===40))?0:typeEff(m.type,SP[t.sp].types);}
 function combatStat(m,st,i,weather=BT?.weather){let v=stat(m,i)*stgMul(st?st[STKEY[i]]||0:0);if(i===1){if(m.st&&abilOf(m)===12)v*=1.5;else if(m.st==='brn')v*=0.5;}if(i===5){if(m.st==='par')v*=0.25;v*=heldOf(m).spe||1;v*=route1Speed(m);v*=route2Speed(m,weather);v*=tribelAISpeed(m,BT);}return Math.max(1,Math.floor(v));}
 function combatEstimate(a,t,m,as,ts,weather){const eff=combatEffect(m,t);if(!eff||m.pow===0)return 0;const fixed=m.eff.find(e=>e.k==='fixed');if(fixed)return fixed.n;if(m.has('level'))return a.lv;if(m.has('halve'))return Math.max(1,t.hp/2);
- let p=Math.floor(m.pow*route2PowerScale(a,m)*route3WeakPower(a,m));if(m.has('pinch')&&a.hp*3<=maxHP(a))p*=2;if(m.has('hex')&&t.st)p*=2;
+ let p=Math.floor(m.pow*route2PowerScale(a,m)*route3WeakPower(a,m)*route4Power(BT,a,t,m));if(m.has('pinch')&&a.hp*3<=maxHP(a))p*=2;if(m.has('hex')&&t.st)p*=2;
  let d=(Math.floor(2*a.lv/5+2)*p*combatStat(a,as,m.phys?1:3,weather)/combatStat(t,ts,m.phys?2:4,weather)/50+2)*eff*0.925;
  if(SP[a.sp].types.includes(m.type))d*=1.5;if(starterPinch(a,m.type))d*=1.5;d*=tribelFireBoost(BT,a,m);d*=route3DamagePower(BT,a,m);if(abilOf(t)===23&&!m.phys&&!starterState(BT,t).mirror)d*=.75;d*=route1DamageScale(BT,t,m,eff);
  if(abilOf(t)===8&&(m.type===1||m.type===5))d*=0.5;if(weather==='sun')d*=m.type===1?1.5:m.type===2?0.5:1;if(weather==='rain')d*=m.type===2?1.5:m.type===1?0.5:1;
@@ -100,7 +100,7 @@ function doubleAI(D,s,reserved){
  }}
  return best||{kind:'move',slot:s,i:-1,mode:'enemy',target:enemies[0]?.pos};
 }
-function doubleOrder(actions){return actions.map(a=>({a,p:a.kind==='run'?110:a.kind==='switch'?100:a.kind==='item'||a.kind==='capture'?90:(a.i<0?0:MOVES[a.slot.mon.mv[a.i].id].prio),speed:combatStat(a.slot.mon,a.slot.st,5,BT?.weather),tie:Math.random()})).sort((a,b)=>b.p-a.p||b.speed-a.speed||a.tie-b.tie).map(x=>x.a);}
+function doubleOrder(actions){return actions.map(a=>({a,p:a.kind==='run'?110:a.kind==='switch'?100:a.kind==='item'||a.kind==='capture'?90:(a.i<0?0:route4Priority(BT,a.slot.mon,MOVES[a.slot.mon.mv[a.i].id])),speed:combatStat(a.slot.mon,a.slot.st,5,BT?.weather),tie:Math.random()})).sort((a,b)=>b.p-a.p||b.speed-a.speed||a.tie-b.tie).map(x=>x.a);}
 async function doubleExecute(D,a){const s=a.slot;if(!s||s.captured||s.mon.hp<=0||D.slots[s.side][s.pos]!==s||D.result)return;
  if(a.kind==='run'){if(!D.wild)return;D.runTry++;const speed=combatStat(s.mon,s.st,5),foe=Math.max(1,...doubleActive(D,1).map(z=>combatStat(z.mon,z.st,5)));if(speed>=foe||ri(256)<Math.floor(speed*128/foe)+30*D.runTry+tribelEscape(s.mon)){D.result='run';await say('うまく にげきれた！');}else await say('にげられなかった！');return;}
  if(a.kind==='capture'){await doubleCapture(D,a);return;}
@@ -111,8 +111,8 @@ async function doubleExecute(D,a){const s=a.slot;if(!s||s.captured||s.mon.hp<=0|
  const allies=doubleActive(D,s.side);
  let targets=mode==='all'?[...enemy,...allies.filter(t=>t!==s)]:mode==='spread'?enemy:mode==='support'?[allies.find(t=>t.pos===a.target)||s]:mode==='self'?[enemy[0]]:[enemy.find(t=>t.pos===a.target)||enemy[0]];
  const support=mode==='support'&&targets[0]!==s;if(mode==='support'&&!support)targets=[enemy[0]];
- let moved=false,rockBoost=false;
- for(let j=0;j<targets.length;j++){if(j&&!moved)break;const t=targets[j];if(t.captured||t.mon.hp<=0||s.mon.hp<=0)continue;const B=doublePair(D,s,t);B.extra=j>0;B.spreadFactor=targets.length>1?0.75:1;B.supportAlly=support;B.r3SpreadBoost=rockBoost;await useMove(B,s.side,a.i);if(!j){moved=B.didMove;rockBoost=B.r3LastBoost;}}
+ let moved=false,rockBoost=false,fireBoost=false;
+ for(let j=0;j<targets.length;j++){if(j&&!moved)break;const t=targets[j];if(t.captured||t.mon.hp<=0||s.mon.hp<=0)continue;const B=doublePair(D,s,t);B.extra=j>0;B.spreadFactor=targets.length>1?0.75:1;B.supportAlly=support;B.r3SpreadBoost=rockBoost;B.r4SpreadBoost=fireBoost;await useMove(B,s.side,a.i);if(!j){moved=B.didMove;rockBoost=B.r3LastBoost;fireBoost=B.r4LastBoost;}}
 }
 async function doubleResidual(D){
  for(const s of D.slots.flat().filter(Boolean)){const m=s.mon,st=s.st;st.flinch=false;st.prot=false;if(s.captured||m.hp<=0)continue;const t=doubleActive(D,1-s.side)[0]||D.slots[1-s.side].find(Boolean)||s,B=doublePair(D,s,t),side=s.side,ab=abilOf(m),mx=maxHP(m);
@@ -184,7 +184,7 @@ async function doubleCapture(D,a){
 }
 function wildEncounterPartner(cell,kind,bonus,repel,lead,first,force=false){
  if(S.party.filter(m=>m.hp>0).length<2||SP[first.sp].legend||route1FamilyRare(first.sp))return null;
- const area=G.map&&G.map.advArea,prob=cell.tribelZone?(TRIBEL_ZONES[cell.tribelZone]||TRIBEL_ZONES.meadow).double:kind==='water'?.10:area==='ridge'?.24:.15;
+ const area=G.map&&G.map.advArea,prob=cell.route4Zone?(kind==='water'?.10:ROUTE4_ZONES[cell.route4Zone].double):cell.tribelZone?(TRIBEL_ZONES[cell.tribelZone]||TRIBEL_ZONES.meadow).double:kind==='water'?.10:area==='ridge'?.24:.15;
  if(!force&&!chance(prob))return null;
  for(let i=0;i<4;i++){const w=wildPick(cell,kind,bonus,true)||(kind==='water'?waterFallback(cell):null);if(w&&!SP[w.sp].legend&&!route1FamilyRare(w.sp)&&!HitokariUpgrade.repelBlocks(repel,w.lv,lead.lv))return w;}return null;
 }

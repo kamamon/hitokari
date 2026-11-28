@@ -15,6 +15,8 @@ on:
       - 'tribel-data.js'
       - 'mon/route3/**'
       - 'route3-data.js'
+      - 'route4-data.js'
+      - 'mon/route4/**'
       - 'tools/bake-anima-sheets.cjs'
       - '.github/workflows/anima-assets.yml'
   workflow_dispatch:
@@ -72,7 +74,7 @@ jobs:
           node-version: '22'
       - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
-      - run: node tools/bake-anima-runtime.cjs --ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003,711,712,516,517,250,251,252,948,949,950,223,224,981,982,283,284,1179,1180,546,547,265,266,1188,1189,1190,849,850,100,101,190,191,192,484,485,1062,1063,11,36,241,242,376,377,370,371,274,275,61,62,63 --out=anima-runtime-pack
+      - run: node tools/bake-anima-runtime.cjs --ids=2,18,19,3,20,21,1,16,17,451,452,717,718,719,334,335,336,765,766,1002,1003,711,712,516,517,250,251,252,948,949,950,223,224,981,982,283,284,1179,1180,546,547,265,266,1188,1189,1190,849,850,100,101,190,191,192,484,485,1062,1063,11,36,241,242,376,377,370,371,274,275,61,62,63,609,610,528,529,358,359,424,425,654,655,927,928,929 --out=anima-runtime-pack
       - uses: actions/upload-artifact@v4
         with:
           name: anima-v113-runtime-atlas-pack
