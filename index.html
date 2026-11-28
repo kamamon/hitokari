@@ -114,7 +114,7 @@ const BOOK_LEG=[[1201,"星明かりだけが届く空の裂け目","星々が進
 
 'use strict';
 /* ================= core.js : 乱数・タイプ・技・特性・道具 ================= */
-const VERSION='1.15';
+const VERSION='1.15.1';
 const SHINY_RATE=8192;           // 色違いの確率 1/8192（原作準拠）
 const PARTY_MAX=6;               // 手持ちは6匹まで
 
@@ -1855,7 +1855,8 @@ function picShiny(P){   // 色違い：色の成分を 入れかえる
 }
 const PIC_FLOAT={fish:1,ghost:1};
 function drawMonPic(g,sp,P,shiny,flip){
-  const fam=famOf(sp),kS=fam.n>1?0.72+0.28*sp.stage/(fam.n-1):1,w=P.img.width,h=P.img.height;
+  const fam=famOf(sp),kS=fam.n>1?0.72+0.28*sp.stage/(fam.n-1):1,w=P.img.naturalWidth||P.img.width,h=P.img.naturalHeight||P.img.height;
+  if(!w||!h)return;
   const f=Math.min(29/w,27.6/h)*kS,dw=w*f,dh=h*f,dx=16-dw/2,dy=PIC_FLOAT[fam.plan]?(15.6+(1-kS)*5)-dh/2:29.6-dh;
   g.save();if(flip){g.translate(32,0);g.scale(-1,1);}
   g.imageSmoothingEnabled=true;g.imageSmoothingQuality='high';

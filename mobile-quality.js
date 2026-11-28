@@ -12,7 +12,7 @@ function mobileResolution(scale){
 function mobileMotionBands(){const q=mobileQualityMode();return q==='low'||q==='auto'&&MOBILE_QA.adaptive?5:isTouchDevice()?8:12;}
 function mobileCacheLimit(k){const small=isTouchDevice()||mobileQualityMode()==='low';return ({monster:small?80:160,portrait:small?72:160,chibi:small?80:160,monsterCanvas:small?28:48})[k]||64;}
 function trimIndividualCaches(){
- const trim=(map,max)=>{if(map.size<=max)return;for(const [k,v] of map){if(map.size<=max)break;if(v.st===0)continue;map.delete(k);}};
+ const trim=(map,max)=>{if(map.size<=max)return;for(const [k,v] of map){if(map.size<=max)break;if(v.st===0||v.pin>0)continue;map.delete(k);}};
  trim(MON_PIC,mobileCacheLimit('monster'));trim(CHR_PIC,mobileCacheLimit('portrait'));
 }
 function mobileFrameSample(render,interval){
