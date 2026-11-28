@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "total": 1212,
   "approved": [
     {
@@ -45,201 +45,12 @@
       ]
     }
   ],
-  "approvedSpecies": 50,
+  "approvedSpecies": 63,
   "defaultStatus": "hold-provisional",
-  "heldSpecies": 1162,
+  "heldSpecies": 1149,
   "next": {
-    "map": "1,0",
-    "name": "第3街道",
-    "land": [
-      {
-        "family": 171,
-        "ids": [
-          516,
-          517
-        ],
-        "names": [
-          "ホロタヌ",
-          "バケダヌ"
-        ]
-      },
-      {
-        "family": 422,
-        "ids": [
-          1181
-        ],
-        "names": [
-          "ソウジンハナ"
-        ]
-      },
-      {
-        "family": 236,
-        "ids": [
-          711,
-          712
-        ],
-        "names": [
-          "ノハラビ",
-          "カゼクサビ"
-        ]
-      },
-      {
-        "family": 315,
-        "ids": [
-          948,
-          949,
-          950
-        ],
-        "names": [
-          "パチワタ",
-          "ライモコ",
-          "ライテイラム"
-        ]
-      },
-      {
-        "family": 83,
-        "ids": [
-          250,
-          251,
-          252
-        ],
-        "names": [
-          "トビカヤ",
-          "カヤキック",
-          "ライガバッタ"
-        ]
-      },
-      {
-        "family": 119,
-        "ids": [
-          358,
-          359,
-          360
-        ],
-        "names": [
-          "シナペロ",
-          "ケイヒナガ",
-          "エンケイガ"
-        ]
-      },
-      {
-        "family": 414,
-        "ids": [
-          453
-        ],
-        "names": [
-          "テンガイサ"
-        ]
-      },
-      {
-        "family": 425,
-        "ids": [
-          192
-        ],
-        "names": [
-          "レンヨウハ"
-        ]
-      },
-      {
-        "family": 417,
-        "ids": [
-          713
-        ],
-        "names": [
-          "ジュシコウガ"
-        ]
-      },
-      {
-        "family": 165,
-        "ids": [
-          496,
-          497,
-          498
-        ],
-        "names": [
-          "ホシヒボ",
-          "コメビナガ",
-          "リュウセイダ"
-        ]
-      },
-      {
-        "family": 420,
-        "ids": [
-          983
-        ],
-        "names": [
-          "キガンガ"
-        ]
-      },
-      {
-        "family": 423,
-        "ids": [
-          548
-        ],
-        "names": [
-          "シロトウド"
-        ]
-      },
-      {
-        "family": 416,
-        "ids": [
-          1004
-        ],
-        "names": [
-          "フクロダマ"
-        ]
-      },
-      {
-        "family": 415,
-        "ids": [
-          767
-        ],
-        "names": [
-          "ソラノボルド"
-        ]
-      }
-    ],
-    "waterAfterLand": [
-      {
-        "family": 364,
-        "ids": [
-          1095,
-          1096,
-          1097
-        ],
-        "names": [
-          "チョウガイ",
-          "ヒラチョウラ",
-          "カクヒラギ"
-        ]
-      },
-      {
-        "family": 363,
-        "ids": [
-          1092,
-          1093,
-          1094
-        ],
-        "names": [
-          "ウキツブ",
-          "ナガフクネ",
-          "レンカイラ"
-        ]
-      },
-      {
-        "family": 371,
-        "ids": [
-          1116,
-          1117,
-          1118
-        ],
-        "names": [
-          "モミフサ",
-          "ソウカンモ",
-          "リンジュフサ"
-        ]
-      }
-    ]
+    "map": "2,0",
+    "name": "モミノキ街"
   },
   "policy": "Unapproved existing assets remain playable for continuity; no new design work until explicit acceptance. Reuse IDs and preserve old originals. Prior generated pack is a provisional archive, not approved artwork.",
   "route1": {
@@ -631,5 +442,116 @@
       "a:tribel-lake:0,0",
       "a:tribel-hill:0,0"
     ]
+  },
+  "route3": {
+    "map": "1,0",
+    "name": "第3街道",
+    "land": [
+      {
+        "ids": [
+          11,
+          36
+        ],
+        "names": [
+          "ケンアナ",
+          "ゴウアナ"
+        ],
+        "weight": 26,
+        "levels": [
+          24
+        ],
+        "ability": 43
+      },
+      {
+        "ids": [
+          241,
+          242
+        ],
+        "names": [
+          "アメイモリ",
+          "シブキモリ"
+        ],
+        "weight": 22,
+        "levels": [
+          26
+        ],
+        "ability": 44
+      },
+      {
+        "ids": [
+          376,
+          377
+        ],
+        "names": [
+          "カブネジ",
+          "カブガネ"
+        ],
+        "weight": 18,
+        "levels": [
+          28
+        ],
+        "ability": 45
+      },
+      {
+        "ids": [
+          370,
+          371
+        ],
+        "names": [
+          "ヤミコウモ",
+          "ヨルマント"
+        ],
+        "weight": 15,
+        "levels": [
+          27
+        ],
+        "ability": 46
+      },
+      {
+        "ids": [
+          274,
+          275
+        ],
+        "names": [
+          "ハリダネ",
+          "イバラカブ"
+        ],
+        "weight": 12,
+        "levels": [
+          25
+        ],
+        "ability": 47
+      },
+      {
+        "ids": [
+          61,
+          62,
+          63
+        ],
+        "names": [
+          "ガケチビ",
+          "ガケリュウ",
+          "ガンレグス"
+        ],
+        "weight": 7,
+        "levels": [
+          28,
+          45
+        ],
+        "ability": 48
+      }
+    ],
+    "levelRange": [
+      8,
+      11
+    ],
+    "weightsOutOf": 100,
+    "assetCount": 13,
+    "frontCount": 13,
+    "trueRearCount": 0,
+    "reflectedRearCount": 13,
+    "trainers": 6,
+    "pairs": 1,
+    "waterStatus": "hold-provisional"
   }
 }
