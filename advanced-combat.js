@@ -23,6 +23,7 @@ function switchRating(current,opponents,candidates,weather){
  return best;
 }
 function singleEnemySwitch(B){
+ if(B.o.momiGym&&B.momiSwitched)return -1;
  if(B.wild||B.foes.length<2||!B.turnN||B.turnN-(B.lastSwitch??-10)<2||B.fs.rech)return -1;
  return switchRating({mon:B.foes[B.fi],st:B.fs},[{mon:S.party[B.pi],st:B.ps}],B.foes.map((mon,i)=>({mon,i})).filter(v=>v.i!==B.fi&&v.mon.hp>0),B.weather);
 }
