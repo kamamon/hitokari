@@ -5555,6 +5555,7 @@ async function talk(o){
    case'clerk':await shopMenu();break;
    case'guard':await gateTalk(o);break;
    case'trainer':{
+     if(G.map.route4){await route4TrainerTalk(o);break;}
      if(G.map.route3){await route3TrainerTalk(o);break;}
      const grunt=o.grunt,nm=o.cls+'の '+o.name;
      if(o.beaten){if(!grunt&&await trainerRematch(o))break;await msg('「'+lineOf(grunt?GR_POST:TR_POST,o)+'」');break;}
@@ -6022,7 +6023,7 @@ function onStep(){
   if(w&&(v===T.DOOR||v===T.MAT||v===T.LADDER)){run(()=>doWarp(w));return;}
   if(momiArrivalReady(m)){run(momiArrival);return;}
   if(expansionChapterReady(m)){run(()=>expansionChapter(m));return;}
-  const sight=trainerSightHits();if(sight.length){const tr=sight[0];if(m.route3){run(()=>route3TrainerTalk(tr,true));return;}if(sight.length>1&&sight[1].role==='trainer'&&tr.role==='trainer'&&S.party.filter(m=>m.hp>0).length>=2)run(()=>pairedTrainerEncounter(sight.slice(0,2)));else run(()=>trainerEncounter(tr));return;}
+  const sight=trainerSightHits();if(sight.length){const tr=sight[0];if(m.route4){run(()=>trainerEncounter(tr));return;}if(m.route3){run(()=>route3TrainerTalk(tr,true));return;}if(sight.length>1&&sight[1].role==='trainer'&&tr.role==='trainer'&&S.party.filter(m=>m.hp>0).length>=2)run(()=>pairedTrainerEncounter(sight.slice(0,2)));else run(()=>trainerEncounter(tr));return;}
   const n=nurseryFor();if(n.egg&&n.egg.held&&n.egg.walk>=HitokariUpgrade.EGG_HATCH){run(hatchNurseryEgg);return;}
   const repel=S.repel||0;if(repel>0){S.repel--;if(S.repel===0){run(async()=>{await msg('まよけのポプリの 効き目が きれた。');const n=ITEM_ORDER.find(id=>S.bag[id]>0&&ITEMS[id].k==='repel');if(n&&await confirmYN('もう一つ 使いますか？'))await useItem(n,{});});return;}}
   if(m.enc&&m.cell&&S.party.length){

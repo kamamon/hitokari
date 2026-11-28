@@ -9,7 +9,7 @@ const ROUTE4_TRAINERS=[
 function r4Set(m,x,y,t){if(x>=0&&x<m.W&&y>=0&&y<m.H)m.t[y*m.W+x]=t;}
 function r4Rect(m,x,y,w,h,t){for(let j=y;j<y+h;j++)for(let i=x;i<x+w;i++)r4Set(m,i,j,t);}
 function r4Path(m,x,y,x2,y2,n=1){for(let xx=Math.min(x,x2);xx<=Math.max(x,x2);xx++)for(let k=0;k<n;k++)r4Set(m,xx,y+k,T.PATH);for(let yy=Math.min(y,y2);yy<=Math.max(y,y2);yy++)for(let k=0;k<n;k++)r4Set(m,x2+k,yy,T.PATH);}
-function r4Patch(m,cx,cy,rx,ry,r,flower=false){for(let y=cy-ry;y<=cy+ry;y++)for(let x=cx-rx;x<=cx+rx;x++){if(x<2||x>29||y<2||y>29||m.t[y*32+x]!==T.GRASS||((x-cx)/(rx+.4))**2+((y-cy)/(ry+.4))**2>1||!r.chance(flower?.78:.92))continue;r4Set(m,x,y,flower?T.FLOWER:T.TALL);}}
+function r4Patch(m,cx,cy,rx,ry,r,flower=false){for(let y=cy-ry;y<=cy+ry;y++)for(let x=cx-rx;x<=cx+rx;x++){if(x<2||x>29||y<2||y>29||(m.t[y*32+x]!==T.GRASS&&(!flower||m.t[y*32+x]!==T.TALL))||((x-cx)/(rx+.4))**2+((y-cy)/(ry+.4))**2>1||!r.chance(flower?.78:.92))continue;r4Set(m,x,y,flower?T.FLOWER:T.TALL);}}
 function r4Sign(m,x,y,s){r4Set(m,x,y,T.SIGN);m.signs[x+','+y]=s;}
 function r4Site(m,x,y,kind,extra={}){m.route4Sites[x+','+y]={kind,...extra};}
 function r4Prop(m,x,y,id,say){m.objs.push({k:'haruprop',id,x,y,say});}
@@ -24,6 +24,8 @@ function genRoute4(zone='main',cell=CELLS[ROUTE4_KEY]){
  for(let y=0;y<32;y++)for(let x=0;x<32;x++){if(x<2||x>29||y<2||y>29)r4Set(m,x,y,T.TREE);if(y<10)m.elevation[y*32+x]=1;}
  const riverY=main?12:15,riverEnd=main?16:18;
  for(let y=riverY;y<=riverEnd;y++)for(let x=2;x<=29;x++)r4Set(m,x,y,T.WATER);
+ // Uneven banks while preserving the continuous water barrier and the bridge footprints.
+ const crossings=main?[6,7,20,21]:[10,11,24,25];for(let x=5;x<=29;x++)if(!crossings.includes(x)){if(Math.sin(x*.73)>.68)r4Set(m,x,riverY,T.GRASS);if(Math.cos(x*.61)>.73)r4Set(m,x,riverEnd,T.GRASS);}
  // Waterfall is a real water tile, never a mandatory traversal gate.
  for(let y=riverY;y<=riverY+1;y++)for(let x=2;x<=4;x++)expPut(m,x,y,{kind:'fall',dir:2});
  if(main){
@@ -57,6 +59,7 @@ function genRoute4(zone='main',cell=CELLS[ROUTE4_KEY]){
  for(const [z,tid,pid,x,y,dir,cls,team] of ROUTE4_TRAINERS.filter(t=>t[0]===zone)){
   r4Set(m,x,y,T.GRASS);m.objs.push({k:'npc',role:'trainer',tid,pid,spr:pSpr(pid),name:pFull(pid),cls,x,y,dir,los:3,team:team.map(([sp,lv])=>({sp,lv})),money:team.at(-1)[1]*28});
  }
+ for(const [x,y] of (main?[[3,8],[10,3],[28,8],[3,19],[9,19],[28,20],[4,29],[28,29]]:[[3,3],[28,3],[4,8],[27,11],[4,20],[28,21],[3,29],[29,29]]))if(m.t[y*32+x]===T.GRASS&&!occupied(m,x,y)&&!m.warps[x+','+y]&&!expAt(m,x,y))r4Set(m,x,y,T.TREE);
  m.r4Flowers=[];for(let y=2;y<30;y++)for(let x=2;x<30;x++)if(m.t[y*32+x]===T.FLOWER)m.r4Flowers.push([x,y,(x*7+y*13)%24]);
  return m;
 }
@@ -65,7 +68,7 @@ function route4Restore(m){if(!m.route4||!S)return;const q=route4State();let dirt
  for(const [x,y] of m.r4Repair){const v=q.repaired?T.PATH:T.WATER;if(m.t[y*32+x]!==v){r4Set(m,x,y,v);dirty=true;}if(q.repaired)expPut(m,x,y,{kind:'bridge',dir:0});else delete m.adv[x+','+y];}
  if(dirty)m.rn=null;
 }
-function route4SafeSpawn(m,x,y){const ok=(a,b)=>Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0&&a<32&&b<32&&!SOLID[m.t[b*32+a]]&&m.t[b*32+a]!==T.WATER&&!occupied(m,a,b);if(ok(x,y))return[x,y];return m.route4==='main'?[15,2]:[15,29];}
+function route4SafeSpawn(m,x,y){const ok=(a,b)=>Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0&&a<32&&b<32&&!SOLID[m.t[b*32+a]]&&(m.t[b*32+a]!==T.WATER||S?.surf&&S.bag.k_surf&&expAt(m,a,b)?.kind!=='fall')&&!occupied(m,a,b);if(ok(x,y))return[x,y];return m.route4==='main'?[15,2]:[15,29];}
 async function route4SiteTalk(m,a){
  const q=route4State();
  if(a.kind==='rest'){if(await confirmYN('ここで 相棒を 休ませる？')){S.party.forEach(healMon);sfx('heal');await msg('みんな 元気に なった！');saveGame();}return;}
@@ -90,7 +93,18 @@ function drawRoute4Ground(g,m,camx,camy){
  if(m.route4==='main'){const x=26*16-camx,y=22*16-camy;g.fillStyle='#cce0b2';g.fillRect(x+3,y+3,10,10);g.fillStyle='#48764c';g.beginPath();g.moveTo(x+8,y+4);g.lineTo(x+4,y+11);g.lineTo(x+12,y+11);g.fill();}
  g.restore();
 }
-function drawRoute4Atmosphere(g,m,cx,cy){if(reducedFx())return;g.save();const night=dayPhase()===3;g.fillStyle=night?'rgba(255,205,103,.65)':'rgba(244,250,211,.5)';for(let j=0;j<12;j++){const x=((j*73+G.t*.26-cx)%(LW+32)+LW+32)%(LW+32)-16,y=((j*53+Math.sin(G.t/43+j)*9-cy)%(LH+24)+LH+24)%(LH+24)-12;g.beginPath();g.ellipse(x,y,night?1:.8,night?.8:.45,0,0,Math.PI*2);g.fill();}g.restore();}
+function drawRoute4Atmosphere(g,m,cx,cy){g.save();const night=dayPhase()===3;
+ if(night){const spots=m.route4==='main'?[[27,6,358],[24,26,358]]:[[5,5,927],[20,12,927],[25,26,358]];for(const [x,y,id] of spots){const px=x*16-cx,py=y*16-cy;if(px<-30||py<-30||px>LW+30||py>LH+30)continue;const r=g.createRadialGradient(px+8,py+5,1,px+8,py+5,20);r.addColorStop(0,id===358?'rgba(255,190,70,.40)':'rgba(103,224,176,.30)');r.addColorStop(1,'rgba(200,230,180,0)');g.fillStyle=r;g.fillRect(px-12,py-15,40,40);const c=monCanvas(id,false,false,false);drawIndividualMotion(g,animaPreviewMon(id,false),c,px-3,py-12,22,1,0,0,false,'idle');}}
+ if(reducedFx()){g.restore();return;}g.fillStyle=night?'rgba(255,205,103,.65)':'rgba(244,250,211,.5)';for(let j=0;j<12;j++){const x=((j*73+G.t*.26-cx)%(LW+32)+LW+32)%(LW+32)-16,y=((j*53+Math.sin(G.t/43+j)*9-cy)%(LH+24)+LH+24)%(LH+24)-12;g.beginPath();g.ellipse(x,y,night?1:.8,night?.8:.45,0,0,Math.PI*2);g.fill();}g.restore();}
 function drawRoute4HUD(m){if(UI.length||G.banner&&G.banner.t>0)return;ctx.fillStyle='rgba(34,65,45,.82)';ctx.fillRect(4,4,134,15);tx((m.route4==='main'?'木漏れ日の 渓流街道 Lv9～12':'渓流の 奥地 Lv11～13'),8,7,'#fff5d5',8);}
 let R4_SOUND_MAP='',R4_SOUND_NEXT=0;
 function route4AmbientAudio(){if(!S||!G.map?.route4||G.scene!=='world'||G.busy||!SND||!AC)return;if(R4_SOUND_MAP!==G.map.id){R4_SOUND_MAP=G.map.id;R4_SOUND_NEXT=G.t+80;}if(G.t<R4_SOUND_NEXT)return;R4_SOUND_NEXT=G.t+160+(G.t%90);sfx(dayPhase()===3?'r4Chime':Math.abs(G.pl.y-(G.map.route4==='main'?14:16))<5?'haruWater':'haruBird');}
+
+async function route4TrainerTalk(o){
+ if(o.beaten){if(await trainerRematch(o))return;await msg('「木漏れ日の 道を 楽しんでね。」');return;}
+ if(!S.party.some(m=>m.hp>0))return;
+ await msg('「渓流を 渡る前に 腕を ためそう！」');
+ const result=await battle({trainer:{name:o.cls+'の '+o.name,team:mkTeam(o.team,10),money:o.money,spr:o.spr}});
+ if(result==='lose'){await blackout();return;}if(result!=='win')return;
+ const key='t:'+G.map.id+':'+o.tid;S.flags[key]=1;o.beaten=true;HitokariUpgrade.noteMatch(S,key);saveGame();
+}
