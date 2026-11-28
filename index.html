@@ -4887,7 +4887,7 @@ async function evolveMon(m){
 }
 // 生態と関連する早期進化。通常レベル進化は維持。
 const EARLY_EVOLUTION={7:{early:5,bond:190,phase:3},9:{early:5,phase:3},11:{early:4,bond:180},12:{early:4,bond:180},13:{early:5,phase:3},15:{early:5,phase:3},46:{early:4,phase:1},49:{early:4,phase:0}};
-function evolutionRule(sp){return sp.stage===0?EARLY_EVOLUTION[sp.id]||null:null;}
+function evolutionRule(sp){return !ROUTE3_IDS.has(sp.id)&&sp.stage===0?EARLY_EVOLUTION[sp.id]||null:null;}
 function canEvolve(m){const sp=SP[m.sp];return !!sp.next&&HitokariUpgrade.earlyEvolution(m,sp.evoLv,evolutionRule(sp),dayPhase());}
 async function checkEvolutions(){
   for(const m of S.party.slice()){
