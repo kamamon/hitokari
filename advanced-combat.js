@@ -94,7 +94,7 @@ function doubleAI(D,s,reserved){
  if(m.has('rech'))score*=0.7;if(m.has('boom')&&s.mon.hp>maxHP(s.mon)*0.25)score*=0.1;
  }else if(kind==='support'){const h=t.mon.hp/maxHP(t.mon);score=m.has('heal')?(h<0.4?85:h<0.7?35:0):(t.mon.st?62:0);}
  else if(kind==='self'){score=m.has('protect')?(s.st.protN?0:8):m.has('wall')?(!D.wall[s.side][m.eff.find(e=>e.k==='wall').c]?30:0):m.has('wx')?(D.weather!==m.eff.find(e=>e.k==='wx').w?18:0):m.has('rest')?(s.mon.hp<maxHP(s.mon)*0.3?70:0):m.eff.some(e=>e.k==='stage'&&e.who==='self'&&Math.abs(s.st[e.stat])<3)?24:4;}
- else score=t.mon.st?5:25;
+ else score=m.type===3&&abilOf(t.mon)===33||m.eff.length&&m.eff.every(e=>e.k==='stage'&&e.who==='foe'&&route2BlocksAccuracy(t.mon,e.stat,e.n))?0:t.mon.st?5:25;
  score*=0.96+Math.random()*0.08;if(score>bs){bs=score;best={kind:'move',slot:s,i:v.i,target:t?t.pos:null,mode:kind};}
  }}
  return best||{kind:'move',slot:s,i:-1,mode:'enemy',target:enemies[0]?.pos};

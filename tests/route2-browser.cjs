@@ -38,17 +38,19 @@ const {chromium,webkit,devices}=require('playwright'),assert=require('node:asser
    sheep.hp=Math.floor(maxHP(sheep)/2);const hp2=sheep.hp;learn(weak,'しびれなみ');Math.random=()=>.1;await useMove(b,0,0);Math.random=random;ck(sheep.hp===hp2+Math.floor(maxHP(sheep)/4)&&!sheep.st,'electric status absorbed');
    b=B(snake,enemy);BT=b;learn(snake,'ぶつかる');enemy.st=null;Math.random=()=>.05;await useMove(b,0,0);Math.random=random;ck(enemy.st==='psn','venom contact');
    b=B(weak,flower);BT=b;learn(weak,'ぶつかる');weak.st=null;Math.random=()=>.05;await useMove(b,0,0);Math.random=random;ck(b.ps.spe===-1,'cotton contact');
-   b=B(weak,fungus);BT=b;learn(weak,'ぶつかる');weak.st=null;Math.random=()=>.05;await useMove(b,0,0);Math.random=random;ck(weak.st==='slp','sleep contact');weak.st=null;
+   b=B(weak,fungus);BT=b;learn(weak,'かみつきあご');weak.st=null;Math.random=()=>.05;await useMove(b,0,0);Math.random=random;ck(weak.st==='slp','sleep contact');weak.st=null;
    ck(route2Contact(other)&&!route2Contact(MOVES[moveId('つぶてあめ')]),'contact vs ranged');await route2ContactEffects(b,0,MOVES[moveId('すなげり')],10);ck(!weak.st,'ranged not contact');
    // Two enemies receive the entry debuff, excluding the accuracy-immune mole.
    S.party=[tanuki,rabbit];const D=doubleState({trainer:{name:'QA',team:[enemy,mole]}});BT=D;await doubleEnter(D,D.slots[0][0]);ck(D.slots[1][0].st.acc===-1&&D.slots[1][1].st.acc===0,'double entry');
    // Real evolution and signature-type acquisition on the transition.
    const evo=makeMon(250,15);evo.mv=[];S.party=[evo];BT=null;G.scene='world';await evolveMon(evo);ck(evo.sp===251&&evo.mv.some(v=>MOVES[v.id].name==='しゅんそくけり'),'actual evolution');
+   // Capture an actual encounter using the real battle engine and save, with deterministic QA randomness.
+   S.party=[makeMon(19,60,{iv:31}),makeMon(21,60,{iv:31})];S.bag.fuda=3;G.scene='world';BT=null;G.fade=0;chooseAction=async()=>({t:'seal',id:'fuda'});Math.random=()=>0;const captured=await doWild({sp:711,lv:5},{});Math.random=random;ck(captured==='caught'&&S.caught[711]&&S.party.some(m=>m.sp===711),'actual capture');
    // Render the expanded field and HD single battle using the production paths.
    S.party=[makeMon(712,25),makeMon(19,50)];BT=null;G.scene='world';loadMap(c.key,15,15,0);G.banner=null;render();window.route2Field=G.map.id;
    const ally=S.party[0],foe=makeMon(1179,7);G.scene='battle';const view={o:{wild:foe},wild:true,foes:[foe],pi:0,fi:0,ps:newStg(),fs:newStg(),env:battleEnv({}),hpShow:[ally.hp,foe.hp],fx:{foeX:0,meX:0,foeA:1,meA:1,foeY:0,meY:0},weather:null,wall:[[0,0],[0,0]]};BT=view;fxClear();render();
    ck(battleArtSource(foe,false,64).view==='front'&&battleArtSource(ally,true,96).view==='rear','HD asset');
-   return{counts,fronts,backs,reflected,motions,meadow:m.route2Meadow,connected:true,abilities:8,double:true,evolution:true};
+   return{counts,fronts,backs,reflected,motions,meadow:m.route2Meadow,connected:true,abilities:8,double:true,evolution:true,capture:true};
   });
   fs.mkdirSync('test-results/route2',{recursive:true});await page.locator('canvas').first().screenshot({path:'test-results/route2/'+engine+'-battle.png'});await page.evaluate(()=>{BT=null;G.scene='world';render();});await page.locator('canvas').first().screenshot({path:'test-results/route2/'+engine+'-meadow.png'});
   assert.deepEqual(errors,[]);assert.deepEqual(data.counts,[25,20,15,13,10,8,6,3]);assert.equal(data.fronts,18);assert.equal(data.backs,4);assert.equal(data.motions,576);results.push({engine,...data});await browser.close();browser=null;

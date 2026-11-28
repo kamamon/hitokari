@@ -4375,6 +4375,7 @@ function aiPick(B){
         if(m.has('drain')&&hp<0.6)score+=12;
       }
     }else{
+      if(m.type===3&&ab===33&&m.eff.some(e=>e.k==='st'||e.k==='stage'&&e.who==='foe'||e.k==='seed'||e.k==='split'))continue;
       for(const e of m.eff){
         let v=0;
         if(e.k==='st'){
