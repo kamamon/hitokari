@@ -88,6 +88,7 @@ body.land #bC{right:auto;left:max(8px,env(safe-area-inset-left));top:7%;bottom:a
 <script src="route1-data.js"></script>
 <script src="route2-data.js"></script>
 <script src="tribel-data.js"></script>
+<script src="route3-data.js"></script>
 <script>
 /* ソラネ地方の人物2000・道具200（tools/parse_sorane.py → gen_sorane.py）。絵は chr/C0001.webp など */
 const PEOPLE_KEY=[["綴森 ハクノ","アニマ博士"],["晴路 ソウ","主人公・男"],["晴路 アオ","主人公・女"],["飛鳥 リオト","幼なじみのライバル"],["名取 コトネア","研究を志すライバル"],["遠野 ナギル","旅慣れたライバル"],["紙野 メモリ","博士の調査助手"],["織部 イトミ","仕立て工房の案内人"],["道具屋 ツクル","道具開発の相棒"],["芽久保 イトハ","ジムリーダー"],["百瀬 ハルク","ジムリーダー"],["露原 ネイロ","ジムリーダー"],["琥野 セキト","ジムリーダー"],["虹井 マユカ","ジムリーダー"],["風巻 ソウリ","ジムリーダー"],["雨宮 ネムジ","ジムリーダー"],["白部 リツカ","ジムリーダー"],["夢代 トワリ","ジムリーダー"],["暁野 ガレン","ジムリーダー"],["汐瀬 ミオリ","ジムリーダー"],["渦井 クラウ","ジムリーダー"],["珊瑚田 ニイナ","ジムリーダー"],["音見 タクト","ジムリーダー"],["滴森 コノエ","ジムリーダー"],["蛍野 アキセ","ジムリーダー"],["月城 シュウガ","ジムリーダー"],["村雨 リキョウ","ジムリーダー"],["凪野 ツバト","ジムリーダー"],["真珠野 オリエ","ジムリーダー"],["火輪 センジ","ジムリーダー"],["大金 レント","ジムリーダー"],["砂上 ヒナギ","ジムリーダー"],["黒良 ゴウト","ジムリーダー"],["稲妻 チヨリ","ジムリーダー"],["岩戸 アラム","ジムリーダー"],["竜石 サライ","ジムリーダー"],["湯森 ユキト","ジムリーダー"],["赤錆 カナメ","ジムリーダー"],["天露 フユラ","ジムリーダー"],["星辺 ユラノ","ジムリーダー"],["雪渡 トキエ","ジムリーダー"],["森林 イツキナ","ジムリーダー"],["影笠 ミツユ","ジムリーダー"],["眠里 ウズネ","ジムリーダー"],["羽雪 ライハ","ジムリーダー"],["白銀 トウマル","ジムリーダー"],["花間 エリネ","ジムリーダー"],["鹿角 ミノルカ","ジムリーダー"],["夢織 セラト","ジムリーダー"],["空橋 リンセ","ジムリーダー"],["白爪 ガクヤ","ジムリーダー"],["影坊 ナツメル","ジムリーダー"],["月読 オトセ","ジムリーダー"],["岩根 ジュエン","ジムリーダー"],["菖蒲 カイリネ","ジムリーダー"],["虫音 シキノ","ジムリーダー"],["火山場 ロクア","ジムリーダー"],["依代 ミクリ","ジムリーダー"],["天界 セイラオ","ジムリーダー"],["大地堂 ガクエン","四天王・地脈"],["海原 ミナサ","四天王・潮流"],["天鳥 ライゼン","四天王・天候"],["記原 シオネ","四天王・記憶"],["巡野 アステル","チャンピオン"],["無地野 レムナ","静環団の代表"],["時雨 ユノカ","静環団・観測幹部"],["鉄見 ガドル","静環団・構造幹部"],["眠野 モイラ","静環団・記録幹部"],["路白 シノク","静環団の元調査員"],["晴路 アサヨ","主人公の家族・保護者"],["晴路 ユウジン","主人公の家族・地図職人"],["飛鳥 トメオ","幼なじみの祖父"],["芽吹 ミイナ","主人公の妹分"],["白井 セネル","巡環診療所の主任"],["高森 バルク","広域レンジャー隊長"],["波間 シエナ","海底探査船の船長"],["風読 コウリ","飛行船の機関士"],["石守 ラング","地底案内人"],["星詠 ツズリ","天文台の館長"],["月舟 ノクタ","月影の海の語り部"],["朝凪 ヒオリ","夜明けの観測者"],["根守 ヴィオ","原初の谷の世話人"],["繭崎 イロア","虹膜洞窟の研究員"],["土還 キノア","古い森の土壌学者"],["夢津 ルミエ","夢の海の案内役"],["銀記 オルノ","記憶回廊の司書"],["分岐 サトリ","境界に現れる旅人"],["円庭 マキオ","リーグ委員長"],["写野 フレア","旅の写真記者"],["継橋 ハルマ","復旧工事のまとめ役"],["宿里 ユリエ","巡回宿の女将"],["古市 レキオ","移動古道具屋"],["音海 リセト","合奏祭の進行役"],["手島 ユノル","静環団の新人"],["星環 モナカ","巡環図鑑の編集者"],["風港 エルド","遠方から来た交換使節"],["小径 チカル","迷子の道案内人"],["輪木 サナラ","五圏連絡所の調整役"],["古灯 クニル","旧巡回路の灯守"],["道守 シキエ","世界巡回のベテラン"]];
@@ -111,7 +112,7 @@ const BOOK_LEG=[[1201,"星明かりだけが届く空の裂け目","星々が進
 
 'use strict';
 /* ================= core.js : 乱数・タイプ・技・特性・道具 ================= */
-const VERSION='1.12';
+const VERSION='1.13';
 const SHINY_RATE=8192;           // 色違いの確率 1/8192（原作準拠）
 const PARTY_MAX=6;               // 手持ちは6匹まで
 
@@ -346,7 +347,7 @@ const ABIL=[
  {n:'聖なる守り',d:'状態異常にならない'}];
 ABIL.push({n:'焔芯',d:'HPが1/3以下のとき 焔の攻撃技が1.5倍'},{n:'潮芯',d:'HPが1/3以下のとき 潮の攻撃技が1.5倍'},{n:'芽吹き',d:'HPが1/3以下のとき 森の攻撃技が1.5倍'},{n:'残火加速',d:'敵の攻撃で初めてHP半分以下になると 素早さ1段階上昇（1戦1回）'},{n:'水鏡',d:'初めて受ける相手の特殊攻撃のダメージを25%軽減（1戦1回）'},{n:'深根',d:'回復・防御以外の変化技が成功したターンの終わりに HPを1/16回復'});
 ABIL.push({n:'拾いもの',d:'勝利・捕獲後10%で 道具を拾う'},{n:'追い風・初速',d:'HP満タン時 素早さ1.2倍'},{n:'朝露',d:'雨のターン終了時 HPを1/16回復'},{n:'堅殻',d:'HP満タン時 物理攻撃を25%軽減'},{n:'星の加護',d:'最初に受ける効果抜群の攻撃を30%軽減（1戦1回）'});
-ABIL.push(...ROUTE2_ABILITIES,...TRIBEL_ABILITIES);
+ABIL.push(...ROUTE2_ABILITIES,...TRIBEL_ABILITIES,...ROUTE3_ABILITIES);
 const ABIL_BY_TYPE=[[6,12,16,17,14],[0,5,11],[0,9,13],[0,3,10],[0,13,16],[8,6,0],[12,17,1],[4,13,0],[6,0,1],
  [14,7,17],[2,13,14],[7,15,0],[6,15,0],[2,13,0],[1,17,0],[1,17,12],[15,6,0]];
 
@@ -771,7 +772,7 @@ for(const f of STARTER_TRIO){for(let i=0;i<3;i++)BOOK_SP[f.ids[i]-1]=[f.name[i],
   // Preserve every family index; only three approved lines are starters. Two former starters are ordinary lines.
   for(const f of FAMS)if(f&&f.starter&&!STARTER_IDS.includes(f.ids[0]))f.starter=false;
   for(const f of STARTER_TRIO){const fam=FAMS[SP[f.ids[0]].fam];Object.assign(fam,{starter:true,abil:f.ability,bst0:318,bstN:535,evo:[16,36],t1:f.type,t2:f.secondary,t2From:1,learn:f.learn.map(([lv,name])=>{const id=moveId(name);if(id<0)throw Error('starter move '+name);return [lv,id];}),starterSignature:moveId(f.signature)});for(let i=0;i<3;i++){const sp=SP[f.ids[i]];sp.base=f.base[i].slice();sp.bst=sp.base.reduce((x,y)=>x+y,0);sp.abil=f.ability;sp.evoLv=i===0?16:i===1?36:0;sp.yield=Math.max(30,Math.floor(sp.bst*.36-35));}}
-  applyRoute1Families();applyRoute1Families(ROUTE2_LINES);applyRoute1Families(TRIBEL_LINES);
+  applyRoute1Families();applyRoute1Families(ROUTE2_LINES);applyRoute1Families(TRIBEL_LINES);applyRoute1Families(ROUTE3_LINES);
   N_SPECIES=BOOK_SP.length;
   SP_OWARI=SP.findIndex(s=>s&&s.name==='メモルディア');
   SP_HAJIMARI=-1;
@@ -779,7 +780,7 @@ for(const f of STARTER_TRIO){for(let i=0;i<3;i++)BOOK_SP[f.ids[i]-1]=[f.name[i],
 const STARTERS=STARTER_IDS.slice(); // 火→水→草。ライバルは次の相性有利な相棒を固定
 const famOf=sp=>FAMS[sp.fam];
 // そのレベルで覚えている技：新しい攻撃技3つ＋変化技1つ（攻撃技がなくならないように）
-function movesAt(sp,lv){const L=famOf(sp).learn.filter(a=>a[0]<=lv&&starterMoveAllowed(sp,a[1])&&route1MoveAllowed(sp,a[1])&&route2MoveAllowed(sp,a[1])).map(a=>a[1]),d=L.filter(id=>MOVES[id].pow>0),s=L.filter(id=>MOVES[id].pow===0);
+function movesAt(sp,lv){const L=famOf(sp).learn.filter(a=>a[0]<=lv&&starterMoveAllowed(sp,a[1])&&route1MoveAllowed(sp,a[1])&&route2MoveAllowed(sp,a[1])&&route3MoveAllowed(sp,a[1])).map(a=>a[1]),d=L.filter(id=>MOVES[id].pow>0),s=L.filter(id=>MOVES[id].pow===0);
   const pk=d.slice(-3);if(s.length)pk.push(s[s.length-1]);else if(d.length>3)pk.push(d[d.length-4]);
   const out=L.filter(id=>pk.indexOf(id)>=0).slice(-4),sig=sp.stage===2&&famOf(sp).starter&&lv>=36?famOf(sp).starterSignature:sp.id===1003&&lv>=35?moveId('せいげっこう'):famOf(sp).sig;
   return sig>=0?[sig].concat(out.filter(id=>id!==sig)).slice(0,4):out;}
@@ -801,7 +802,7 @@ function dexText(sp){
 }
 
 /* ---------- 個体 ---------- */
-function abilityOptions(sp){const f=famOf(sp),base=sp.abil,record=STARTER_SPECIES.get(sp.id);if(record)return record.stage===2?[base,record.family.special]:[base];if(ROUTE1_IDS.has(sp.id)||ROUTE2_IDS.has(sp.id)||TRIBEL_IDS.has(sp.id))return[base];if(f.legend||f.one||f.starter)return [base];const choices=ABIL_BY_TYPE[f.t1].filter(n=>n!==base);return choices.length?[base,choices[hashStr('ability:'+f.id)%choices.length]]:[base];}
+function abilityOptions(sp){const f=famOf(sp),base=sp.abil,record=STARTER_SPECIES.get(sp.id);if(record)return record.stage===2?[base,record.family.special]:[base];if(ROUTE1_IDS.has(sp.id)||ROUTE2_IDS.has(sp.id)||TRIBEL_IDS.has(sp.id)||ROUTE3_IDS.has(sp.id))return[base];if(f.legend||f.one||f.starter)return [base];const choices=ABIL_BY_TYPE[f.t1].filter(n=>n!==base);return choices.length?[base,choices[hashStr('ability:'+f.id)%choices.length]]:[base];}
 function makeMon(spId,lv,opt){
   opt=opt||{};const sp=SP[spId];
   const m={sp:spId,lv,exp:expFor(sp,lv),iv:[0,0,0,0,0,0].map(()=>opt.iv!=null?opt.iv:ri(32)),ev:[0,0,0,0,0,0],
@@ -1054,7 +1055,7 @@ function genMacro(seed,pNew){
   // 最初の5系統のうち選ばなかったものは 終盤の草むらにまれに出る
   const late=landAreas.filter(a=>a.prog>=38&&a.prog<=48&&!a.branch);
   for(let i=0;i<STARTERS.length;i++)if(late.length)late[(i*3)%late.length].rare=famOf(SP[STARTERS[i]]).id;
-  setRoute1Encounters();setRoute2Encounters();setTribelEncounters();
+  setRoute1Encounters();setRoute2Encounters();setTribelEncounters();setRoute3Encounters();
   // Harusaki is a peaceful transit town. Move its former gym to Michishirube,
   // renumber challenges in their existing world order without altering ecology, paths or gates.
   const old=WORLD.gymTown.slice(1),haru=old[0],last=WORLD.main[50];
@@ -1069,6 +1070,7 @@ function wildPick(cell,kind,bonus,partner=false){
   if(cell===CELLS['0,3']&&kind!=='water')return route1WildPick(cell,partner);
   if(cell===CELLS['0,1']&&kind!=='water')return route2WildPick();
   if((cell===CELLS[TRIBEL_KEY]||cell.tribelZone)&&kind!=='water')return tribelWildPick(cell.tribelZone||'meadow');
+  if(cell===CELLS[ROUTE3_KEY]&&kind!=='water')return route3WildPick();
   const list=kind==='water'?cell.water:cell.land;if(!list||!list.length)return null;
   let fam;
   if(kind!=='water'&&cell.rare!=null&&ri(50)===0)fam=FAMS[cell.rare];
@@ -1225,6 +1227,7 @@ function occupied(m,x,y){for(const o of m.objs)if(o.x===x&&o.y===y)return true;r
 
 /* ---------- 街道（連結セル） ---------- */
 function genRoute(cell){
+  if(cell.key===ROUTE3_KEY)return genRoute3(cell);
   const r=RNG('map'+cell.key),sea=cell.kind==='sea',cave=cell.pal==='cave';
   const WALL=sea?T.WATER:cave?T.ROCK:T.TREE,FL=cave?T.CFLOOR:T.GRASS,PT=cave?T.CFLOOR:T.PATH;
   const m=newMap(cell.key,cell,MW,MH,WALL),t=m.t;
@@ -1819,7 +1822,7 @@ function wcInit(){
 }
 // ---- 図鑑の原画（mon/001.webp 〜 500.webp）。使うときに 1体ずつ 読みこむ ----
 const MON_PIC=new Map(),MON_PIC_DIR='mon/';
-function monAssetPath(no,back=false){if(TRIBEL_IDS.has(no))return MON_PIC_DIR+'tribel/'+(back?'b':'')+String(no).padStart(4,'0')+(TRIBEL_HORSE.has(no)?'.webp':'.svg');if(ROUTE2_IDS.has(no))return MON_PIC_DIR+'route2/'+(back&&ROUTE2_REAR_IDS.has(no)?'b':'')+String(no).padStart(4,'0')+'.webp';if(ROUTE1_IDS.has(no))return MON_PIC_DIR+'route1/'+(back?'b':'')+String(no).padStart(4,'0')+'.webp';const selected=back?STARTER_REAR_SET.has(no):STARTER_FRONT_SET.has(no);return MON_PIC_DIR+(selected?'starter-v2/':'')+(back?'b':'')+String(no).padStart(4,'0')+'.webp';}
+function monAssetPath(no,back=false){if(ROUTE3_IDS.has(no))return MON_PIC_DIR+'route3/'+String(no).padStart(4,'0')+'.webp';if(TRIBEL_IDS.has(no))return MON_PIC_DIR+'tribel/'+(back?'b':'')+String(no).padStart(4,'0')+(TRIBEL_HORSE.has(no)?'.webp':'.svg');if(ROUTE2_IDS.has(no))return MON_PIC_DIR+'route2/'+(back&&ROUTE2_REAR_IDS.has(no)?'b':'')+String(no).padStart(4,'0')+'.webp';if(ROUTE1_IDS.has(no))return MON_PIC_DIR+'route1/'+(back?'b':'')+String(no).padStart(4,'0')+'.webp';const selected=back?STARTER_REAR_SET.has(no):STARTER_FRONT_SET.has(no);return MON_PIC_DIR+(selected?'starter-v2/':'')+(back?'b':'')+String(no).padStart(4,'0')+'.webp';}
 function monPic(no){
  let P=MON_PIC.get(no);
  if(P){MON_PIC.delete(no);MON_PIC.set(no,P);return P;}
@@ -1829,7 +1832,7 @@ function monPic(no){
 }
 function monPreload(spId){const sp=SP[spId];if(sp&&sp.book){monPic(sp.book);if(typeof MONBACK!=='undefined'&&MONBACK[sp.book])pic(monAssetPath(sp.book,true));}}
 // 後ろ姿の絵がある子（27種）は 自分の側で それを使う
-const MONBACK={},MONBACK_CV=new Map();for(const n of ASSET.MON_BACK)if(!STARTER_FRONT_SET.has(n)&&!ROUTE2_IDS.has(n))MONBACK[n]=1;for(const n of STARTER_REAR_SET)MONBACK[n]=1;for(const n of ROUTE1_IDS)MONBACK[n]=1;for(const n of ROUTE2_REAR_IDS)MONBACK[n]=1;for(const n of TRIBEL_IDS)MONBACK[n]=1;
+const MONBACK={},MONBACK_CV=new Map();for(const n of ASSET.MON_BACK)if(!STARTER_FRONT_SET.has(n)&&!ROUTE2_IDS.has(n)&&!ROUTE3_IDS.has(n))MONBACK[n]=1;for(const n of STARTER_REAR_SET)MONBACK[n]=1;for(const n of ROUTE1_IDS)MONBACK[n]=1;for(const n of ROUTE2_REAR_IDS)MONBACK[n]=1;for(const n of TRIBEL_IDS)MONBACK[n]=1;
 function monBackCv(spId,shiny){
   const sp=SP[spId];if(!sp||!sp.book||!MONBACK[sp.book])return null;
   const P=pic(monAssetPath(sp.book,true));if(P.st!==1)return null;
@@ -4188,7 +4191,7 @@ function effStat(B,s,i){
 function calcDamage(B,s,mv,crit,eff,roll=85+ri(16)){
   const a=bmon(B,s),d=bmon(B,1-s),asp=SP[a.sp];
   const A=mv.phys?effStat(B,s,1):effStat(B,s,3),D=mv.phys?effStat(B,1-s,2):effStat(B,1-s,4);
-  let pw=Math.floor(mv.pow*route2PowerScale(a,mv));if(mv.has('pinch')&&a.hp*3<=maxHP(a))pw*=2;if(mv.has('hex')&&d.st)pw*=2;
+  let pw=Math.floor(mv.pow*route2PowerScale(a,mv)*route3WeakPower(a,mv));if(mv.has('pinch')&&a.hp*3<=maxHP(a))pw*=2;if(mv.has('hex')&&d.st)pw*=2;
   let dmg=Math.floor(Math.floor(Math.floor(2*a.lv/5+2)*pw*A/D)/50)+2;
   if(crit)dmg*=2;else if(B.wall[1-s][mv.phys?0:1]>0)dmg=Math.floor(dmg/2);          // 光の壁（急所には きかない）
   if(B.weather==='sun'){if(mv.type===1)dmg=Math.floor(dmg*1.5);else if(mv.type===2)dmg=Math.floor(dmg/2);}
@@ -4196,7 +4199,7 @@ function calcDamage(B,s,mv,crit,eff,roll=85+ri(16)){
   if(mv.type>=0){
     if(asp.types.indexOf(mv.type)>=0)dmg=Math.floor(dmg*1.5);
     dmg=Math.floor(dmg*eff);
-    if(starterPinch(a,mv.type))dmg=Math.floor(dmg*1.5);dmg=Math.floor(dmg*tribelFireBoost(B,a,mv));
+    if(starterPinch(a,mv.type))dmg=Math.floor(dmg*1.5);dmg=Math.floor(dmg*tribelFireBoost(B,a,mv));dmg=Math.floor(dmg*route3DamagePower(B,a,mv));
     if(abilOf(d)===8&&(mv.type===1||mv.type===5))dmg=Math.floor(dmg/2);
   }
   {const h=heldOf(a);if(h.t===mv.type)dmg=Math.floor(dmg*1.15);if(h.all)dmg=Math.floor(dmg*h.all);}      // 持たせた道具
@@ -4228,11 +4231,12 @@ async function inflict(B,s,st,verbose){
   await say(n+({psn:'は どくを うけた！',brn:'は やけどを おった！',par:'は からだが しびれた！',slp:'は ねむってしまった！',frz:'は こおりついた！'})[st]);
   return true;
 }
-async function boost(B,s,key,n){
+async function boost(B,s,key,n,source=1-s){
   const st=bstg(B,s),nm=bname(B,s);
   if(bmon(B,s).hp<=0)return;
   if(route2BlocksAccuracy(bmon(B,s),key,n)){await say(nm+'は 「地中感覚」で 命中率が 下がらない！');return;}
   if((n>0&&st[key]>=6)||(n<0&&st[key]<=-6)){await say(nm+'の '+STAGE_JP[key]+'は もう '+(n>0?'上がらない':'下がらない')+'！');return;}
+  if(route3RootWard(B,s,n,source)){await say(nm+'は 「根の守り」で 能力低下を 防いだ！');return;}
   st[key]=clamp(st[key]+n,-6,6);
   stageFx(s,key,n>0);sfx(n>0?'lvup':'cancel');
   await say(nm+'の '+STAGE_JP[key]+'が '+(n>=2?'ぐんと 上がった！':n===1?'上がった！':n===-1?'下がった！':'がくんと 下がった！'));
@@ -4251,7 +4255,7 @@ async function applyEffects(B,sd,mv,isStatus,selfOnly){
       }else await inflict(B,1-sd,e.st,isStatus);
     }else if(e.k==='stage'){
       if(ri(100)>=e.ch)continue;
-      if(e.who==='self')await boost(B,sd,e.stat,e.n);else if(!selfOnly)await boost(B,1-sd,e.stat,e.n);
+      if(e.who==='self')await boost(B,sd,e.stat,e.n,sd);else if(!selfOnly)await boost(B,1-sd,e.stat,e.n,sd);
     }else if(e.k==='heal'){
       const side=B.supportAlly?1-sd:sd,u=bmon(B,side),mx=maxHP(u);
       if(u.hp>=mx)await say('しかし HPは まんたんだ！');
@@ -4286,7 +4290,8 @@ function accCheck(B,sd,mv){
   return ri(100)<a;
 }
 async function useMove(B,sd,idx){
-  B.didMove=false;
+  B.didMove=false;B.r3LastBoost=false;B.r3AttackActor=null;
+  try{
   const u=bmon(B,sd),t=bmon(B,1-sd),us=bstg(B,sd),un=bname(B,sd),tn=bname(B,1-sd);
   if(!B.extra){
   if(us.flinch){us.flinch=false;us.rech=false;await say(un+'は ひるんで うごけない！');return;}
@@ -4309,7 +4314,7 @@ async function useMove(B,sd,idx){
   }
   const mv=idx<0?STRUGGLE:MOVES[u.mv[idx].id];
   if(!B.extra){if(idx>=0)u.mv[idx].pp=Math.max(0,u.mv[idx].pp-1);await say(un+'の '+mv.name+'！');if(!mv.has('protect'))us.protN=0;}
-  B.didMove=true;
+  B.didMove=true;await route3BeginAttack(B,sd,mv);
   const ts=bstg(B,1-sd);
   if(mv.pow===0){
     const onFoe=mv.eff.some(e=>e.k==='st'||(e.k==='stage'&&e.who==='foe')||e.k==='seed'||e.k==='split');
@@ -4320,6 +4325,7 @@ async function useMove(B,sd,idx){
     const before=abilOf(u)===24?starterStatusSnapshot(B,sd):null;await applyEffects(B,sd,mv,true,false);if(before!==null)starterRootMark(B,sd,mv,before);return;
   }
   if(t.hp<=0)return;
+  if(route3PriorityBlock(t,mv)&&starterOpponents(B,sd)){await say(tn+'は 「静音飛行」で 先制技を かわした！');return;}
   if(ts.prot){startIndividualMotion(t,'guard');await say(tn+'は 身を まもった！');return;}
   if(mv.acc>0&&!accCheck(B,sd,mv)){actorMotionForMove(u,mv);startIndividualMotion(t,'dodge');await say('しかし こうげきは はずれた！');return;}
   let eff=mv.type>=0?typeEff(mv.type,SP[t.sp].types):1;const ab=abilOf(t);
@@ -4332,7 +4338,7 @@ async function useMove(B,sd,idx){
   const fxd=mv.eff.find(e=>e.k==='fixed');
   if(fxd||mv.has('level')||mv.has('halve')){     // 決まった量のダメージ（能力や相性の倍率を 受けない）
     const d0=Math.min(t.hp,fxd?fxd.n:mv.has('level')?u.lv:Math.max(1,Math.floor(t.hp/2)));
-    await moveFx(B,sd,mv);await hitAnim(B,1-sd,1);t.hp-=d0;await hpAnim(B,1-sd);if(abilOf(t)===22)await starterAfterDamage(B,sd,beforeHP,d0,false);await applyEffects(B,sd,mv,false,t.hp<=0);await route2ContactEffects(B,sd,mv,d0);await tribelCounterSpines(B,sd,mv,d0);return;
+    await moveFx(B,sd,mv);await hitAnim(B,1-sd,1);t.hp-=d0;await hpAnim(B,1-sd);if(abilOf(t)===22)await starterAfterDamage(B,sd,beforeHP,d0,false);await applyEffects(B,sd,mv,false,t.hp<=0);await route3AfterHit(B,sd,mv,eff,d0);await route2ContactEffects(B,sd,mv,d0);await tribelCounterSpines(B,sd,mv,d0);return;
   }
   const hits=mv.has('multi')?[2,2,3,3,4,5][ri(6)]:mv.has('twice')?2:1;
   let dmg=0,nh=0,crit=false,sturdy=false,held1=false;
@@ -4366,7 +4372,8 @@ async function useMove(B,sd,idx){
   if(mv.has('coin')&&sd===0){B.coins+=u.lv*4;await say('お金が あたりに ちらばった！');}
   if(mv.has('boom')&&u.hp>0){u.hp=0;await hpAnim(B,sd);await say(un+'は 力を 使いはたした！');}
   if(t.hp>0&&u.hp>0&&mv.phys&&ri(10)<3){if(ab===3)await inflict(B,sd,'par');else if(ab===4)await inflict(B,sd,'psn');else if(ab===5)await inflict(B,sd,'brn');}
-  await route2ContactEffects(B,sd,mv,dmg);await tribelCounterSpines(B,sd,mv,dmg);
+  await route3AfterHit(B,sd,mv,eff,dmg);await route2ContactEffects(B,sd,mv,dmg);await tribelCounterSpines(B,sd,mv,dmg);
+  }finally{B.r3AttackActor=null;}
 }
 function aiPick(B){
   const f=bmon(B,1),me=bmon(B,0),list=[];
@@ -4380,7 +4387,7 @@ function aiPick(B){
     const acc=m.acc===0?1:clamp(m.acc*accMul(B.fs.acc-B.ps.eva)*(abilOf(f)===14?1.2:1)/100,0,1);
     if(m.pow>0){
       let eff=m.type<0?1:typeEff(m.type,ty);
-      if((m.type===8&&ab===2)||(m.type===2&&ab===9)||(m.type===3&&(ab===10||ab===33))||(m.type===1&&(ab===11||ab===40)))eff=0;
+      if((m.type===8&&ab===2)||(m.type===2&&ab===9)||(m.type===3&&(ab===10||ab===33))||(m.type===1&&(ab===11||ab===40))||route3PriorityBlock(me,m))eff=0;
       if(eff>0){
         const fix=m.eff.find(e=>e.k==='fixed');
         let d=fix?fix.n:m.has('level')?f.lv:m.has('halve')?Math.max(1,me.hp/2):calcDamage(B,1,m,false,eff,92);
@@ -4397,7 +4404,7 @@ function aiPick(B){
         if(e.k==='st'){
           if(e.st==='cnf')v=B.ps.conf?0:28;
           else if(!me.st&&ab!==18&&!(e.st==='brn'&&ty.includes(1))&&!(e.st==='frz'&&ty.includes(5))&&!(e.st==='psn'&&(ty.includes(7)||ty.includes(16))))v=e.st==='slp'?42:27;
-        }else if(e.k==='stage'){const st=e.who==='self'?B.fs:B.ps,x=st[e.stat];v=(e.n>0&&x>=6||e.n<0&&x<=-6||route2BlocksAccuracy(e.who==='self'?f:me,e.stat,e.n))?0:Math.max(0,30-Math.abs(x)*7)*(hp<0.3?0.3:1);}
+        }else if(e.k==='stage'){const st=e.who==='self'?B.fs:B.ps,x=st[e.stat];v=(e.n>0&&x>=6||e.n<0&&x<=-6||route2BlocksAccuracy(e.who==='self'?f:me,e.stat,e.n)||e.who==='foe'&&e.n<0&&route3RootAvailable(B,me))?0:Math.max(0,30-Math.abs(x)*7)*(hp<0.3?0.3:1);}
         else if(e.k==='heal')v=hp<0.45?72:hp<0.65?38:0;
         else if(e.k==='protect')v=B.fs.protN?1:B.weather||B.ps.seed||me.st==='psn'||me.st==='brn'?22:5;
         else if(e.k==='seed')v=B.ps.seed||ty.includes(4)?0:32;
@@ -4468,7 +4475,7 @@ async function gainExp(m,amt,B,quiet){
 }
 async function learnMoves(m,lv){
   for(const a of famOf(SP[m.sp]).learn){
-    if(a[0]!==lv||m.mv.some(v=>v.id===a[1])||!starterMoveAllowed(SP[m.sp],a[1])||!route1MoveAllowed(SP[m.sp],a[1])||!route2MoveAllowed(SP[m.sp],a[1]))continue;
+    if(a[0]!==lv||m.mv.some(v=>v.id===a[1])||!starterMoveAllowed(SP[m.sp],a[1])||!route1MoveAllowed(SP[m.sp],a[1])||!route2MoveAllowed(SP[m.sp],a[1])||!route3MoveAllowed(SP[m.sp],a[1]))continue;
     await teachMove(m,a[1]);
   }
 }
@@ -4624,14 +4631,14 @@ async function battle(o){
       if(a>=b||ri(256)<Math.floor(a*128/b)+30*B.runTry+tribelEscape(me)){sfx('door');await say('うまく にげきれた！');B.result='run';break;}
       await say('にげられなかった！');
     }else if(act.t==='switch'){
-      await say(monName(me)+'、もどれ！');startIndividualMotion(me,'withdraw');await tween(200,p=>{B.fx.meX=-120*p;});await sendMe(B,act.pi);
+      await say(monName(me)+'、もどれ！');startIndividualMotion(me,'withdraw');await tween(200,p=>{B.fx.meX=-120*p;});await route3Withdraw(me);await sendMe(B,act.pi);
     }else if(act.t==='item'){
       if(act.pi===B.pi){healFx(0);await hpAnim(B,0);}
     }else if(act.t==='seal'){
       if(!B.wild){await say('人の アニマとは 絆を 結べない！');}
       else if(await tryCatch(B,act.id)){await giveExp(B);B.result='caught';break;}
     }
-    if(swap>=0&&!B.result){await say(B.o.trainer.name+'は '+monName(bmon(B,1))+'を もどした！');startIndividualMotion(bmon(B,1),'withdraw');await tween(180,p=>{B.fx.foeX=120*p;});B.fi=swap;B.lastSwitch=B.turnN||0;await sendFoe(B);}
+    if(swap>=0&&!B.result){await say(B.o.trainer.name+'は '+monName(bmon(B,1))+'を もどした！');startIndividualMotion(bmon(B,1),'withdraw');await tween(180,p=>{B.fx.foeX=120*p;});await route3Withdraw(bmon(B,1));B.fi=swap;B.lastSwitch=B.turnN||0;await sendFoe(B);}
     if(act.t==='move'&&swap>=0){await useMove(B,0,act.i);}
     else if(act.t==='move'){
       const fi=aiPick(B),mv=act.i<0?STRUGGLE:MOVES[me.mv[act.i].id],fmv=fi<0?STRUGGLE:MOVES[bmon(B,1).mv[fi].id];
@@ -4875,12 +4882,12 @@ async function evolveMon(m){
   await msg('おめでとう！ '+oldName+'は '+nx.name+'に 進化した！');
   popW(w);
   if(STARTER_SPECIES.has(nx.id)){const f=famOf(nx),id=nx.stage===2?f.starterSignature:f.learn.find(v=>v[0]===16)?.[1];if(id>=0&&!m.mv.some(v=>v.id===id))await teachMove(m,id);}
-  if(ROUTE1_IDS.has(nx.id)||ROUTE2_IDS.has(nx.id)||TRIBEL_IDS.has(nx.id)){const r=ROUTE1_SPECIES.get(nx.id)||ROUTE2_SPECIES.get(nx.id)||TRIBEL_SPECIES.get(nx.id),lv=r.family.levels[r.stage-1];for(const [l,id] of famOf(nx).learn)if(l===lv&&route1MoveAllowed(nx,id)&&route2MoveAllowed(nx,id)&&!m.mv.some(v=>v.id===id))await teachMove(m,id);}
+  if(ROUTE1_IDS.has(nx.id)||ROUTE2_IDS.has(nx.id)||TRIBEL_IDS.has(nx.id)||ROUTE3_IDS.has(nx.id)){const r=ROUTE1_SPECIES.get(nx.id)||ROUTE2_SPECIES.get(nx.id)||TRIBEL_SPECIES.get(nx.id)||ROUTE3_SPECIES.get(nx.id),lv=r.family.levels[r.stage-1];for(const [l,id] of famOf(nx).learn)if(l===lv&&route1MoveAllowed(nx,id)&&route2MoveAllowed(nx,id)&&route3MoveAllowed(nx,id)&&!m.mv.some(v=>v.id===id))await teachMove(m,id);}
   return true;
 }
 // 生態と関連する早期進化。通常レベル進化は維持。
 const EARLY_EVOLUTION={7:{early:5,bond:190,phase:3},9:{early:5,phase:3},11:{early:4,bond:180},12:{early:4,bond:180},13:{early:5,phase:3},15:{early:5,phase:3},46:{early:4,phase:1},49:{early:4,phase:0}};
-function evolutionRule(sp){return sp.stage===0?EARLY_EVOLUTION[sp.id]||null:null;}
+function evolutionRule(sp){return !ROUTE3_IDS.has(sp.id)&&sp.stage===0?EARLY_EVOLUTION[sp.id]||null:null;}
 function canEvolve(m){const sp=SP[m.sp];return !!sp.next&&HitokariUpgrade.earlyEvolution(m,sp.evoLv,evolutionRule(sp),dayPhase());}
 async function checkEvolutions(){
   for(const m of S.party.slice()){
@@ -4929,7 +4936,7 @@ async function useItem(id,opt){
     const sp=SP[m.sp];
     if(B){await msg('バトル中は 使えない。');return null;}
     if(!sp.next||!sp.types.some(t=>it.v.indexOf(t)>=0)){await msg(n+'には 使っても 効果が ないよ。');return null;}
-    const minLv=ROUTE1_IDS.has(sp.id)||ROUTE2_IDS.has(sp.id)||TRIBEL_IDS.has(sp.id)?sp.evoLv:sp.evoLv-8;if(m.lv<minLv){await msg(n+'は まだ 進化の 準備が できていない。（Lv'+minLv+'から 使える）');return null;}
+    const minLv=ROUTE1_IDS.has(sp.id)||ROUTE2_IDS.has(sp.id)||TRIBEL_IDS.has(sp.id)||ROUTE3_IDS.has(sp.id)?sp.evoLv:sp.evoLv-8;if(m.lv<minLv){await msg(n+'は まだ 進化の 準備が できていない。（Lv'+minLv+'から 使える）');return null;}
     consume();await evolveMon(m);return true;
   }
   else if(it.k==='pp'){if(m.mv.some(v=>v.pp<MOVES[v.id].pp)){for(const v of m.mv)v.pp=MOVES[v.id].pp;text=n+'の 技の PPが 回復した！';}}
@@ -5534,6 +5541,7 @@ async function talk(o){
    case'clerk':await shopMenu();break;
    case'guard':await gateTalk(o);break;
    case'trainer':{
+     if(G.map.route3){await route3TrainerTalk(o);break;}
      const grunt=o.grunt,nm=o.cls+'の '+o.name;
      if(o.beaten){if(!grunt&&await trainerRematch(o))break;await msg('「'+lineOf(grunt?GR_POST:TR_POST,o)+'」');break;}
      await msg('「'+lineOf(grunt?GR_PRE:TR_PRE,o)+'」');
@@ -5920,7 +5928,7 @@ function loadMap(id,x,y,dir){
   if(S&&S.party)for(const q of S.party)monPreload(q.sp);
   if(m.cell&&m.cell.kind==='town'&&G.cellKey!==undefined&&G.cellKey!==m.cell.key&&S){S.rot=S.rot||{};S.rot[m.cell.key]=(S.rot[m.cell.key]||0)+1;}      // 人物図鑑2000人を維持するため、住民の巡回を維持
   G.cellKey=m.cell?m.cell.key:null;chrPreload('pl');
-  G.map=m;if(m.haru){[x,y]=haruSafeSpawn(m,x,y);}if(m.tribel){[x,y]=tribelSafeSpawn(m,x,y);}const p=G.pl;p.x=x;p.y=y;if(dir!=null)p.dir=dir;p.moving=false;p.prog=0;p.turn=0;p.idle=9;
+  G.map=m;if(m.haru){[x,y]=haruSafeSpawn(m,x,y);}if(m.tribel){[x,y]=tribelSafeSpawn(m,x,y);}if(m.route3){[x,y]=route3SafeSpawn(m,x,y);}const p=G.pl;p.x=x;p.y=y;if(dir!=null)p.dir=dir;p.moving=false;p.prog=0;p.turn=0;p.idle=9;
   if(m.t[y*m.W+x]!==T.WATER)p.surf=false;
   p.fly=false;p.alt=0;mountPreload();
   G.objs=activeObjs(m);folReset();charCacheTrim();
@@ -5998,12 +6006,12 @@ function onStep(){
   const w=m.warps[p.x+','+p.y];
   if(w&&(v===T.DOOR||v===T.MAT||v===T.LADDER)){run(()=>doWarp(w));return;}
   if(expansionChapterReady(m)){run(()=>expansionChapter(m));return;}
-  const sight=trainerSightHits();if(sight.length){const tr=sight[0];if(sight.length>1&&sight[1].role==='trainer'&&tr.role==='trainer'&&S.party.filter(m=>m.hp>0).length>=2)run(()=>pairedTrainerEncounter(sight.slice(0,2)));else run(()=>trainerEncounter(tr));return;}
+  const sight=trainerSightHits();if(sight.length){const tr=sight[0];if(m.route3){run(()=>route3TrainerTalk(tr,true));return;}if(sight.length>1&&sight[1].role==='trainer'&&tr.role==='trainer'&&S.party.filter(m=>m.hp>0).length>=2)run(()=>pairedTrainerEncounter(sight.slice(0,2)));else run(()=>trainerEncounter(tr));return;}
   const n=nurseryFor();if(n.egg&&n.egg.held&&n.egg.walk>=HitokariUpgrade.EGG_HATCH){run(hatchNurseryEgg);return;}
   const repel=S.repel||0;if(repel>0){S.repel--;if(S.repel===0){run(async()=>{await msg('まよけのポプリの 効き目が きれた。');const n=ITEM_ORDER.find(id=>S.bag[id]>0&&ITEMS[id].k==='repel');if(n&&await confirmYN('もう一つ 使いますか？'))await useItem(n,{});});return;}}
   if(m.enc&&m.cell&&S.party.length){
     let kind=null,rate=m.enc.rate;
-    if(m.advArea==='undersea'&&(v===T.CFLOOR||v===T.TALL)){kind='water';rate=12;}else if(v===T.TALL||(v===T.CFLOOR&&m.pal==='cave'))kind='land';else if((m.id==='0,1'||m.tribel)&&v===T.FLOWER){kind='land';rate=5;}else if(!m.tribel&&v===T.WATER&&p.surf){kind='water';rate=10;}
+    if(m.advArea==='undersea'&&(v===T.CFLOOR||v===T.TALL)){kind='water';rate=12;}else if(v===T.TALL||(v===T.CFLOOR&&m.pal==='cave'))kind='land';else if((m.id==='0,1'||m.tribel||m.route3)&&v===T.FLOWER){kind='land';rate=5;}else if(!m.tribel&&v===T.WATER&&p.surf){kind='water';rate=10;}
     const lead=S.party.find(a=>a.hp>0);if(kind&&lead&&chance(HitokariUpgrade.encounterChance(rate,abilOf(lead)))){const ec=m.tribel?tribelEncounterCell(m,p):m.advEnc||m.cell,wp=wildPick(ec,kind,m.enc.bonus||0)||(kind==='water'?waterFallback(ec):null);if(wp&&!HitokariUpgrade.repelBlocks(repel,wp.lv,lead.lv)){const partner=wildEncounterPartner(ec,kind,m.enc.bonus||0,repel,lead,wp);run(()=>doWild(wp,partner?{wildPartner:partner,water:kind==='water'}:{water:kind==='water'}));}}
   }
 }
@@ -6147,7 +6155,7 @@ function drawWorldPix(){
   let camx=Math.round((ppx-112)*K)/K,camy=Math.round((ppy-96)*K)/K;
   if(m.W*16<=LW)camx=Math.round((m.W*16-LW)/2);if(m.H*16<=LH)camy=Math.round((m.H*16-LH)/2);
   G.camx=camx;G.camy=camy;
-  drawGround(g,m,camx,camy);if(m.haru)drawHaruGround(g,m,camx,camy);else if(m.tribel)drawTribelGround(g,m,camx,camy);else drawIndividualTerrain(g,m,camx,camy);drawExpansionTerrain(g,m,camx,camy);
+  drawGround(g,m,camx,camy);if(m.haru)drawHaruGround(g,m,camx,camy);else if(m.tribel)drawTribelGround(g,m,camx,camy);else if(m.route3)drawRoute3Ground(g,m,camx,camy);else drawIndividualTerrain(g,m,camx,camy);drawExpansionTerrain(g,m,camx,camy);
   // 人物と置き物を行ごとにまとめ、木や草むらと奥→手前の順で重ねる
   const byRow={},put=e=>{const r=Math.round(e.y/16);(byRow[r]||(byRow[r]=[])).push(e);};
   const skip={};   // 道具が落ちているマスは手前の草をかぶせない（見つけやすく）
@@ -6208,7 +6216,7 @@ function drawFieldClimate(g,m){
   else if(w==='sun'){g.fillStyle='rgba(246,185,86,.09)';g.fillRect(0,0,LW,LH);}
 }
 function drawWorldUI(){
-  const m=G.map;if(!m)return;drawExpansionHUD(m);drawIndividualMapHUD(m);if(m.haru)drawHaruHUD(m);if(m.tribel)drawTribelHUD(m);
+  const m=G.map;if(!m)return;drawExpansionHUD(m);drawIndividualMapHUD(m);if(m.haru)drawHaruHUD(m);if(m.tribel)drawTribelHUD(m);if(m.route3)drawRoute3HUD(m);
   for(const b of m.blds){
     if(!BLD_MARK[b.kind]||b.kind==='house'||b.kind==='home')continue;
     let x=(b.x+2)*16-G.camx+8,y=b.y*16-G.camy+9,r=9,fs=12;
@@ -6454,6 +6462,7 @@ window.addEventListener('load',()=>{
 <script src="world-expansion.js"></script>
 <script src="harusaki.js"></script>
 <script src="tribel-world.js"></script>
+<script src="route3-world.js"></script>
 <script src="data/anima-motion.js"></script>
 <script src="data/npc-schedules.js"></script>
 <script src="data/field-designs.js"></script>

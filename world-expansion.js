@@ -72,7 +72,7 @@ function findPortal(m,x0,y0){const a=[];for(let y=3;y<m.H-3;y++)for(let x=3;x<m.
 function portalAt(m,kind,x,y,label){const p=findPortal(m,x,y);if(p)expPut(m,p[0],p[1],{kind:'portal',area:kind,label,returnX:p[0],returnY:p[1]});return p;}
 function decorateExpansionMap(m){
  if(m.advDecorated)return;m.advDecorated=true;
- if(m.advArea||m.haru||m.tribel)return;
+ if(m.advArea||m.haru||m.tribel||m.route3)return;
  if(m.bk==='gym'){decorateGym(m);return;}
  if(!m.indoor&&m.cell&&m.cell.kind==='town'){
   const k=m.cell.gym?gymLegacyId(m.cell.gym):m.cell.dist||1;
