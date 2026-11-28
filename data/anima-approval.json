@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "total": 1212,
   "approved": [
     {
@@ -45,37 +45,76 @@
       ]
     }
   ],
-  "approvedSpecies": 9,
+  "approvedSpecies": 21,
   "defaultStatus": "hold-provisional",
-  "heldSpecies": 1203,
+  "heldSpecies": 1191,
   "next": {
-    "map": "0,3",
-    "name": "第1街道",
+    "map": "0,1",
+    "name": "第2街道",
     "land": [
       {
-        "family": 150,
+        "family": 236,
         "ids": [
-          451,
-          452,
-          453
+          711,
+          712,
+          713
         ],
         "names": [
-          "カミクラ",
-          "タコヒラ",
-          "テンガイサ"
+          "エダハサル",
+          "デンドルミ",
+          "ジュシコウガ"
         ]
       },
       {
-        "family": 238,
+        "family": 171,
         "ids": [
-          717,
-          718,
-          719
+          516,
+          517,
+          518
         ],
         "names": [
-          "フタツノク",
-          "クロスパル",
-          "ソウショウル"
+          "ツツマン",
+          "ヒダマント",
+          "ホウジュウラ"
+        ]
+      },
+      {
+        "family": 326,
+        "ids": [
+          981,
+          982,
+          983
+        ],
+        "names": [
+          "エマコブ",
+          "エマシル",
+          "キガンガ"
+        ]
+      },
+      {
+        "family": 315,
+        "ids": [
+          948,
+          949,
+          950
+        ],
+        "names": [
+          "ヨヨコ",
+          "ワドモ",
+          "カイテンラ"
+        ]
+      },
+      {
+        "family": 392,
+        "ids": [
+          1179,
+          1180,
+          1181
+        ],
+        "names": [
+          "ハナハシリ",
+          "シュンカラ",
+          "ソウジンハナ"
         ]
       },
       {
@@ -86,61 +125,22 @@
           336
         ],
         "names": [
-          "ムギリリ",
-          "ホナリリ",
-          "カリホルン"
+          "ツユマユ",
+          "シズクサナギ",
+          "ミズハネ"
         ]
       },
       {
-        "family": 254,
+        "family": 74,
         "ids": [
-          765,
-          766,
-          767
+          223,
+          224,
+          225
         ],
         "names": [
-          "フクラミュ",
-          "タイリューム",
-          "ソラノボルド"
-        ]
-      },
-      {
-        "family": 333,
-        "ids": [
-          1002,
-          1003,
-          1004
-        ],
-        "names": [
-          "テダマリ",
-          "オテフワ",
-          "フクロダマ"
-        ]
-      },
-      {
-        "family": 181,
-        "ids": [
-          546,
-          547,
-          548
-        ],
-        "names": [
-          "トフマル",
-          "カタフモ",
-          "シロトウド"
-        ]
-      },
-      {
-        "family": 353,
-        "ids": [
-          1062,
-          1063,
-          1064
-        ],
-        "names": [
-          "タコネラ",
-          "ラセンネギ",
-          "スクリュダン"
+          "コツイワネ",
+          "イワクチル",
+          "ガンクレスタ"
         ]
       },
       {
@@ -155,20 +155,29 @@
           "キリアゴ",
           "シュクセツ"
         ]
+      },
+      {
+        "family": 416,
+        "ids": [
+          1004
+        ],
+        "names": [
+          "フクロダマ"
+        ]
       }
     ],
     "waterAfterLand": [
       {
-        "family": 364,
+        "family": 363,
         "ids": [
-          1095,
-          1096,
-          1097
+          1092,
+          1093,
+          1094
         ],
         "names": [
-          "チョウガイ",
-          "ヒラチョウラ",
-          "カクヒラギ"
+          "ウキツブ",
+          "ナガフクネ",
+          "レンカイラ"
         ]
       },
       {
@@ -185,19 +194,119 @@
         ]
       },
       {
-        "family": 363,
+        "family": 364,
         "ids": [
-          1092,
-          1093,
-          1094
+          1095,
+          1096,
+          1097
         ],
         "names": [
-          "ウキツブ",
-          "ナガフクネ",
-          "レンカイラ"
+          "チョウガイ",
+          "ヒラチョウラ",
+          "カクヒラギ"
         ]
       }
     ]
   },
-  "policy": "Unapproved existing assets remain playable for continuity; no new design work until explicit acceptance. Reuse IDs and preserve old originals. Prior generated pack is a provisional archive, not approved artwork."
+  "policy": "Unapproved existing assets remain playable for continuity; no new design work until explicit acceptance. Reuse IDs and preserve old originals. Prior generated pack is a provisional archive, not approved artwork.",
+  "route1": {
+    "map": "0,3",
+    "name": "第1街道",
+    "land": [
+      {
+        "ids": [
+          451,
+          452
+        ],
+        "names": [
+          "コムギネ",
+          "ムギハヤ"
+        ],
+        "weight": 400,
+        "rate": 40,
+        "ability": 25,
+        "levels": [
+          18
+        ]
+      },
+      {
+        "ids": [
+          717,
+          718,
+          719
+        ],
+        "names": [
+          "ソヨチド",
+          "カゼバネ",
+          "ソラハヤテ"
+        ],
+        "weight": 300,
+        "rate": 30,
+        "ability": 26,
+        "levels": [
+          16,
+          32
+        ]
+      },
+      {
+        "ids": [
+          334,
+          335,
+          336
+        ],
+        "names": [
+          "ツユマユ",
+          "シズクサナギ",
+          "ミズハネ"
+        ],
+        "weight": 200,
+        "rate": 20,
+        "ability": 27,
+        "levels": [
+          7,
+          12
+        ]
+      },
+      {
+        "ids": [
+          765,
+          766
+        ],
+        "names": [
+          "コロガネ",
+          "ガンヨロイ"
+        ],
+        "weight": 99,
+        "rate": 9.9,
+        "ability": 28,
+        "levels": [
+          24
+        ]
+      },
+      {
+        "ids": [
+          1002,
+          1003
+        ],
+        "names": [
+          "ルナシカ",
+          "セイリンカ"
+        ],
+        "weight": 1,
+        "rate": 0.1,
+        "ability": 29,
+        "levels": [
+          35
+        ]
+      }
+    ],
+    "displacedProvisional": [
+      453,
+      767,
+      1004
+    ],
+    "weightsOutOf": 1000,
+    "rareOnlyPrimary": true,
+    "waterStatus": "hold-provisional"
+  }
 }
