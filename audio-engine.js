@@ -12,6 +12,8 @@ const createSoraneAudio=function musicFactory(){
     'momi-gym':{tempo:108,roots:[57,60,53,55],motif:[0,0,7,3,7,null,5,3,0,7,10,7,5,3,2,null],minor:true,type:'triangle',drums:true},
     'momi-battle':{tempo:146,roots:[57,53,60,55],motif:[0,7,12,7,3,7,10,3,0,5,7,12,10,7,5,3],minor:true,type:'square',drums:true},
     'momi-victory':{tempo:126,roots:[60,65,67,60],motif:[0,4,7,12,7,9,12,null,4,7,9,12,16,12,7,null],type:'triangle'},
+    'route4-day':{tempo:100,roots:[62,67,59,65],motif:[0,4,7,9,12,9,7,null,2,5,9,7,4,2,0,null],type:'triangle'},
+    'route4-night':{tempo:66,roots:[57,60,64,65],motif:[12,null,9,4,null,7,9,null,7,4,null,2,0,null,4,null],type:'sine'},
     town:{tempo:92,roots:[55,60,57,62],motif:[7,null,9,7,4,2,0,null,4,7,9,12,9,7,4,null],type:'sine'},
     road:{tempo:124,roots:[62,55,59,57],motif:[0,2,7,9,7,4,2,null,4,7,11,9,7,4,2,0],type:'triangle'},
     cave:{tempo:76,roots:[57,53,60,55],motif:[0,null,7,null,3,2,null,null,0,null,10,7,null,3,2,null],minor:true,type:'sine'},

@@ -73,7 +73,7 @@ function findPortal(m,x0,y0){const a=[];for(let y=3;y<m.H-3;y++)for(let x=3;x<m.
 function portalAt(m,kind,x,y,label){const p=findPortal(m,x,y);if(p)expPut(m,p[0],p[1],{kind:'portal',area:kind,label,returnX:p[0],returnY:p[1]});return p;}
 function decorateExpansionMap(m){
  if(m.advDecorated)return;m.advDecorated=true;
- if(m.advArea||m.haru||m.tribel||m.route3||m.momi)return;
+ if(m.advArea||m.haru||m.tribel||m.route3||m.momi||m.route4)return;
  if(m.bk==='gym'){decorateGym(m);return;}
  if(!m.indoor&&m.cell&&m.cell.kind==='town'){
   const k=m.cell.gym?gymLegacyId(m.cell.gym):m.cell.dist||1;
@@ -93,8 +93,8 @@ function decorateExpansionMap(m){
   }
  }
 }
-const EXP_AREAS=new Set(['ridge','river','coast','undersea','base','hub','contest','trial-single','trial-double','trial-rental','trial-endurance','life','tribel-lake','tribel-hill']);
-function validExpansionMapId(id){if(typeof id!=='string')return false;const p=id.split(':');return p.length===3&&p[0]==='a'&&EXP_AREAS.has(p[1])&&Object.prototype.hasOwnProperty.call(CELLS,p[2])&&(!p[1].startsWith('tribel-')||p[2]===TRIBEL_KEY);}
+const EXP_AREAS=new Set(['ridge','river','coast','undersea','base','hub','contest','trial-single','trial-double','trial-rental','trial-endurance','life','tribel-lake','tribel-hill','route4-gorge']);
+function validExpansionMapId(id){if(typeof id!=='string')return false;const p=id.split(':');return p.length===3&&p[0]==='a'&&EXP_AREAS.has(p[1])&&Object.prototype.hasOwnProperty.call(CELLS,p[2])&&(!p[1].startsWith('tribel-')||p[2]===TRIBEL_KEY)&&(p[1]!=='route4-gorge'||p[2]===ROUTE4_KEY);}
 function expId(area,cell){return 'a:'+area+':'+cell.key;}
 function expTownReturn(cell,area){const m=getMap(cell.key);for(const [k,o] of Object.entries(m.adv||{}))if(o.kind==='portal'&&o.area===area){const [x,y]=k.split(',').map(Number);return{map:cell.key,x,y,dir:2};}return{map:cell.key,x:15,y:15,dir:2};}
 function expExit(m,x,y,to){expSet(m,x,y,T.MAT);m.warps[expKey(x,y)]=to;expPut(m,x,y,{kind:'exit'});}
@@ -111,6 +111,7 @@ function expansionEncounter(m,area){
 }
 function generateExpansionMap(id){
  if(!validExpansionMapId(id))throw Error('invalid expansion map');const [,area,key]=id.split(':'),cell=CELLS[key],r=RNG('adventure:'+id);let m;
+ if(area==='route4-gorge')return genRoute4('gorge',cell);
  if(area==='tribel-lake'||area==='tribel-hill')return genTribelMap(area==='tribel-lake'?'lake':'hill',cell);
  if(area==='life')return generateLifeDistrict(id,cell);
  if(area==='ridge'){
@@ -317,6 +318,7 @@ function drawExpansionTerrain(g,m,camx,camy){
  if(!a){if(m.advArea&&!m.indoor&&m.t[y*m.W+x]===T.GRASS&&h2(x,y,19)<.13){g.fillStyle='rgba(213,223,151,.7)';g.fillRect(px+3,py+11,1,2);g.fillRect(px+5,py+9,1,3);g.fillRect(px+8,py+12,1,1);}continue;}const k=a.kind;
  if(k==='cliff'){g.fillStyle='#80654e';g.fillRect(px,py+2,16,13);g.fillStyle='#bba17a';g.fillRect(px,py,16,4);g.fillStyle='#514e48';g.fillRect(px,py+13,16,3);g.strokeStyle='#a08263';g.beginPath();g.moveTo(px+4,py+5);g.lineTo(px+2,py+12);g.moveTo(px+12,py+6);g.lineTo(px+14,py+14);g.stroke();}
  else if(k==='stairs'||k==='ledge'){g.fillStyle=k==='stairs'?'#b59b77':'#c7b18f';g.fillRect(px,py,16,16);g.fillStyle='#795e48';if(k==='stairs'){for(let i=3;i<16;i+=4)g.fillRect(px,py+i,16,1);}else{g.fillRect(px,py+9,16,4);g.fillStyle='#f2e7cb';g.fillRect(px,py+8,16,1);g.beginPath();g.moveTo(px+5,py+3);g.lineTo(px+11,py+3);g.lineTo(px+8,py+7);g.fill();}}
+ else if(k==='bridge'&&m.route4){g.fillStyle='#805b3e';g.fillRect(px,py,16,16);g.fillStyle='#bf9565';g.fillRect(px+1,py,14,16);for(let j=3;j<16;j+=4){g.fillStyle='#896043';g.fillRect(px+1,py+j,14,1);}g.fillStyle='#e1ba83';g.fillRect(px+1,py,2,16);g.fillRect(px+13,py,2,16);g.fillStyle='#695037';g.fillRect(px,py+2,3,4);g.fillRect(px+13,py+10,3,4);}
  else if(k==='bridge'){g.fillStyle='#4a352c';g.fillRect(px,py+1,16,14);g.fillStyle='#bd8858';g.fillRect(px,py+2,16,12);g.fillStyle='#7d533a';for(let i=3;i<16;i+=5)g.fillRect(px+i,py+2,1,12);g.fillStyle='#e0b278';g.fillRect(px,py+1,16,2);g.fillRect(px,py+13,16,2);g.fillStyle='#624d3b';g.fillRect(px+1,py,2,4);g.fillRect(px+13,py+12,2,4);}
  else if(k==='fall'){g.fillStyle='#498eac';g.fillRect(px,py,16,16);g.strokeStyle='#c8f4f3';g.lineWidth=.8;g.beginPath();for(let i=2;i<16;i+=4){const d=(t*1.8+i*7)%16;g.moveTo(px+i,py+d-8);g.lineTo(px+i-1,py+d+7);}g.stroke();g.fillStyle='rgba(239,255,255,.72)';for(let i=0;i<4;i++)g.fillRect(px+(i*7+t/3)%16,py+13,3,2);}
  else if(k==='dive'||k==='surface'){g.fillStyle=k==='dive'?'#246d86':'#72cad4';g.fillRect(px,py,16,16);expIcon(g,k,px,py,16);}

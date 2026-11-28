@@ -1,5 +1,5 @@
 {
-  "version": 7,
+  "version": 8,
   "total": 1212,
   "approved": [
     {
@@ -45,12 +45,12 @@
       ]
     }
   ],
-  "approvedSpecies": 70,
+  "approvedSpecies": 83,
   "defaultStatus": "hold-provisional",
-  "heldSpecies": 1142,
+  "heldSpecies": 1129,
   "next": {
-    "map": "2,0",
-    "name": "モミノキ街"
+    "map": "2,2",
+    "name": "ツユクサ野"
   },
   "policy": "Unapproved existing assets remain playable for continuity; no new design work until explicit acceptance. Reuse IDs and preserve old originals. Prior generated pack is a provisional archive, not approved artwork.",
   "route1": {
@@ -681,5 +681,193 @@
     "trainers": 6,
     "pairs": 1,
     "waterStatus": "hold-provisional"
+  },
+  "route4": {
+    "map": "2,1",
+    "name": "第4街道",
+    "maps": [
+      "2,1",
+      "a:route4-gorge:2,1"
+    ],
+    "land": [
+      {
+        "ids": [
+          609,
+          610
+        ],
+        "names": [
+          "タネウツロ",
+          "ウツロギ"
+        ],
+        "types": [
+          [
+            4
+          ],
+          [
+            4,
+            16
+          ]
+        ],
+        "weight": 24,
+        "levels": [
+          25
+        ],
+        "ability": 49
+      },
+      {
+        "ids": [
+          528,
+          529
+        ],
+        "names": [
+          "アワトビ",
+          "セセラトビ"
+        ],
+        "types": [
+          [
+            2
+          ],
+          [
+            2,
+            9
+          ]
+        ],
+        "weight": 20,
+        "levels": [
+          24
+        ],
+        "ability": 50
+      },
+      {
+        "ids": [
+          358,
+          359
+        ],
+        "names": [
+          "ホノカサ",
+          "ヒガサネ"
+        ],
+        "types": [
+          [
+            1,
+            11
+          ],
+          [
+            1,
+            11
+          ]
+        ],
+        "weight": 18,
+        "levels": [
+          26
+        ],
+        "ability": 51
+      },
+      {
+        "ids": [
+          424,
+          425
+        ],
+        "names": [
+          "イトハネ",
+          "オリハネ"
+        ],
+        "types": [
+          [
+            11,
+            9
+          ],
+          [
+            11,
+            9
+          ]
+        ],
+        "weight": 16,
+        "levels": [
+          27
+        ],
+        "ability": 52
+      },
+      {
+        "ids": [
+          654,
+          655
+        ],
+        "names": [
+          "ホリクチ",
+          "キリクチ"
+        ],
+        "types": [
+          [
+            8
+          ],
+          [
+            8,
+            6
+          ]
+        ],
+        "weight": 15,
+        "levels": [
+          28
+        ],
+        "ability": 53
+      },
+      {
+        "ids": [
+          927,
+          928,
+          929
+        ],
+        "names": [
+          "ネノオト",
+          "カナネ",
+          "キョウリン"
+        ],
+        "types": [
+          [
+            10
+          ],
+          [
+            10
+          ],
+          [
+            10,
+            16
+          ]
+        ],
+        "weight": 7,
+        "levels": [
+          22,
+          40
+        ],
+        "ability": 54
+      }
+    ],
+    "levels": [
+      9,
+      12
+    ],
+    "gorge": {
+      "weights": [
+        18,
+        22,
+        16,
+        14,
+        13,
+        17
+      ],
+      "levels": [
+        11,
+        13
+      ]
+    },
+    "water": [
+      528
+    ],
+    "assetCount": 13,
+    "frontCount": 13,
+    "trueRearCount": 0,
+    "reflectedRearCount": 13,
+    "trainers": 5
   }
 }

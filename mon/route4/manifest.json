@@ -1,0 +1,132 @@
+[
+  {
+    "path": "mon/route4/0609.webp",
+    "id": 609,
+    "width": 308,
+    "height": 376,
+    "size": 30338,
+    "sha": "2d48292e1865e8de1983ffeff5586aa42bbffae4",
+    "source": "a_clean_white_background_illustration_sheet_in_a_b.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0610.webp",
+    "id": 610,
+    "width": 457,
+    "height": 457,
+    "size": 65306,
+    "sha": "8e73f7e866ea00d38577218ba3dfa683d05d0116",
+    "source": "a_clean_white_background_illustration_sheet_in_a_b.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0528.webp",
+    "id": 528,
+    "width": 426,
+    "height": 383,
+    "size": 35196,
+    "sha": "5b0c2c72cf0195f3bc9013198a38f147eabd46e6",
+    "source": "a_clean_white_background_illustration_sheet_in_a_b.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0529.webp",
+    "id": 529,
+    "width": 524,
+    "height": 454,
+    "size": 61492,
+    "sha": "63c50aadf05e11c91de7e65bc9e11061b289e762",
+    "source": "a_clean_white_background_illustration_sheet_in_a_b.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0358.webp",
+    "id": 358,
+    "width": 359,
+    "height": 333,
+    "size": 22240,
+    "sha": "7b9b7aed7dcbbf81f166679c51b13d1f2bed6e21",
+    "source": "a_clean_white_background_illustration_sheet_in_a_b.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0359.webp",
+    "id": 359,
+    "width": 499,
+    "height": 461,
+    "size": 54178,
+    "sha": "d5c5e88d37aa0ceac9fc5ca0937a75427a99c1d7",
+    "source": "a_clean_white_background_illustration_sheet_in_a_b.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0424.webp",
+    "id": 424,
+    "width": 285,
+    "height": 347,
+    "size": 20714,
+    "sha": "abc21f2241a8efef6955e45b0b8eb4d868d1ae64",
+    "source": "a_clean_high_resolution_illustrated_concept_sheet.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0425.webp",
+    "id": 425,
+    "width": 470,
+    "height": 385,
+    "size": 49496,
+    "sha": "1ce981fe9de4a57147644c6f4d31586b417a13ec",
+    "source": "a_clean_high_resolution_illustrated_concept_sheet.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0654.webp",
+    "id": 654,
+    "width": 332,
+    "height": 275,
+    "size": 22506,
+    "sha": "6a4af874294da21e3c3c82eea5940e30734a0f11",
+    "source": "a_clean_high_resolution_illustrated_concept_sheet.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0655.webp",
+    "id": 655,
+    "width": 439,
+    "height": 367,
+    "size": 41584,
+    "sha": "80ab7092c2a9428a9a11bca54003223b203bcfa0",
+    "source": "a_clean_high_resolution_illustrated_concept_sheet.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0927.webp",
+    "id": 927,
+    "width": 280,
+    "height": 381,
+    "size": 22470,
+    "sha": "a480e54ab34549fbf2e408b3c42ba9d0223ac7cb",
+    "source": "a_clean_high_resolution_illustrated_concept_sheet.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0928.webp",
+    "id": 928,
+    "width": 365,
+    "height": 437,
+    "size": 38552,
+    "sha": "d418519066b097ff09da56fcb3b526fcf1e5e213",
+    "source": "a_clean_high_resolution_illustrated_concept_sheet.png",
+    "rear": "reflection"
+  },
+  {
+    "path": "mon/route4/0929.webp",
+    "id": 929,
+    "width": 606,
+    "height": 473,
+    "size": 108080,
+    "sha": "4ae1ab36da3ba48572bf07029dffbbc9404cd46c",
+    "source": "a_clean_high_resolution_illustrated_concept_sheet.png",
+    "rear": "reflection"
+  }
+]
