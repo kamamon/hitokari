@@ -836,7 +836,7 @@ const ROUTE2_LINES=[
     "tier": 0.115
   }
 ];
-const ROUTE2_ABILITIES=[{"n":"草原疾走","d":"晴れのとき 素早さが1.5倍"},{"n":"化かし","d":"登場時 相手の命中率を1段階 下げる"},{"n":"跳躍力","d":"指定の跳躍・蹴り技の威力が1.2倍"},{"n":"蓄電毛","d":"雷の攻撃技を無効にして HPを1/4回復"},{"n":"地中感覚","d":"命中率を 下げられない"},{"n":"毒牙","d":"接触技でダメージを与えると20%で 毒にする"},{"n":"綿毛散布","d":"接触技を受けると20%で 相手の素早さを1段階下げる"},{"n":"夢の胞子","d":"接触技を受けると10%で 相手を眠らせる"}];
+const ROUTE2_ABILITIES=[{"n":"草原疾走","d":"晴れのとき 素早さが1.5倍"},{"n":"化かし","d":"登場時 相手の命中率を1段階 下げる"},{"n":"跳躍力","d":"指定の跳躍・蹴り技の威力が1.2倍"},{"n":"蓄電毛","d":"相手から受ける雷技を無効にして HPを1/4回復"},{"n":"地中感覚","d":"命中率を 下げられない"},{"n":"毒牙","d":"接触技でダメージを与えると20%で 毒にする"},{"n":"綿毛散布","d":"接触技を受けると20%で 相手の素早さを1段階下げる"},{"n":"夢の胞子","d":"接触技を受けると10%で 相手を眠らせる"}];
 
 const ROUTE2_SPECIES=new Map(ROUTE2_LINES.flatMap(f=>f.ids.map((id,i)=>[id,{family:f,stage:i}])));
 const ROUTE2_IDS=new Set(ROUTE2_SPECIES.keys()),ROUTE2_REAR_IDS=new Set([711,712,516,517]);
@@ -850,12 +850,13 @@ function route2Roll(n){if(!Number.isInteger(n)||n<0||n>=100)throw RangeError('ro
 function route2WildPick(){const f=route2Roll(ri(100));return {sp:f.ids[0],lv:5+ri(5)};}
 function route2MoveAllowed(sp,id){const r=ROUTE2_SPECIES.get(sp.id);if(!r)return true;const sec=r.family.types.at(-1)[1];return sec==null||r.family.types[r.stage].includes(sec)||MOVES[id].type!==sec||sec===0;}
 function route2Speed(m,weather){return abilOf(m)===30&&weather==='sun'?1.5:1;}
-const ROUTE2_JUMP_MOVES=new Set(['はねばしり','しゅんそくけり','ふたえげり','はやぶさおとし','らいこうげり','そうらいきゃく','ほむらげり','しゃくねつとつげき']);
+const ROUTE2_JUMP_MOVES=new Set(['はねばしり','しゅんそくけり','ふたえげり','はやぶさおとし','らいこうげり','そうらいきゃく','ほむらげり']);
 function route2PowerScale(m,mv){return abilOf(m)===32&&ROUTE2_JUMP_MOVES.has(mv.name)?1.2:1;}
 // Contact is a distinct property from physical. Projectiles and area ground moves do not trigger these abilities.
 const ROUTE2_CONTACT_RE=/ぶつかる|づき|つき|づめ|つめ|かみ|がみ|きば|けり|げり|きゃく|あご|なぐ|けん|きり|ぎり|やいば|まわしうち|はがんしょう|かえしうち|はねうち|かえしばね|つるばしり|いばらむち|とつげき|はねばしり|むれあたり|にだんほり|かつぎなげ|たいえきすい|はりれんだ|ふたまた|ひやりて/;
 const ROUTE2_RANGED_PHYS=new Set(['はっぱうち','たねつぶて','つぶてあめ','すなげり','きんかとばし','つちなだれ','だいちわり','ちかくへんどう','ふみかためうち','ひとだまれんだ','かげばしり','みだればね','もりのやいば','やまかぜぎり']);
 function route2Contact(mv){return !!(mv.phys&&mv.pow>0&&!ROUTE2_RANGED_PHYS.has(mv.name)&&ROUTE2_CONTACT_RE.test(mv.name));}
+async function route2Absorb(B,s){const m=bmon(B,s);m.hp=Math.min(maxHP(m),m.hp+Math.max(1,Math.floor(maxHP(m)/4)));healFx(s);await hpAnim(B,s);await say(bname(B,s)+'は 「蓄電毛」で 技を すいとった！');}
 function route2BlocksAccuracy(m,key,n){return abilOf(m)===34&&key==='acc'&&n<0;}
 async function route2EntryAbility(B,s){
  if(abilOf(bmon(B,s))!==31||bmon(B,1-s).hp<=0)return false;
@@ -864,9 +865,9 @@ async function route2EntryAbility(B,s){
 async function route2ContactEffects(B,sd,mv,dmg){
  if(dmg<=0||!route2Contact(mv)||!starterOpponents(B,sd))return;
  const u=bmon(B,sd),t=bmon(B,1-sd);if(u.hp<=0||t.hp<=0)return;
- if(abilOf(u)===35&&!t.st&&ri(100)<20)await inflict(B,1-sd,'psn',false);
+ if(abilOf(u)===35&&!t.st&&ri(100)<20){if(await inflict(B,1-sd,'psn',false))await say(bname(B,sd)+'の 「毒牙」！');}
  if(abilOf(t)===36&&ri(100)<20){await say(bname(B,1-sd)+'の 「綿毛散布」！');await boost(B,sd,'spe',-1);}
- if(abilOf(t)===37&&!u.st&&ri(100)<10)await inflict(B,sd,'slp',false);
+ if(abilOf(t)===37&&!u.st&&ri(100)<10){if(await inflict(B,sd,'slp',false))await say(bname(B,1-sd)+'の 「夢の胞子」！');}
 }
 // Widen the walkable interior rather than altering the 32x32 world-cell connections.
 function expandRoute2Meadow(m){

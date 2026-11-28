@@ -4300,6 +4300,7 @@ async function useMove(B,sd,idx){
     const onFoe=mv.eff.some(e=>e.k==='st'||(e.k==='stage'&&e.who==='foe')||e.k==='seed'||e.k==='split');
     if(onFoe&&ts.prot){await say(tn+'は 身を まもった！');return;}
     if(onFoe&&mv.acc>0&&!accCheck(B,sd,mv)){await say('しかし '+tn+'には あたらなかった！');return;}
+    if(onFoe&&mv.type===3&&abilOf(t)===33&&t.hp>0){await route2Absorb(B,1-sd);return;}
     await moveFx(B,sd,mv);
     const before=abilOf(u)===24?starterStatusSnapshot(B,sd):null;await applyEffects(B,sd,mv,true,false);if(before!==null)starterRootMark(B,sd,mv,before);return;
   }
