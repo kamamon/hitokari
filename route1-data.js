@@ -547,8 +547,8 @@ const ROUTE1_LINES=[
 const ROUTE1_SPECIES=new Map(ROUTE1_LINES.flatMap(f=>f.ids.map((id,i)=>[id,{family:f,stage:i}])));
 const ROUTE1_IDS=new Set(ROUTE1_SPECIES.keys()),ROUTE1_RARE=ROUTE1_LINES[4].ids[0];
 function route1FamilyRare(id){return !!ROUTE1_SPECIES.get(id)?.family.rare;}
-function applyRoute1Families(){
- for(const r of ROUTE1_LINES){
+function applyRoute1Families(lines=ROUTE1_LINES){
+ for(const r of lines){
   const f=FAMS[SP[r.ids[0]].fam],oldIds=f.ids.slice();
   // The unused old third forms are preserved as distinct provisional single-stage species.
   for(const id of oldIds.filter(id=>!r.ids.includes(id))){
