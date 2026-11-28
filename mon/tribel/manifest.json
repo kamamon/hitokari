@@ -1,0 +1,160 @@
+{
+  "horse": [
+    {
+      "path": "mon/tribel/0546.webp",
+      "sha": "a46f8ff1bc191093e3a67f12615490dcfd080325",
+      "size": 30318,
+      "width": 390,
+      "height": 449
+    },
+    {
+      "path": "mon/tribel/0547.webp",
+      "sha": "d74a4a782d5df51d0cde8c02e7bdee6a1f8e0e48",
+      "size": 76456,
+      "width": 566,
+      "height": 509
+    },
+    {
+      "path": "mon/tribel/b0546.webp",
+      "sha": "d6208c148439cc96d6f3878ea39616a280684c77",
+      "size": 27978,
+      "width": 340,
+      "height": 508
+    },
+    {
+      "path": "mon/tribel/b0547.webp",
+      "sha": "6db56475a57f461c09edd694e137ccbc7a1a4182",
+      "size": 71834,
+      "width": 501,
+      "height": 566
+    }
+  ],
+  "vectors": [
+    {
+      "id": 265,
+      "back": false,
+      "path": "mon/tribel/0265.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 265,
+      "back": true,
+      "path": "mon/tribel/b0265.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 266,
+      "back": false,
+      "path": "mon/tribel/0266.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 266,
+      "back": true,
+      "path": "mon/tribel/b0266.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 1188,
+      "back": false,
+      "path": "mon/tribel/1188.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 1188,
+      "back": true,
+      "path": "mon/tribel/b1188.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 1189,
+      "back": false,
+      "path": "mon/tribel/1189.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 1189,
+      "back": true,
+      "path": "mon/tribel/b1189.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 1190,
+      "back": false,
+      "path": "mon/tribel/1190.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 1190,
+      "back": true,
+      "path": "mon/tribel/b1190.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 190,
+      "back": false,
+      "path": "mon/tribel/0190.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 190,
+      "back": true,
+      "path": "mon/tribel/b0190.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 191,
+      "back": false,
+      "path": "mon/tribel/0191.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 191,
+      "back": true,
+      "path": "mon/tribel/b0191.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 1062,
+      "back": false,
+      "path": "mon/tribel/1062.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 1062,
+      "back": true,
+      "path": "mon/tribel/b1062.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 1063,
+      "back": false,
+      "path": "mon/tribel/1063.svg",
+      "width": 640,
+      "height": 640
+    },
+    {
+      "id": 1063,
+      "back": true,
+      "path": "mon/tribel/b1063.svg",
+      "width": 640,
+      "height": 640
+    }
+  ]
+}

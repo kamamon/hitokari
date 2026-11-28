@@ -87,6 +87,7 @@ body.land #bC{right:auto;left:max(8px,env(safe-area-inset-left));top:7%;bottom:a
 <script src="audio-engine.js"></script>
 <script src="route1-data.js"></script>
 <script src="route2-data.js"></script>
+<script src="tribel-data.js"></script>
 <script>
 /* ソラネ地方の人物2000・道具200（tools/parse_sorane.py → gen_sorane.py）。絵は chr/C0001.webp など */
 const PEOPLE_KEY=[["綴森 ハクノ","アニマ博士"],["晴路 ソウ","主人公・男"],["晴路 アオ","主人公・女"],["飛鳥 リオト","幼なじみのライバル"],["名取 コトネア","研究を志すライバル"],["遠野 ナギル","旅慣れたライバル"],["紙野 メモリ","博士の調査助手"],["織部 イトミ","仕立て工房の案内人"],["道具屋 ツクル","道具開発の相棒"],["芽久保 イトハ","ジムリーダー"],["百瀬 ハルク","ジムリーダー"],["露原 ネイロ","ジムリーダー"],["琥野 セキト","ジムリーダー"],["虹井 マユカ","ジムリーダー"],["風巻 ソウリ","ジムリーダー"],["雨宮 ネムジ","ジムリーダー"],["白部 リツカ","ジムリーダー"],["夢代 トワリ","ジムリーダー"],["暁野 ガレン","ジムリーダー"],["汐瀬 ミオリ","ジムリーダー"],["渦井 クラウ","ジムリーダー"],["珊瑚田 ニイナ","ジムリーダー"],["音見 タクト","ジムリーダー"],["滴森 コノエ","ジムリーダー"],["蛍野 アキセ","ジムリーダー"],["月城 シュウガ","ジムリーダー"],["村雨 リキョウ","ジムリーダー"],["凪野 ツバト","ジムリーダー"],["真珠野 オリエ","ジムリーダー"],["火輪 センジ","ジムリーダー"],["大金 レント","ジムリーダー"],["砂上 ヒナギ","ジムリーダー"],["黒良 ゴウト","ジムリーダー"],["稲妻 チヨリ","ジムリーダー"],["岩戸 アラム","ジムリーダー"],["竜石 サライ","ジムリーダー"],["湯森 ユキト","ジムリーダー"],["赤錆 カナメ","ジムリーダー"],["天露 フユラ","ジムリーダー"],["星辺 ユラノ","ジムリーダー"],["雪渡 トキエ","ジムリーダー"],["森林 イツキナ","ジムリーダー"],["影笠 ミツユ","ジムリーダー"],["眠里 ウズネ","ジムリーダー"],["羽雪 ライハ","ジムリーダー"],["白銀 トウマル","ジムリーダー"],["花間 エリネ","ジムリーダー"],["鹿角 ミノルカ","ジムリーダー"],["夢織 セラト","ジムリーダー"],["空橋 リンセ","ジムリーダー"],["白爪 ガクヤ","ジムリーダー"],["影坊 ナツメル","ジムリーダー"],["月読 オトセ","ジムリーダー"],["岩根 ジュエン","ジムリーダー"],["菖蒲 カイリネ","ジムリーダー"],["虫音 シキノ","ジムリーダー"],["火山場 ロクア","ジムリーダー"],["依代 ミクリ","ジムリーダー"],["天界 セイラオ","ジムリーダー"],["大地堂 ガクエン","四天王・地脈"],["海原 ミナサ","四天王・潮流"],["天鳥 ライゼン","四天王・天候"],["記原 シオネ","四天王・記憶"],["巡野 アステル","チャンピオン"],["無地野 レムナ","静環団の代表"],["時雨 ユノカ","静環団・観測幹部"],["鉄見 ガドル","静環団・構造幹部"],["眠野 モイラ","静環団・記録幹部"],["路白 シノク","静環団の元調査員"],["晴路 アサヨ","主人公の家族・保護者"],["晴路 ユウジン","主人公の家族・地図職人"],["飛鳥 トメオ","幼なじみの祖父"],["芽吹 ミイナ","主人公の妹分"],["白井 セネル","巡環診療所の主任"],["高森 バルク","広域レンジャー隊長"],["波間 シエナ","海底探査船の船長"],["風読 コウリ","飛行船の機関士"],["石守 ラング","地底案内人"],["星詠 ツズリ","天文台の館長"],["月舟 ノクタ","月影の海の語り部"],["朝凪 ヒオリ","夜明けの観測者"],["根守 ヴィオ","原初の谷の世話人"],["繭崎 イロア","虹膜洞窟の研究員"],["土還 キノア","古い森の土壌学者"],["夢津 ルミエ","夢の海の案内役"],["銀記 オルノ","記憶回廊の司書"],["分岐 サトリ","境界に現れる旅人"],["円庭 マキオ","リーグ委員長"],["写野 フレア","旅の写真記者"],["継橋 ハルマ","復旧工事のまとめ役"],["宿里 ユリエ","巡回宿の女将"],["古市 レキオ","移動古道具屋"],["音海 リセト","合奏祭の進行役"],["手島 ユノル","静環団の新人"],["星環 モナカ","巡環図鑑の編集者"],["風港 エルド","遠方から来た交換使節"],["小径 チカル","迷子の道案内人"],["輪木 サナラ","五圏連絡所の調整役"],["古灯 クニル","旧巡回路の灯守"],["道守 シキエ","世界巡回のベテラン"]];
@@ -110,7 +111,7 @@ const BOOK_LEG=[[1201,"星明かりだけが届く空の裂け目","星々が進
 
 'use strict';
 /* ================= core.js : 乱数・タイプ・技・特性・道具 ================= */
-const VERSION='1.11';
+const VERSION='1.12';
 const SHINY_RATE=8192;           // 色違いの確率 1/8192（原作準拠）
 const PARTY_MAX=6;               // 手持ちは6匹まで
 
@@ -345,7 +346,7 @@ const ABIL=[
  {n:'聖なる守り',d:'状態異常にならない'}];
 ABIL.push({n:'焔芯',d:'HPが1/3以下のとき 焔の攻撃技が1.5倍'},{n:'潮芯',d:'HPが1/3以下のとき 潮の攻撃技が1.5倍'},{n:'芽吹き',d:'HPが1/3以下のとき 森の攻撃技が1.5倍'},{n:'残火加速',d:'敵の攻撃で初めてHP半分以下になると 素早さ1段階上昇（1戦1回）'},{n:'水鏡',d:'初めて受ける相手の特殊攻撃のダメージを25%軽減（1戦1回）'},{n:'深根',d:'回復・防御以外の変化技が成功したターンの終わりに HPを1/16回復'});
 ABIL.push({n:'拾いもの',d:'勝利・捕獲後10%で 道具を拾う'},{n:'追い風・初速',d:'HP満タン時 素早さ1.2倍'},{n:'朝露',d:'雨のターン終了時 HPを1/16回復'},{n:'堅殻',d:'HP満タン時 物理攻撃を25%軽減'},{n:'星の加護',d:'最初に受ける効果抜群の攻撃を30%軽減（1戦1回）'});
-ABIL.push(...ROUTE2_ABILITIES);
+ABIL.push(...ROUTE2_ABILITIES,...TRIBEL_ABILITIES);
 const ABIL_BY_TYPE=[[6,12,16,17,14],[0,5,11],[0,9,13],[0,3,10],[0,13,16],[8,6,0],[12,17,1],[4,13,0],[6,0,1],
  [14,7,17],[2,13,14],[7,15,0],[6,15,0],[2,13,0],[1,17,0],[1,17,12],[15,6,0]];
 
@@ -770,7 +771,7 @@ for(const f of STARTER_TRIO){for(let i=0;i<3;i++)BOOK_SP[f.ids[i]-1]=[f.name[i],
   // Preserve every family index; only three approved lines are starters. Two former starters are ordinary lines.
   for(const f of FAMS)if(f&&f.starter&&!STARTER_IDS.includes(f.ids[0]))f.starter=false;
   for(const f of STARTER_TRIO){const fam=FAMS[SP[f.ids[0]].fam];Object.assign(fam,{starter:true,abil:f.ability,bst0:318,bstN:535,evo:[16,36],t1:f.type,t2:f.secondary,t2From:1,learn:f.learn.map(([lv,name])=>{const id=moveId(name);if(id<0)throw Error('starter move '+name);return [lv,id];}),starterSignature:moveId(f.signature)});for(let i=0;i<3;i++){const sp=SP[f.ids[i]];sp.base=f.base[i].slice();sp.bst=sp.base.reduce((x,y)=>x+y,0);sp.abil=f.ability;sp.evoLv=i===0?16:i===1?36:0;sp.yield=Math.max(30,Math.floor(sp.bst*.36-35));}}
-  applyRoute1Families();applyRoute1Families(ROUTE2_LINES);
+  applyRoute1Families();applyRoute1Families(ROUTE2_LINES);applyRoute1Families(TRIBEL_LINES);
   N_SPECIES=BOOK_SP.length;
   SP_OWARI=SP.findIndex(s=>s&&s.name==='メモルディア');
   SP_HAJIMARI=-1;
@@ -800,7 +801,7 @@ function dexText(sp){
 }
 
 /* ---------- 個体 ---------- */
-function abilityOptions(sp){const f=famOf(sp),base=sp.abil,record=STARTER_SPECIES.get(sp.id);if(record)return record.stage===2?[base,record.family.special]:[base];if(ROUTE1_IDS.has(sp.id)||ROUTE2_IDS.has(sp.id))return[base];if(f.legend||f.one||f.starter)return [base];const choices=ABIL_BY_TYPE[f.t1].filter(n=>n!==base);return choices.length?[base,choices[hashStr('ability:'+f.id)%choices.length]]:[base];}
+function abilityOptions(sp){const f=famOf(sp),base=sp.abil,record=STARTER_SPECIES.get(sp.id);if(record)return record.stage===2?[base,record.family.special]:[base];if(ROUTE1_IDS.has(sp.id)||ROUTE2_IDS.has(sp.id)||TRIBEL_IDS.has(sp.id))return[base];if(f.legend||f.one||f.starter)return [base];const choices=ABIL_BY_TYPE[f.t1].filter(n=>n!==base);return choices.length?[base,choices[hashStr('ability:'+f.id)%choices.length]]:[base];}
 function makeMon(spId,lv,opt){
   opt=opt||{};const sp=SP[spId];
   const m={sp:spId,lv,exp:expFor(sp,lv),iv:[0,0,0,0,0,0].map(()=>opt.iv!=null?opt.iv:ri(32)),ev:[0,0,0,0,0,0],
@@ -1053,7 +1054,7 @@ function genMacro(seed,pNew){
   // 最初の5系統のうち選ばなかったものは 終盤の草むらにまれに出る
   const late=landAreas.filter(a=>a.prog>=38&&a.prog<=48&&!a.branch);
   for(let i=0;i<STARTERS.length;i++)if(late.length)late[(i*3)%late.length].rare=famOf(SP[STARTERS[i]]).id;
-  setRoute1Encounters();setRoute2Encounters();
+  setRoute1Encounters();setRoute2Encounters();setTribelEncounters();
   // Harusaki is a peaceful transit town. Move its former gym to Michishirube,
   // renumber challenges in their existing world order without altering ecology, paths or gates.
   const old=WORLD.gymTown.slice(1),haru=old[0],last=WORLD.main[50];
@@ -1067,6 +1068,7 @@ const ENC_W=[30,25,20,12,8,5,3,2,2,2];
 function wildPick(cell,kind,bonus,partner=false){
   if(cell===CELLS['0,3']&&kind!=='water')return route1WildPick(cell,partner);
   if(cell===CELLS['0,1']&&kind!=='water')return route2WildPick();
+  if((cell===CELLS[TRIBEL_KEY]||cell.tribelZone)&&kind!=='water')return tribelWildPick(cell.tribelZone||'meadow');
   const list=kind==='water'?cell.water:cell.land;if(!list||!list.length)return null;
   let fam;
   if(kind!=='water'&&cell.rare!=null&&ri(50)===0)fam=FAMS[cell.rare];
@@ -1314,6 +1316,7 @@ function downPos(cell,f){
 const floorType=(cell,f)=>(cell.kind==='dung'&&f===cell.nF-1&&cell.style!=='road')?'hall':'cave';
 const floorId=(cell,f)=>cell.key+(f?':f'+f:'');
 function genWild(cell,o){
+  if(cell.key===TRIBEL_KEY)return genTribelMap('main',cell);
   o=o||{};const f=o.f||0,id=floorId(cell,f),r=RNG('map'+id),cave=cell.pal==='cave';
   const WALL=cave?T.ROCK:T.TREE,FL=cave?T.CFLOOR:T.GRASS,PT=cave?T.CFLOOR:T.PATH;
   const m=newMap(id,cell,MW,MH,WALL),t=m.t,br=carver(m,FL,PT,WALL);
@@ -1816,7 +1819,7 @@ function wcInit(){
 }
 // ---- 図鑑の原画（mon/001.webp 〜 500.webp）。使うときに 1体ずつ 読みこむ ----
 const MON_PIC=new Map(),MON_PIC_DIR='mon/';
-function monAssetPath(no,back=false){if(ROUTE2_IDS.has(no))return MON_PIC_DIR+'route2/'+(back&&ROUTE2_REAR_IDS.has(no)?'b':'')+String(no).padStart(4,'0')+'.webp';if(ROUTE1_IDS.has(no))return MON_PIC_DIR+'route1/'+(back?'b':'')+String(no).padStart(4,'0')+'.webp';const selected=back?STARTER_REAR_SET.has(no):STARTER_FRONT_SET.has(no);return MON_PIC_DIR+(selected?'starter-v2/':'')+(back?'b':'')+String(no).padStart(4,'0')+'.webp';}
+function monAssetPath(no,back=false){if(TRIBEL_IDS.has(no))return MON_PIC_DIR+'tribel/'+(back?'b':'')+String(no).padStart(4,'0')+(TRIBEL_HORSE.has(no)?'.webp':'.svg');if(ROUTE2_IDS.has(no))return MON_PIC_DIR+'route2/'+(back&&ROUTE2_REAR_IDS.has(no)?'b':'')+String(no).padStart(4,'0')+'.webp';if(ROUTE1_IDS.has(no))return MON_PIC_DIR+'route1/'+(back?'b':'')+String(no).padStart(4,'0')+'.webp';const selected=back?STARTER_REAR_SET.has(no):STARTER_FRONT_SET.has(no);return MON_PIC_DIR+(selected?'starter-v2/':'')+(back?'b':'')+String(no).padStart(4,'0')+'.webp';}
 function monPic(no){
  let P=MON_PIC.get(no);
  if(P){MON_PIC.delete(no);MON_PIC.set(no,P);return P;}
@@ -1826,7 +1829,7 @@ function monPic(no){
 }
 function monPreload(spId){const sp=SP[spId];if(sp&&sp.book){monPic(sp.book);if(typeof MONBACK!=='undefined'&&MONBACK[sp.book])pic(monAssetPath(sp.book,true));}}
 // 後ろ姿の絵がある子（27種）は 自分の側で それを使う
-const MONBACK={},MONBACK_CV=new Map();for(const n of ASSET.MON_BACK)if(!STARTER_FRONT_SET.has(n)&&!ROUTE2_IDS.has(n))MONBACK[n]=1;for(const n of STARTER_REAR_SET)MONBACK[n]=1;for(const n of ROUTE1_IDS)MONBACK[n]=1;for(const n of ROUTE2_REAR_IDS)MONBACK[n]=1;
+const MONBACK={},MONBACK_CV=new Map();for(const n of ASSET.MON_BACK)if(!STARTER_FRONT_SET.has(n)&&!ROUTE2_IDS.has(n))MONBACK[n]=1;for(const n of STARTER_REAR_SET)MONBACK[n]=1;for(const n of ROUTE1_IDS)MONBACK[n]=1;for(const n of ROUTE2_REAR_IDS)MONBACK[n]=1;for(const n of TRIBEL_IDS)MONBACK[n]=1;
 function monBackCv(spId,shiny){
   const sp=SP[spId];if(!sp||!sp.book||!MONBACK[sp.book])return null;
   const P=pic(monAssetPath(sp.book,true));if(P.st!==1)return null;
@@ -2257,9 +2260,9 @@ function initAudio(){try{if(!AC){AC=new(window.AudioContext||window.webkitAudioC
 function currentCue(){
   if(G.scene==='title')return'title';
   if(G.scene==='battle'&&BT){if(BT.result==='win'||BT.result==='caught')return'victory';if(BT.o.legend||BT.o.facility||BT.env.kind==='dojo'||BT.env.kind==='league')return'boss';return BT.wild?'wild':'trainer';}
-  const m=G.map;if(!m)return'title';if(m.haru&&!m.indoor)return dayPhase()===3?'harusaki-night':'harusaki-day';if(m.indoor)return'indoor';if(m.pal==='cave')return'cave';if(G.pl.surf||m.cell&&m.cell.kind==='sea')return'sea';return m.cell&&m.cell.kind==='town'?'town':'road';
+  const m=G.map;if(!m)return'title';if(m.haru&&!m.indoor)return dayPhase()===3?'harusaki-night':'harusaki-day';if(m.tribel)return dayPhase()===3?'tribel-night':'tribel-day';if(m.indoor)return'indoor';if(m.pal==='cave')return'cave';if(G.pl.surf||m.cell&&m.cell.kind==='sea')return'sea';return m.cell&&m.cell.kind==='town'?'town':'road';
 }
-function audioTick(){haruAmbientAudio();if(MUSIC&&AC){const o=S&&S.opts||{};try{MUSIC.tick(currentCue(),Number.isFinite(o.musicVol)?o.musicVol/100:0.4,o.music!==0&&!document.hidden);}catch(e){MUSIC.stop();MUSIC=null;console.warn('music',e);}}}
+function audioTick(){haruAmbientAudio();tribelAmbientAudio();if(MUSIC&&AC){const o=S&&S.opts||{};try{MUSIC.tick(currentCue(),Number.isFinite(o.musicVol)?o.musicVol/100:0.4,o.music!==0&&!document.hidden);}catch(e){MUSIC.stop();MUSIC=null;console.warn('music',e);}}}
 function fieldWeather(m){return m?SoraneAudio.naturalWeather(m,hashStr('climate:'+m.id)):null;}
 function reducedFx(){return !!(S&&S.opts&&S.opts.reduceFx)||typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;}
 
@@ -4176,7 +4179,7 @@ const sayW=t=>msg(t);
 
 function effStat(B,s,i){
   const m=bmon(B,s),st=bstg(B,s);let v=Math.floor(stat(m,i)*stgMul(st[STKEY[i]]));
-  if(i===5){if(heldOf(m).spe)v=Math.floor(v*heldOf(m).spe);v=Math.floor(v*route1Speed(m));v=Math.floor(v*route2Speed(m,B.weather));}
+  if(i===5){if(heldOf(m).spe)v=Math.floor(v*heldOf(m).spe);v=Math.floor(v*route1Speed(m));v=Math.floor(v*route2Speed(m,B.weather));v=Math.floor(v*tribelWindSpeed(B,s));}
   const ab=abilOf(m);
   if(i===1){if(m.st&&ab===12)v=Math.floor(v*1.5);else if(m.st==='brn')v=Math.floor(v/2);}
   if(i===5&&m.st==='par')v=Math.floor(v/4);
@@ -4193,7 +4196,7 @@ function calcDamage(B,s,mv,crit,eff,roll=85+ri(16)){
   if(mv.type>=0){
     if(asp.types.indexOf(mv.type)>=0)dmg=Math.floor(dmg*1.5);
     dmg=Math.floor(dmg*eff);
-    if(starterPinch(a,mv.type))dmg=Math.floor(dmg*1.5);
+    if(starterPinch(a,mv.type))dmg=Math.floor(dmg*1.5);dmg=Math.floor(dmg*tribelFireBoost(B,a,mv));
     if(abilOf(d)===8&&(mv.type===1||mv.type===5))dmg=Math.floor(dmg/2);
   }
   {const h=heldOf(a);if(h.t===mv.type)dmg=Math.floor(dmg*1.15);if(h.all)dmg=Math.floor(dmg*h.all);}      // 持たせた道具
@@ -4252,7 +4255,7 @@ async function applyEffects(B,sd,mv,isStatus,selfOnly){
     }else if(e.k==='heal'){
       const side=B.supportAlly?1-sd:sd,u=bmon(B,side),mx=maxHP(u);
       if(u.hp>=mx)await say('しかし HPは まんたんだ！');
-      else{u.hp=Math.min(mx,u.hp+Math.floor(mx/2));startIndividualMotion(u,'recover');sfx('heal');healFx(side);await hpAnim(B,side);await say(bname(B,side)+'の たいりょくが 回復した！');}
+      else{u.hp=Math.min(mx,u.hp+Math.floor(mx/2*tribelHealScale(bmon(B,sd))));startIndividualMotion(u,'recover');sfx('heal');healFx(side);await hpAnim(B,side);await say(bname(B,side)+'の たいりょくが 回復した！');}
     }else if(e.k==='protect'){
       const st=bstg(B,sd);if(ri(1<<Math.min(3,st.protN))===0){st.prot=true;st.protN++;startIndividualMotion(bmon(B,sd),'guard');await say(bname(B,sd)+'は 守りの かまえに 入った！');}else{st.protN=0;await say('しかし うまく きまらなかった！');}
     }else if(e.k==='seed'){
@@ -4312,7 +4315,7 @@ async function useMove(B,sd,idx){
     const onFoe=mv.eff.some(e=>e.k==='st'||(e.k==='stage'&&e.who==='foe')||e.k==='seed'||e.k==='split');
     if(onFoe&&ts.prot){await say(tn+'は 身を まもった！');return;}
     if(onFoe&&mv.acc>0&&!accCheck(B,sd,mv)){await say('しかし '+tn+'には あたらなかった！');return;}
-    if(onFoe&&mv.type===3&&abilOf(t)===33&&t.hp>0){await route2Absorb(B,1-sd);return;}
+    if(onFoe&&mv.type===3&&abilOf(t)===33&&t.hp>0){await route2Absorb(B,1-sd);return;}if(onFoe&&mv.type===1&&abilOf(t)===40&&starterOpponents(B,sd)&&t.hp>0){await tribelAbsorbFire(B,1-sd);return;}
     await moveFx(B,sd,mv);
     const before=abilOf(u)===24?starterStatusSnapshot(B,sd):null;await applyEffects(B,sd,mv,true,false);if(before!==null)starterRootMark(B,sd,mv,before);return;
   }
@@ -4321,6 +4324,7 @@ async function useMove(B,sd,idx){
   if(mv.acc>0&&!accCheck(B,sd,mv)){actorMotionForMove(u,mv);startIndividualMotion(t,'dodge');await say('しかし こうげきは はずれた！');return;}
   let eff=mv.type>=0?typeEff(mv.type,SP[t.sp].types):1;const ab=abilOf(t);
   if(mv.type===8&&ab===2)eff=0;
+  if(mv.type===1&&ab===40&&starterOpponents(B,sd)){await tribelAbsorbFire(B,1-sd);return;}
   if((mv.type===2&&ab===9)||(mv.type===3&&(ab===10||ab===33))||(mv.type===1&&ab===11)){
     const mx=maxHP(t);t.hp=Math.min(mx,t.hp+Math.floor(mx/4));healFx(1-sd);await hpAnim(B,1-sd);await say(tn+'は 「'+ABIL[ab].n+'」で 技を すいとった！');return;}
   if(eff===0){await say(tn+'には まったく きかない！');return;}
@@ -4328,7 +4332,7 @@ async function useMove(B,sd,idx){
   const fxd=mv.eff.find(e=>e.k==='fixed');
   if(fxd||mv.has('level')||mv.has('halve')){     // 決まった量のダメージ（能力や相性の倍率を 受けない）
     const d0=Math.min(t.hp,fxd?fxd.n:mv.has('level')?u.lv:Math.max(1,Math.floor(t.hp/2)));
-    await moveFx(B,sd,mv);await hitAnim(B,1-sd,1);t.hp-=d0;await hpAnim(B,1-sd);if(abilOf(t)===22)await starterAfterDamage(B,sd,beforeHP,d0,false);await applyEffects(B,sd,mv,false,t.hp<=0);await route2ContactEffects(B,sd,mv,d0);return;
+    await moveFx(B,sd,mv);await hitAnim(B,1-sd,1);t.hp-=d0;await hpAnim(B,1-sd);if(abilOf(t)===22)await starterAfterDamage(B,sd,beforeHP,d0,false);await applyEffects(B,sd,mv,false,t.hp<=0);await route2ContactEffects(B,sd,mv,d0);await tribelCounterSpines(B,sd,mv,d0);return;
   }
   const hits=mv.has('multi')?[2,2,3,3,4,5][ri(6)]:mv.has('twice')?2:1;
   let dmg=0,nh=0,crit=false,sturdy=false,held1=false;
@@ -4351,18 +4355,18 @@ async function useMove(B,sd,idx){
   if(held1)await say(tn+'は 「約束の木札」で こらえた！');
   for(const e of mv.eff){
     if(e.k==='recoil'&&u.hp>0){startIndividualMotion(u,'recoil');u.hp=Math.max(0,u.hp-Math.max(1,Math.floor(dmg/4)));await hpAnim(B,sd);await say(un+'は はんどうを うけた！');}
-    if(u.hp>0&&(e.k==='mend'||e.k==='mend4')&&u.hp<maxHP(u)){u.hp=Math.min(maxHP(u),u.hp+Math.max(1,Math.floor(maxHP(u)/(e.k==='mend'?8:4))));healFx(sd);await hpAnim(B,sd);await say(un+'の たいりょくが 回復した！');}
+    if(u.hp>0&&(e.k==='mend'||e.k==='mend4')&&u.hp<maxHP(u)){u.hp=Math.min(maxHP(u),u.hp+Math.max(1,Math.floor(maxHP(u)/(e.k==='mend'?8:4)*tribelHealScale(u))));healFx(sd);await hpAnim(B,sd);await say(un+'の たいりょくが 回復した！');}
     if(u.hp>0&&e.k==='purify'&&u.st){u.st=null;healFx(sd);await say(un+'の 状態異常が なおった！');}
     if(u.hp>0&&(e.k==='renew'||e.k==='renewD')){const st=bstg(B,sd);let ch=false;for(const k of (e.k==='renew'?['atk','def','spa','spd','spe','acc','eva']:['def','spd']))if(st[k]<0){st[k]=0;ch=true;}if(ch)await say(un+'の 下がった 能力が もとに もどった！');}
     if(u.hp>0&&e.k==='lowUp'){const st=bstg(B,sd);await boost(B,sd,st.def<=st.spd?'def':'spd',1);}
-    if(e.k==='drain'&&u.hp>0&&u.hp<maxHP(u)){u.hp=Math.min(maxHP(u),u.hp+Math.max(1,Math.floor(dmg/2)));healFx(sd);await hpAnim(B,sd);await say(tn+'から たいりょくを すいとった！');}
+    if(e.k==='drain'&&u.hp>0&&u.hp<maxHP(u)){u.hp=Math.min(maxHP(u),u.hp+Math.max(1,Math.floor(dmg/2*tribelHealScale(u))));healFx(sd);await hpAnim(B,sd);await say(tn+'から たいりょくを すいとった！');}
   }
   await applyEffects(B,sd,mv,false,t.hp<=0);
   if(mv.has('rech')&&u.hp>0)us.rech=true;
   if(mv.has('coin')&&sd===0){B.coins+=u.lv*4;await say('お金が あたりに ちらばった！');}
   if(mv.has('boom')&&u.hp>0){u.hp=0;await hpAnim(B,sd);await say(un+'は 力を 使いはたした！');}
   if(t.hp>0&&u.hp>0&&mv.phys&&ri(10)<3){if(ab===3)await inflict(B,sd,'par');else if(ab===4)await inflict(B,sd,'psn');else if(ab===5)await inflict(B,sd,'brn');}
-  await route2ContactEffects(B,sd,mv,dmg);
+  await route2ContactEffects(B,sd,mv,dmg);await tribelCounterSpines(B,sd,mv,dmg);
 }
 function aiPick(B){
   const f=bmon(B,1),me=bmon(B,0),list=[];
@@ -4376,7 +4380,7 @@ function aiPick(B){
     const acc=m.acc===0?1:clamp(m.acc*accMul(B.fs.acc-B.ps.eva)*(abilOf(f)===14?1.2:1)/100,0,1);
     if(m.pow>0){
       let eff=m.type<0?1:typeEff(m.type,ty);
-      if((m.type===8&&ab===2)||(m.type===2&&ab===9)||(m.type===3&&(ab===10||ab===33))||(m.type===1&&ab===11))eff=0;
+      if((m.type===8&&ab===2)||(m.type===2&&ab===9)||(m.type===3&&(ab===10||ab===33))||(m.type===1&&(ab===11||ab===40)))eff=0;
       if(eff>0){
         const fix=m.eff.find(e=>e.k==='fixed');
         let d=fix?fix.n:m.has('level')?f.lv:m.has('halve')?Math.max(1,me.hp/2):calcDamage(B,1,m,false,eff,92);
@@ -4387,7 +4391,7 @@ function aiPick(B){
         if(m.has('drain')&&hp<0.6)score+=12;
       }
     }else{
-      if(m.type===3&&ab===33&&m.eff.some(e=>e.k==='st'||e.k==='stage'&&e.who==='foe'||e.k==='seed'||e.k==='split'))continue;
+      if((m.type===3&&ab===33||m.type===1&&ab===40)&&m.eff.some(e=>e.k==='st'||e.k==='stage'&&e.who==='foe'||e.k==='seed'||e.k==='split'))continue;
       for(const e of m.eff){
         let v=0;
         if(e.k==='st'){
@@ -4416,7 +4420,7 @@ function aiPick(B){
 }
 async function entryAbility(B,s){
   if(abilOf(bmon(B,s))===1&&bmon(B,1-s).hp>0){await say(bname(B,s)+'の 「威圧」！');await boost(B,1-s,'atk',-1);}
-  await route2EntryAbility(B,s);
+  await route2EntryAbility(B,s);await tribelWindEntry(B,s,bmon(B,s));
 }
 async function sendFoe(B){
   const f=bmon(B,1);B.fs=newStg();B.hpShow[1]=f.hp;B.fx.foeA=1;B.fx.foeY=0;B.fx.foeX=120;markSeen(f.sp);
@@ -4513,7 +4517,7 @@ async function endTurn(B){
   }
   if(B.weather&&!B.naturalWX&&--B.wT<=0){await say(WX_OFF[B.weather]);B.weather=null;}
   for(const s of [0,1])for(const c of [0,1])if(B.wall[s][c]>0&&--B.wall[s][c]===0)await say((s?'相手':'味方')+'の '+(c?'特殊':'物理')+'の 壁が 消えた！');
-  await handleFaints(B);
+  await tribelWindEnd(B);await handleFaints(B);
 }
 async function tryCatch(B,id){
   const f=bmon(B,1),sp=SP[f.sp],M=maxHP(f),it=ITEMS[id],v=it.v*(it.c?it.c(B,f):1);
@@ -4617,7 +4621,7 @@ async function battle(o){
     if(act.t==='run'){
       B.runTry++;
       const a=effStat(B,0,5),b=effStat(B,1,5);
-      if(a>=b||ri(256)<Math.floor(a*128/b)+30*B.runTry){sfx('door');await say('うまく にげきれた！');B.result='run';break;}
+      if(a>=b||ri(256)<Math.floor(a*128/b)+30*B.runTry+tribelEscape(me)){sfx('door');await say('うまく にげきれた！');B.result='run';break;}
       await say('にげられなかった！');
     }else if(act.t==='switch'){
       await say(monName(me)+'、もどれ！');startIndividualMotion(me,'withdraw');await tween(200,p=>{B.fx.meX=-120*p;});await sendMe(B,act.pi);
@@ -4871,7 +4875,7 @@ async function evolveMon(m){
   await msg('おめでとう！ '+oldName+'は '+nx.name+'に 進化した！');
   popW(w);
   if(STARTER_SPECIES.has(nx.id)){const f=famOf(nx),id=nx.stage===2?f.starterSignature:f.learn.find(v=>v[0]===16)?.[1];if(id>=0&&!m.mv.some(v=>v.id===id))await teachMove(m,id);}
-  if(ROUTE1_IDS.has(nx.id)||ROUTE2_IDS.has(nx.id)){const r=ROUTE1_SPECIES.get(nx.id)||ROUTE2_SPECIES.get(nx.id),lv=r.family.levels[r.stage-1];for(const [l,id] of famOf(nx).learn)if(l===lv&&route1MoveAllowed(nx,id)&&route2MoveAllowed(nx,id)&&!m.mv.some(v=>v.id===id))await teachMove(m,id);}
+  if(ROUTE1_IDS.has(nx.id)||ROUTE2_IDS.has(nx.id)||TRIBEL_IDS.has(nx.id)){const r=ROUTE1_SPECIES.get(nx.id)||ROUTE2_SPECIES.get(nx.id)||TRIBEL_SPECIES.get(nx.id),lv=r.family.levels[r.stage-1];for(const [l,id] of famOf(nx).learn)if(l===lv&&route1MoveAllowed(nx,id)&&route2MoveAllowed(nx,id)&&!m.mv.some(v=>v.id===id))await teachMove(m,id);}
   return true;
 }
 // 生態と関連する早期進化。通常レベル進化は維持。
@@ -4925,7 +4929,7 @@ async function useItem(id,opt){
     const sp=SP[m.sp];
     if(B){await msg('バトル中は 使えない。');return null;}
     if(!sp.next||!sp.types.some(t=>it.v.indexOf(t)>=0)){await msg(n+'には 使っても 効果が ないよ。');return null;}
-    const minLv=ROUTE1_IDS.has(sp.id)||ROUTE2_IDS.has(sp.id)?sp.evoLv:sp.evoLv-8;if(m.lv<minLv){await msg(n+'は まだ 進化の 準備が できていない。（Lv'+minLv+'から 使える）');return null;}
+    const minLv=ROUTE1_IDS.has(sp.id)||ROUTE2_IDS.has(sp.id)||TRIBEL_IDS.has(sp.id)?sp.evoLv:sp.evoLv-8;if(m.lv<minLv){await msg(n+'は まだ 進化の 準備が できていない。（Lv'+minLv+'から 使える）');return null;}
     consume();await evolveMon(m);return true;
   }
   else if(it.k==='pp'){if(m.mv.some(v=>v.pp<MOVES[v.id].pp)){for(const v of m.mv)v.pp=MOVES[v.id].pp;text=n+'の 技の PPが 回復した！';}}
@@ -5515,6 +5519,8 @@ async function talk(o){
   switch(o.role){
    case'civ':await civTalk(o);await expansionCivDialogue(o);break;
    case'harusaki':await haruTalk(o);break;
+   case'tribeltrainer':await tribelTrainerTalk(o);break;
+   case'tribelguide':await tribelGuideTalk(o);break;
    case'harutailor':await haruTailor(o);break;
    case'resident':await scheduledResidentTalk(o);break;
    case'key':await keyTalk(o);break;
@@ -5899,7 +5905,7 @@ function activeObjs(m){
       if(a.spr&&a.role!=='resident')chrPreload(a.spr);
       if(o.role==='story'&&S.flags['s:'+o.sid])continue;
       if(o.role==='rival0'&&S.flags['s:rival1'])continue;
-      if(o.role==='trainer')a.beaten=!!S.flags['t:'+m.id+':'+o.tid];
+      if(o.role==='trainer'||o.role==='tribeltrainer')a.beaten=!!S.flags['t:'+m.id+':'+o.tid];
       if(o.role==='elite'&&S.flags['s:lg'+o.n]){a.x=3;a.y=2;a.dir=1;}
     }
     out.push(a);
@@ -5914,7 +5920,7 @@ function loadMap(id,x,y,dir){
   if(S&&S.party)for(const q of S.party)monPreload(q.sp);
   if(m.cell&&m.cell.kind==='town'&&G.cellKey!==undefined&&G.cellKey!==m.cell.key&&S){S.rot=S.rot||{};S.rot[m.cell.key]=(S.rot[m.cell.key]||0)+1;}      // 人物図鑑2000人を維持するため、住民の巡回を維持
   G.cellKey=m.cell?m.cell.key:null;chrPreload('pl');
-  G.map=m;if(m.haru){[x,y]=haruSafeSpawn(m,x,y);}const p=G.pl;p.x=x;p.y=y;if(dir!=null)p.dir=dir;p.moving=false;p.prog=0;p.turn=0;p.idle=9;
+  G.map=m;if(m.haru){[x,y]=haruSafeSpawn(m,x,y);}if(m.tribel){[x,y]=tribelSafeSpawn(m,x,y);}const p=G.pl;p.x=x;p.y=y;if(dir!=null)p.dir=dir;p.moving=false;p.prog=0;p.turn=0;p.idle=9;
   if(m.t[y*m.W+x]!==T.WATER)p.surf=false;
   p.fly=false;p.alt=0;mountPreload();
   G.objs=activeObjs(m);folReset();charCacheTrim();
@@ -5997,8 +6003,8 @@ function onStep(){
   const repel=S.repel||0;if(repel>0){S.repel--;if(S.repel===0){run(async()=>{await msg('まよけのポプリの 効き目が きれた。');const n=ITEM_ORDER.find(id=>S.bag[id]>0&&ITEMS[id].k==='repel');if(n&&await confirmYN('もう一つ 使いますか？'))await useItem(n,{});});return;}}
   if(m.enc&&m.cell&&S.party.length){
     let kind=null,rate=m.enc.rate;
-    if(m.advArea==='undersea'&&(v===T.CFLOOR||v===T.TALL)){kind='water';rate=12;}else if(v===T.TALL||(v===T.CFLOOR&&m.pal==='cave'))kind='land';else if(m.id==='0,1'&&v===T.FLOWER){kind='land';rate=5;}else if(v===T.WATER&&p.surf){kind='water';rate=10;}
-    const lead=S.party.find(a=>a.hp>0);if(kind&&lead&&chance(HitokariUpgrade.encounterChance(rate,abilOf(lead)))){const ec=m.advEnc||m.cell,wp=wildPick(ec,kind,m.enc.bonus||0)||(kind==='water'?waterFallback(ec):null);if(wp&&!HitokariUpgrade.repelBlocks(repel,wp.lv,lead.lv)){const partner=wildEncounterPartner(ec,kind,m.enc.bonus||0,repel,lead,wp);run(()=>doWild(wp,partner?{wildPartner:partner,water:kind==='water'}:{water:kind==='water'}));}}
+    if(m.advArea==='undersea'&&(v===T.CFLOOR||v===T.TALL)){kind='water';rate=12;}else if(v===T.TALL||(v===T.CFLOOR&&m.pal==='cave'))kind='land';else if((m.id==='0,1'||m.tribel)&&v===T.FLOWER){kind='land';rate=5;}else if(!m.tribel&&v===T.WATER&&p.surf){kind='water';rate=10;}
+    const lead=S.party.find(a=>a.hp>0);if(kind&&lead&&chance(HitokariUpgrade.encounterChance(rate,abilOf(lead)))){const ec=m.tribel?tribelEncounterCell(m,p):m.advEnc||m.cell,wp=wildPick(ec,kind,m.enc.bonus||0)||(kind==='water'?waterFallback(ec):null);if(wp&&!HitokariUpgrade.repelBlocks(repel,wp.lv,lead.lv)){const partner=wildEncounterPartner(ec,kind,m.enc.bonus||0,repel,lead,wp);run(()=>doWild(wp,partner?{wildPartner:partner,water:kind==='water'}:{water:kind==='water'}));}}
   }
 }
 function waterFallback(cell){let best=null,bd=1e9;for(const a of WORLD.areas){if(!a.water.length)continue;const d=Math.abs(a.prog-cell.prog);if(d<bd){bd=d;best=a;}}return best?wildPick(best,'water',0):null;}
@@ -6052,6 +6058,7 @@ function interact(){
   const p=G.pl,m=G.map,fx=p.x+DX[p.dir],fy=p.y+DY[p.dir];
   if(p.fly){run(flyLand);return;}
   const inb=fx>=0&&fy>=0&&fx<m.W&&fy<m.H,v=inb?m.t[fy*m.W+fx]:-1;
+  if(tribelInteract(m,fx,fy))return;
   if(haruInteract(m,fx,fy))return;
   if(expansionInteract(m,fx,fy))return;
   let o=objAt(fx,fy);
@@ -6077,6 +6084,7 @@ async function useTool(v,x,y){
   await msg({k_cut:'木こりの手斧で 茨を 切りはらった！',k_smash:'岩くだきの槌で 岩を 砕いた！',k_str:'力の籠手で 大岩を 押しのけた！'}[need]);
 }
 async function waterAct(){
+  if(G.map.tribel){await msg('しずく湖は 観察用の 水辺。木橋から 見わたそう。釣り場は 準備中だ。');return;}
   if(G.map.haru){await msg('村の いけは アニマたちの 休む 場所だ。木橋を わたろう。');return;}
   const surf=hasItem('k_surf'),rod=hasItem('k_rod');
   if(!surf&&!rod){await msg('水が きらきら 光っている。');return;}
@@ -6139,7 +6147,7 @@ function drawWorldPix(){
   let camx=Math.round((ppx-112)*K)/K,camy=Math.round((ppy-96)*K)/K;
   if(m.W*16<=LW)camx=Math.round((m.W*16-LW)/2);if(m.H*16<=LH)camy=Math.round((m.H*16-LH)/2);
   G.camx=camx;G.camy=camy;
-  drawGround(g,m,camx,camy);if(m.haru)drawHaruGround(g,m,camx,camy);else drawIndividualTerrain(g,m,camx,camy);drawExpansionTerrain(g,m,camx,camy);
+  drawGround(g,m,camx,camy);if(m.haru)drawHaruGround(g,m,camx,camy);else if(m.tribel)drawTribelGround(g,m,camx,camy);else drawIndividualTerrain(g,m,camx,camy);drawExpansionTerrain(g,m,camx,camy);
   // 人物と置き物を行ごとにまとめ、木や草むらと奥→手前の順で重ねる
   const byRow={},put=e=>{const r=Math.round(e.y/16);(byRow[r]||(byRow[r]=[])).push(e);};
   const skip={};   // 道具が落ちているマスは手前の草をかぶせない（見つけやすく）
@@ -6190,7 +6198,7 @@ function drawWorldPix(){
     if(!drawMount(g,'fly',p.dir,x+8,y+5-h))drawChar(g,'pl',p.dir,0,x,y-6-h);
     if(a>0.9&&!p.moving&&landable(p.x,p.y)){const k=0.5+0.5*Math.sin(G.t/7);g.strokeStyle='rgba(255,255,255,'+(0.45+0.35*k)+')';g.lineWidth=0.8;g.beginPath();g.ellipse(x+8,y+13,6+k*1.5,2.4+k*0.6,0,0,6.3);g.stroke();}      // 降りられる しるし
   }
-  drawAmbient(g,m,camx,camy);drawDayNight(g,m,camx,camy);drawFieldClimate(g,m);drawExpansionAtmosphere(g,m);if(m.haru)drawHaruLights(g,m,camx,camy);
+  drawAmbient(g,m,camx,camy);drawDayNight(g,m,camx,camy);drawFieldClimate(g,m);drawExpansionAtmosphere(g,m);if(m.haru)drawHaruLights(g,m,camx,camy);if(m.tribel)drawTribelAtmosphere(g,m,camx,camy);
 }
 function drawFieldClimate(g,m){
   const w=fieldWeather(m);if(!w)return;
@@ -6200,7 +6208,7 @@ function drawFieldClimate(g,m){
   else if(w==='sun'){g.fillStyle='rgba(246,185,86,.09)';g.fillRect(0,0,LW,LH);}
 }
 function drawWorldUI(){
-  const m=G.map;if(!m)return;drawExpansionHUD(m);drawIndividualMapHUD(m);if(m.haru)drawHaruHUD(m);
+  const m=G.map;if(!m)return;drawExpansionHUD(m);drawIndividualMapHUD(m);if(m.haru)drawHaruHUD(m);if(m.tribel)drawTribelHUD(m);
   for(const b of m.blds){
     if(!BLD_MARK[b.kind]||b.kind==='house'||b.kind==='home')continue;
     let x=(b.x+2)*16-G.camx+8,y=b.y*16-G.camy+9,r=9,fs=12;
@@ -6445,6 +6453,7 @@ window.addEventListener('load',()=>{
 <script src="advanced-combat.js"></script>
 <script src="world-expansion.js"></script>
 <script src="harusaki.js"></script>
+<script src="tribel-world.js"></script>
 <script src="data/anima-motion.js"></script>
 <script src="data/npc-schedules.js"></script>
 <script src="data/field-designs.js"></script>

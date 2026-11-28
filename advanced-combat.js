@@ -3,12 +3,12 @@
 const DOUBLE_SPREAD=new Set(['おおなみ','だいかいしょう','はなあらし','たいじゅのいかり','ひょうてんか','だいおせん','ふはいのきり','ちかくへんどう','てんぷうは','ほうせきあらし','がけくずし','だいぐんしゅう','うろこあらし','はめつのほうこう','らんきりゅう','だいせんぷう']);
 const DOUBLE_ADJACENT=new Set(['ちかくへんどう']);
 const doubleTarget=m=>DOUBLE_ADJACENT.has(m.name)?'all':DOUBLE_SPREAD.has(m.name)?'spread':m.pow>0||m.eff.some(e=>e.k==='st'||e.k==='seed'||e.k==='split'||e.k==='stage'&&e.who==='foe')?'enemy':m.eff.some(e=>e.k==='heal'||e.k==='cure')?'support':'self';
-function combatEffect(m,t){if(m.type<0)return 1;const ab=abilOf(t);return (m.type===8&&ab===2||m.type===2&&ab===9||m.type===3&&(ab===10||ab===33)||m.type===1&&ab===11)?0:typeEff(m.type,SP[t.sp].types);}
-function combatStat(m,st,i,weather=BT?.weather){let v=stat(m,i)*stgMul(st?st[STKEY[i]]||0:0);if(i===1){if(m.st&&abilOf(m)===12)v*=1.5;else if(m.st==='brn')v*=0.5;}if(i===5){if(m.st==='par')v*=0.25;v*=heldOf(m).spe||1;v*=route1Speed(m);v*=route2Speed(m,weather);}return Math.max(1,Math.floor(v));}
+function combatEffect(m,t){if(m.type<0)return 1;const ab=abilOf(t);return (m.type===8&&ab===2||m.type===2&&ab===9||m.type===3&&(ab===10||ab===33)||m.type===1&&(ab===11||ab===40))?0:typeEff(m.type,SP[t.sp].types);}
+function combatStat(m,st,i,weather=BT?.weather){let v=stat(m,i)*stgMul(st?st[STKEY[i]]||0:0);if(i===1){if(m.st&&abilOf(m)===12)v*=1.5;else if(m.st==='brn')v*=0.5;}if(i===5){if(m.st==='par')v*=0.25;v*=heldOf(m).spe||1;v*=route1Speed(m);v*=route2Speed(m,weather);v*=tribelAISpeed(m,BT);}return Math.max(1,Math.floor(v));}
 function combatEstimate(a,t,m,as,ts,weather){const eff=combatEffect(m,t);if(!eff||m.pow===0)return 0;const fixed=m.eff.find(e=>e.k==='fixed');if(fixed)return fixed.n;if(m.has('level'))return a.lv;if(m.has('halve'))return Math.max(1,t.hp/2);
  let p=Math.floor(m.pow*route2PowerScale(a,m));if(m.has('pinch')&&a.hp*3<=maxHP(a))p*=2;if(m.has('hex')&&t.st)p*=2;
  let d=(Math.floor(2*a.lv/5+2)*p*combatStat(a,as,m.phys?1:3,weather)/combatStat(t,ts,m.phys?2:4,weather)/50+2)*eff*0.925;
- if(SP[a.sp].types.includes(m.type))d*=1.5;if(starterPinch(a,m.type))d*=1.5;if(abilOf(t)===23&&!m.phys&&!starterState(BT,t).mirror)d*=.75;d*=route1DamageScale(BT,t,m,eff);
+ if(SP[a.sp].types.includes(m.type))d*=1.5;if(starterPinch(a,m.type))d*=1.5;d*=tribelFireBoost(BT,a,m);if(abilOf(t)===23&&!m.phys&&!starterState(BT,t).mirror)d*=.75;d*=route1DamageScale(BT,t,m,eff);
  if(abilOf(t)===8&&(m.type===1||m.type===5))d*=0.5;if(weather==='sun')d*=m.type===1?1.5:m.type===2?0.5:1;if(weather==='rain')d*=m.type===2?1.5:m.type===1?0.5:1;
  if(m.has('multi'))d*=3;if(m.has('twice'))d*=2;const held=heldOf(a);if(held.t===m.type)d*=1.15;d*=held.all||1;return Math.max(1,d);}
 function combatOptions(m){const arr=m.mv.map((v,i)=>({i,m:MOVES[v.id]})).filter(v=>m.mv[v.i].pp>0);return arr.length?arr:[{i:-1,m:STRUGGLE}];}
@@ -31,7 +31,7 @@ function doublePosition(s){return s.side?{x:147+s.pos*61,y:57-s.pos*9}:{x:41+s.p
 function doubleActive(D,side){return D.slots[side].filter(s=>s&&!s.captured&&s.mon.hp>0);}
 function doubleReserve(D,side,used=[],pos=null){const a=side?D.foes:S.party,active=D.slots[side].filter(Boolean).map(s=>s.i);return a.map((mon,i)=>({mon,i})).filter(v=>v.mon.hp>0&&!active.includes(v.i)&&!used.includes(v.i)&&(!side||!D.caughtIndices.has(v.i)&&(!D.o.multi||pos===null||D.o.ownerByIndex[v.i]===pos)));}
 function doublePair(D,a,t){const pair=a.side?[t,a]:[a,t];D.pair=pair;const B={o:D.o,wild:D.wild,foes:D.foes,pi:pair[0].i,fi:pair[1].i,ps:pair[0].st,fs:pair[1].st,parts:D.parts,pairMons:pair.map(s=>s.mon),pairSlots:pair,wall:pair.map(s=>D.wall[s.side]),allStages:D.slots.flat().filter(Boolean).map(s=>s.st),starterFlags:D.starterFlags||(D.starterFlags=new WeakMap()),hpShow:[],fx:{}};
- for(const key of ['weather','wT','naturalWX','coins','turnN'])Object.defineProperty(B,key,{get:()=>D[key],set:v=>D[key]=v});
+ for(const key of ['weather','wT','naturalWX','coins','turnN','tribelWinds'])Object.defineProperty(B,key,{get:()=>D[key],set:v=>D[key]=v});
  for(let i=0;i<2;i++){const s=pair[i],prefix=i?'foe':'me';Object.defineProperty(B.hpShow,i,{get:()=>s.hpShow,set:v=>s.hpShow=v,enumerable:true});for(const k of ['DX','DY','SX','Hide','A','Y'])Object.defineProperty(B.fx,prefix+k,{get:()=>s.fx[k],set:v=>s.fx[k]=v});}
  return B;
 }
@@ -41,7 +41,7 @@ function doubleState(o){const D={double:true,o,wild:!!o.wilds,foes:o.wilds||o.tr
  return D;
 }
 async function doubleEnter(D,s){if(!s)return;startIndividualMotion(s.mon,'enter');if(s.side)markSeen(s.mon.sp);else D.parts.add(s.i);const q=doublePosition(s);ring(q.x,q.y+18,'230,255,255',{flat:0.35,dr:2.4,w:2});if(s.mon.shiny)sparkleFx(q.x,q.y,12);
- if(abilOf(s.mon)===1){await say(monName(s.mon)+'の 威圧！');for(const t of doubleActive(D,1-s.side))await boost(doublePair(D,s,t),1-s.side,'atk',-1);}else if(abilOf(s.mon)===31){await say(monName(s.mon)+'の 「化かし」！');for(const t of doubleActive(D,1-s.side))await boost(doublePair(D,s,t),1-s.side,'acc',-1);}}
+ if(abilOf(s.mon)===1){await say(monName(s.mon)+'の 威圧！');for(const t of doubleActive(D,1-s.side))await boost(doublePair(D,s,t),1-s.side,'atk',-1);}else if(abilOf(s.mon)===31){await say(monName(s.mon)+'の 「化かし」！');for(const t of doubleActive(D,1-s.side))await boost(doublePair(D,s,t),1-s.side,'acc',-1);}await tribelWindEntry(D,s.side,s.mon);}
 async function doublePlayerAction(D,s,reserved,itemsReserved={}){
  for(;;){D.focus=s;const options0=['技を 使う','交代する',{label:'もちもの',dis:!!D.o.facility},'前の選択へ'];if(D.wild)options0.push('捕獲','にげる');const choice=await menu(options0,{x:6,y:LH-MSG_H+2,w:228,cols:2,cancel:true,title:monName(s.mon)+' の 行動'});
  if(choice<0||choice===3)return null;
@@ -94,14 +94,14 @@ function doubleAI(D,s,reserved){
  if(m.has('rech'))score*=0.7;if(m.has('boom')&&s.mon.hp>maxHP(s.mon)*0.25)score*=0.1;
  }else if(kind==='support'){const h=t.mon.hp/maxHP(t.mon);score=m.has('heal')?(h<0.4?85:h<0.7?35:0):(t.mon.st?62:0);}
  else if(kind==='self'){score=m.has('protect')?(s.st.protN?0:8):m.has('wall')?(!D.wall[s.side][m.eff.find(e=>e.k==='wall').c]?30:0):m.has('wx')?(D.weather!==m.eff.find(e=>e.k==='wx').w?18:0):m.has('rest')?(s.mon.hp<maxHP(s.mon)*0.3?70:0):m.eff.some(e=>e.k==='stage'&&e.who==='self'&&Math.abs(s.st[e.stat])<3)?24:4;}
- else score=m.type===3&&abilOf(t.mon)===33||m.eff.length&&m.eff.every(e=>e.k==='stage'&&e.who==='foe'&&route2BlocksAccuracy(t.mon,e.stat,e.n))?0:t.mon.st?5:25;
+ else score=(m.type===3&&abilOf(t.mon)===33||m.type===1&&abilOf(t.mon)===40)||m.eff.length&&m.eff.every(e=>e.k==='stage'&&e.who==='foe'&&route2BlocksAccuracy(t.mon,e.stat,e.n))?0:t.mon.st?5:25;
  score*=0.96+Math.random()*0.08;if(score>bs){bs=score;best={kind:'move',slot:s,i:v.i,target:t?t.pos:null,mode:kind};}
  }}
  return best||{kind:'move',slot:s,i:-1,mode:'enemy',target:enemies[0]?.pos};
 }
 function doubleOrder(actions){return actions.map(a=>({a,p:a.kind==='run'?110:a.kind==='switch'?100:a.kind==='item'||a.kind==='capture'?90:(a.i<0?0:MOVES[a.slot.mon.mv[a.i].id].prio),speed:combatStat(a.slot.mon,a.slot.st,5,BT?.weather),tie:Math.random()})).sort((a,b)=>b.p-a.p||b.speed-a.speed||a.tie-b.tie).map(x=>x.a);}
 async function doubleExecute(D,a){const s=a.slot;if(!s||s.captured||s.mon.hp<=0||D.slots[s.side][s.pos]!==s||D.result)return;
- if(a.kind==='run'){if(!D.wild)return;D.runTry++;const speed=combatStat(s.mon,s.st,5),foe=Math.max(1,...doubleActive(D,1).map(z=>combatStat(z.mon,z.st,5)));if(speed>=foe||ri(256)<Math.floor(speed*128/foe)+30*D.runTry){D.result='run';await say('うまく にげきれた！');}else await say('にげられなかった！');return;}
+ if(a.kind==='run'){if(!D.wild)return;D.runTry++;const speed=combatStat(s.mon,s.st,5),foe=Math.max(1,...doubleActive(D,1).map(z=>combatStat(z.mon,z.st,5)));if(speed>=foe||ri(256)<Math.floor(speed*128/foe)+30*D.runTry+tribelEscape(s.mon)){D.result='run';await say('うまく にげきれた！');}else await say('にげられなかった！');return;}
  if(a.kind==='capture'){await doubleCapture(D,a);return;}
  if(a.kind==='item'){await doubleUseItem(D,a);return;}
  if(a.kind==='switch'){const next=doubleReserve(D,s.side,[],s.pos).find(v=>v.i===a.i);if(!next)return;await say(monName(s.mon)+'、もどれ！');startIndividualMotion(s.mon,'withdraw');await tween(180,p=>{s.fx.A=1-p;});const q=doubleSlot(s.side,s.pos,next.i,next.mon);q.lastSwitch=D.turnN;D.slots[s.side][s.pos]=q;await say(monName(q.mon)+'、出番だ！');await doubleEnter(D,q);return;}
@@ -123,7 +123,7 @@ async function doubleResidual(D){
   if(m.hp<=0)continue;await starterRootEnd(B,side,D.turnN);await route1RainHeal(B,side);if(ab===16&&m.hp<mx){m.hp=Math.min(mx,m.hp+Math.max(1,Math.floor(mx/16)));await hpAnim(B,side);}if(ab===7&&st.spe<6){st.spe++;await say(monName(m)+'の すばやさが 上がった！');}if(ab===13&&m.st&&ri(3)===0){m.st=null;await say(monName(m)+'の 状態異常が 治った！');}
  }
  if(D.weather&&!D.naturalWX&&--D.wT<=0){await say(WX_OFF[D.weather]);D.weather=null;}
- for(const side of [0,1])for(let c=0;c<2;c++)if(D.wall[side][c]>0)--D.wall[side][c];
+ for(const side of [0,1])for(let c=0;c<2;c++)if(D.wall[side][c]>0)--D.wall[side][c];await tribelWindEnd(D);
 }
 async function doubleFaints(D){
  for(const s of D.slots.flat().filter(Boolean)){if(s.captured||s.mon.hp>0||s.down)continue;s.down=true;const opposite=D.slots[1-s.side].find(Boolean);if(opposite){const B=doublePair(D,s,opposite);await faintAnim(B,s.side);await say(monName(s.mon)+'は たおれた！');if(s.side&&!D.o.facility){const live=doubleActive(D,0)[0];if(live)await giveExp(doublePair(D,live,s));}else if(!s.side&&!D.o.facility)HitokariUpgrade.bond(s.mon,-3);}}
@@ -183,7 +183,7 @@ async function doubleCapture(D,a){
 }
 function wildEncounterPartner(cell,kind,bonus,repel,lead,first,force=false){
  if(S.party.filter(m=>m.hp>0).length<2||SP[first.sp].legend||route1FamilyRare(first.sp))return null;
- const area=G.map&&G.map.advArea,prob=kind==='water'?.10:area==='ridge'?.24:.15;
+ const area=G.map&&G.map.advArea,prob=cell.tribelZone?(TRIBEL_ZONES[cell.tribelZone]||TRIBEL_ZONES.meadow).double:kind==='water'?.10:area==='ridge'?.24:.15;
  if(!force&&!chance(prob))return null;
  for(let i=0;i<4;i++){const w=wildPick(cell,kind,bonus,true)||(kind==='water'?waterFallback(cell):null);if(w&&!SP[w.sp].legend&&!route1FamilyRare(w.sp)&&!HitokariUpgrade.repelBlocks(repel,w.lv,lead.lv))return w;}return null;
 }

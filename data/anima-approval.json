@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "total": 1212,
   "approved": [
     {
@@ -45,68 +45,42 @@
       ]
     }
   ],
-  "approvedSpecies": 39,
+  "approvedSpecies": 50,
   "defaultStatus": "hold-provisional",
-  "heldSpecies": 1173,
+  "heldSpecies": 1162,
   "next": {
     "map": "1,0",
     "name": "第3街道",
     "land": [
       {
-        "family": 418,
+        "family": 171,
         "ids": [
-          518
+          516,
+          517
         ],
         "names": [
-          "ホウジュウラ"
+          "ホロタヌ",
+          "バケダヌ"
         ]
       },
       {
-        "family": 165,
+        "family": 422,
         "ids": [
-          496,
-          497,
-          498
+          1181
         ],
         "names": [
-          "ホシヒボ",
-          "コメビナガ",
-          "リュウセイダ"
+          "ソウジンハナ"
         ]
       },
       {
-        "family": 217,
+        "family": 236,
         "ids": [
-          654,
-          655,
-          656
+          711,
+          712
         ],
         "names": [
-          "オウサミ",
-          "サリュウラ",
-          "センスナール"
-        ]
-      },
-      {
-        "family": 63,
-        "ids": [
-          190,
-          191,
-          192
-        ],
-        "names": [
-          "クキアシ",
-          "ハスミクラ",
-          "レンヨウハ"
-        ]
-      },
-      {
-        "family": 414,
-        "ids": [
-          453
-        ],
-        "names": [
-          "テンガイサ"
+          "ノハラビ",
+          "カゼクサビ"
         ]
       },
       {
@@ -123,6 +97,19 @@
         ]
       },
       {
+        "family": 83,
+        "ids": [
+          250,
+          251,
+          252
+        ],
+        "names": [
+          "トビカヤ",
+          "カヤキック",
+          "ライガバッタ"
+        ]
+      },
+      {
         "family": 119,
         "ids": [
           358,
@@ -136,29 +123,79 @@
         ]
       },
       {
-        "family": 395,
+        "family": 414,
         "ids": [
-          1188,
-          1189,
-          1190
+          453
         ],
         "names": [
-          "トロコア",
-          "ノビチーラ",
-          "メルトアラ"
+          "テンガイサ"
         ]
       },
       {
-        "family": 141,
+        "family": 425,
         "ids": [
-          424,
-          425,
-          426
+          192
         ],
         "names": [
-          "フエイモ",
-          "オルガム",
-          "パイプラード"
+          "レンヨウハ"
+        ]
+      },
+      {
+        "family": 417,
+        "ids": [
+          713
+        ],
+        "names": [
+          "ジュシコウガ"
+        ]
+      },
+      {
+        "family": 165,
+        "ids": [
+          496,
+          497,
+          498
+        ],
+        "names": [
+          "ホシヒボ",
+          "コメビナガ",
+          "リュウセイダ"
+        ]
+      },
+      {
+        "family": 420,
+        "ids": [
+          983
+        ],
+        "names": [
+          "キガンガ"
+        ]
+      },
+      {
+        "family": 423,
+        "ids": [
+          548
+        ],
+        "names": [
+          "シロトウド"
+        ]
+      },
+      {
+        "family": 416,
+        "ids": [
+          1004
+        ],
+        "names": [
+          "フクロダマ"
+        ]
+      },
+      {
+        "family": 415,
+        "ids": [
+          767
+        ],
+        "names": [
+          "ソラノボルド"
         ]
       }
     ],
@@ -463,5 +500,136 @@
     "frontCount": 18,
     "trueRearCount": 4,
     "reflectedRearCount": 14
+  },
+  "tribel": {
+    "map": "0,0",
+    "name": "トリベル平原",
+    "land": [
+      {
+        "id": 711,
+        "weight": 16
+      },
+      {
+        "id": 546,
+        "weight": 14
+      },
+      {
+        "id": 717,
+        "weight": 12
+      },
+      {
+        "id": 265,
+        "weight": 12
+      },
+      {
+        "id": 451,
+        "weight": 10
+      },
+      {
+        "id": 1188,
+        "weight": 10
+      },
+      {
+        "id": 190,
+        "weight": 9
+      },
+      {
+        "id": 516,
+        "weight": 8
+      },
+      {
+        "id": 334,
+        "weight": 6
+      },
+      {
+        "id": 1062,
+        "weight": 3
+      }
+    ],
+    "new": [
+      {
+        "ids": [
+          546,
+          547
+        ],
+        "names": [
+          "ノカケウマ",
+          "ハヤテウマ"
+        ],
+        "levels": [
+          22
+        ],
+        "ability": 38
+      },
+      {
+        "ids": [
+          265,
+          266
+        ],
+        "names": [
+          "イシハリ",
+          "ハリガン"
+        ],
+        "levels": [
+          25
+        ],
+        "ability": 39
+      },
+      {
+        "ids": [
+          1188,
+          1189,
+          1190
+        ],
+        "names": [
+          "ヒノキツネ",
+          "ホムラギツネ",
+          "カガリオウ"
+        ],
+        "levels": [
+          16,
+          34
+        ],
+        "ability": 40
+      },
+      {
+        "ids": [
+          190,
+          191
+        ],
+        "names": [
+          "ハナミツ",
+          "ミツフローラ"
+        ],
+        "levels": [
+          20
+        ],
+        "ability": 41
+      },
+      {
+        "ids": [
+          1062,
+          1063
+        ],
+        "names": [
+          "フワカゼ",
+          "カゼミタマ"
+        ],
+        "levels": [
+          32
+        ],
+        "ability": 42
+      }
+    ],
+    "assetCount": 22,
+    "frontCount": 11,
+    "trueRearCount": 11,
+    "source": "4 cropped generated horse WebP; 18 original vector views; high resolution originals for vector art remain a future visual refinement",
+    "waterStatus": "hold-provisional",
+    "maps": [
+      "0,0",
+      "a:tribel-lake:0,0",
+      "a:tribel-hill:0,0"
+    ]
   }
 }

@@ -72,7 +72,7 @@ function findPortal(m,x0,y0){const a=[];for(let y=3;y<m.H-3;y++)for(let x=3;x<m.
 function portalAt(m,kind,x,y,label){const p=findPortal(m,x,y);if(p)expPut(m,p[0],p[1],{kind:'portal',area:kind,label,returnX:p[0],returnY:p[1]});return p;}
 function decorateExpansionMap(m){
  if(m.advDecorated)return;m.advDecorated=true;
- if(m.advArea||m.haru)return;
+ if(m.advArea||m.haru||m.tribel)return;
  if(m.bk==='gym'){decorateGym(m);return;}
  if(!m.indoor&&m.cell&&m.cell.kind==='town'){
   const k=m.cell.gym?gymLegacyId(m.cell.gym):m.cell.dist||1;
@@ -92,8 +92,8 @@ function decorateExpansionMap(m){
   }
  }
 }
-const EXP_AREAS=new Set(['ridge','river','coast','undersea','base','hub','contest','trial-single','trial-double','trial-rental','trial-endurance','life']);
-function validExpansionMapId(id){if(typeof id!=='string')return false;const p=id.split(':');return p.length===3&&p[0]==='a'&&EXP_AREAS.has(p[1])&&Object.prototype.hasOwnProperty.call(CELLS,p[2]);}
+const EXP_AREAS=new Set(['ridge','river','coast','undersea','base','hub','contest','trial-single','trial-double','trial-rental','trial-endurance','life','tribel-lake','tribel-hill']);
+function validExpansionMapId(id){if(typeof id!=='string')return false;const p=id.split(':');return p.length===3&&p[0]==='a'&&EXP_AREAS.has(p[1])&&Object.prototype.hasOwnProperty.call(CELLS,p[2])&&(!p[1].startsWith('tribel-')||p[2]===TRIBEL_KEY);}
 function expId(area,cell){return 'a:'+area+':'+cell.key;}
 function expTownReturn(cell,area){const m=getMap(cell.key);for(const [k,o] of Object.entries(m.adv||{}))if(o.kind==='portal'&&o.area===area){const [x,y]=k.split(',').map(Number);return{map:cell.key,x,y,dir:2};}return{map:cell.key,x:15,y:15,dir:2};}
 function expExit(m,x,y,to){expSet(m,x,y,T.MAT);m.warps[expKey(x,y)]=to;expPut(m,x,y,{kind:'exit'});}
@@ -110,6 +110,7 @@ function expansionEncounter(m,area){
 }
 function generateExpansionMap(id){
  if(!validExpansionMapId(id))throw Error('invalid expansion map');const [,area,key]=id.split(':'),cell=CELLS[key],r=RNG('adventure:'+id);let m;
+ if(area==='tribel-lake'||area==='tribel-hill')return genTribelMap(area==='tribel-lake'?'lake':'hill',cell);
  if(area==='life')return generateLifeDistrict(id,cell);
  if(area==='ridge'){
   m=expOutdoor(id,cell,23,24,cell.pal==='cave'?'forest':cell.pal);m.name=cell.name+'・風渡り段丘';m.enc={rate:13,bonus:1};
