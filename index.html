@@ -5985,7 +5985,7 @@ function onStep(){
   const p=G.pl,m=G.map,v=m.t[p.y*m.W+p.x];
   S.steps++;if(p.fly)return;
   nurseryAdvance();
-  expansionStep(m,p);
+  expansionStep(m,p);if(m.haru&&!m.indoor&&expAt(m,p.x,p.y)?.kind==='bridge')sfx('haruBridge');
   if(S.steps%128===0)for(const a of S.party)if(a.hp>0)HitokariUpgrade.bond(a,1);      // 空の上では 野生にも トレーナーにも 出会わない
   folArrive();if(p.surf&&v!==T.WATER){p.surf=false;folReset();}
   scnStep(m,p.x,p.y,p.dir,p.spd>2);

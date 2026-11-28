@@ -29,7 +29,7 @@ const HARU_PETS=[
 ];
 const HARU_FLOWER_BEDS=[[10,10],[11,12],[11,17]];
 const HARU_PLOTS=[[24,10],[26,10],[24,13],[26,13]];
-const HARU_PET_LOST={id:'lost',sp:451,schedule:[[0,-1,28,28]]};
+const HARU_PET_LOST={id:'lost',sp:451,schedule:[[0,-1,29,28]]};
 const HARU_QUESTS=[['catch','初めての 捕獲','キャプセル5個'],['lost','迷子の コムギネ','1000G'],['flowers','花壇の お手伝い','木の実3種'],['practice','先輩との 練習戦','ケアスプレー3個'],['tailor','仕立て体験','旅帽'],['night','夜の 広場','会話の 記録']];
 const haruMapId=slot=>slot<0?HARU_KEY:HARU_KEY+':b'+slot;
 function haruBuildings(){return HARU_BLD.map(([x,y,kind,haruArt,label],slot)=>({slot,x,y,kind,haruArt,label}));}
@@ -57,7 +57,7 @@ function genHaruTown(cell){
   const entry=b.kind==='heal'?[5,7]:b.kind==='harulodge'?[5,8]:b.kind==='harutailor'?[5,7]:[4,6];
   m.warps[(b.x+2)+','+(b.y+3)]={map:haruMapId(b.slot),x:entry[0],y:entry[1],dir:0};
   // Keep door approaches and connect each building to the main avenue.
-  haruPath(m,b.x+2,y,b.x+2,y);haruPath(m,b.x+2,y,b.x+2,b.y<16?8:b.y<24?22:29);
+  haruSet(m,b.x+2,y,T.PATH); // The flower house faces south; never carve a road through its roof.
   if(b.y>=24)haruPath(m,b.x+2,29,15,29);
   m.blds.push(b);
  }
@@ -76,7 +76,7 @@ function genHaruTown(cell){
  // Water garden with a real crossing and walkable bank.
  haruRect(m,23,25,6,4,T.WATER);for(let x=23;x<=28;x++){haruSet(m,x,27,T.PATH);expPut(m,x,27,{kind:'bridge',dir:1});}
  haruPath(m,20,27,22,27);haruSet(m,29,27,T.PATH);
- for(const [id,x,y] of [['bench',13,12],['bench',18,21],['bench',22,24],['lamp',14,10],['lamp',17,10],['lamp',14,23],['lamp',17,23],['lamp',22,29],['crate',3,8],['pot',9,9],['pot',21,8],['barrel',3,22],['mail',9,24],['basket',28,15],['well',28,11],['flag',29,21],['basket',3,14]]){haruProp(m,id,x,y,id==='bench'?'ここで ひと休み できる。':'村の 人たちが 大切に 使っている。');}
+ for(const [id,x,y] of [['bench',12,12],['bench',18,21],['bench',22,24],['lamp',13,10],['lamp',18,10],['lamp',14,23],['lamp',17,23],['lamp',22,29],['crate',3,8],['pot',9,9],['pot',21,8],['barrel',3,22],['mail',9,24],['basket',28,15],['well',28,11],['flag',29,21],['basket',3,14]]){haruProp(m,id,x,y,id==='bench'?'ここで ひと休み できる。':'村の 人たちが 大切に 使っている。');}
  haruSign(m,13,3,'北：第2街道\n南：第1街道');haruSign(m,12,22,'花咲き広場\n北東：診療所　北西：雑貨店\n西：旅人の家　東：仕立て工房');
  haruSign(m,28,9,'木の実 栽培園。実を 植えて 水を あげよう。');
  // Preserve existing adventure/life functionality, but put portals in authored safe spots.
@@ -101,7 +101,7 @@ function genHaruInterior(cell,slot){
 }
 function haruActorInfo(o){return o.k==='harupet'?HARU_PETS.concat([HARU_PET_LOST]).find(p=>'pet:'+p.id===o.haruActor):HARU_PEOPLE.find(p=>p.key===o.haruActor);}
 function haruSchedule(o,minute=npcMinutes()){const p=haruActorInfo(o);if(!p)return null;let s=p.schedule[0];for(const z of p.schedule)if(z[0]<=minute)s=z;return{map:haruMapId(s[1]),x:s[2],y:s[3]};}
-function haruQuest(){const p=HitokariUpgrade.progress(S);return p.harusaki||(p.harusaki={flowers:[]});}
+function haruQuest(){const p=HitokariUpgrade.progress(S);return p.harusaki||(p.harusaki={watered:[]});}
 function haruActorEnabled(o){return o.haruActor!=='pet:lost'||haruQuest().lostStarted&&!haruQuest().lostFound&&!haruQuest().lost;}
 function haruWalkable(m,x,y){return x>=1&&y>=1&&x<m.W-1&&y<m.H-1&&!SOLID[m.t[y*m.W+x]]&&m.t[y*m.W+x]!==T.WATER&&!m.warps[x+','+y]&&!expAt(m,x,y);}
 function haruSpawn(m,o,out){const s=haruSchedule(o);if(!s||s.map!==m.id||!haruActorEnabled(o))return false;
@@ -136,7 +136,7 @@ async function haruTalk(o){
    if(await confirmYN('村の お手伝いを 見る？'))await haruQuestList();break;
   case'mentor':await haruMentor();break;
   case'florist':case'farmer':
-   if(!q.flowersDone&&!q.flowersStarted){q.flowersStarted=1;await msg(name+'「花壇3か所を 調べて 水を あげてくれる？ 栽培園で 実も 育てられるよ。」');saveGame();}
+   if(!q.flowers&&!q.flowersStarted){q.flowersStarted=1;await msg(name+'「花壇3か所を 調べて 水を あげてくれる？ 栽培園で 実も 育てられるよ。」');saveGame();}
    else await msg(q.flowers?'花壇の 花が 元気だね！':'花壇の お手伝い '+(q.watered||[]).length+'/3。');break;
   case'child':
    if(q.lostFound&&!q.lost){await haruReward('lost','ナナ「見つけて くれて ありがとう！」\n1000Gを もらった！',()=>S.money+=1000);}
@@ -198,7 +198,7 @@ function haruInteract(m,x,y){
 function migrateHaruSave(s){
  if(!s.flags)s.flags={};if(s.flags['hsk:v111'])return;s.flags['hsk:v111']=1;
  const old=s.badges||{};s.badges={};for(const [k,v] of Object.entries(old)){const n=+k;if(n>=1&&n<=50&&v)s.badges[gymNumberForLegacy(n)]=v;}
- const p=s.upgrade;if(p&&p.rematches){const old=p.rematches;p.rematches={};for(const [k,v] of Object.entries(old)){const m=/^g:(\\d+)$/.exec(k);p.rematches[m?'g:'+gymNumberForLegacy(+m[1]):k]=v;}}
+ const p=s.upgrade;if(p&&p.rematches){const old=p.rematches;p.rematches={};for(const [k,v] of Object.entries(old)){const m=/^g:(\d+)$/.exec(k);p.rematches[m?'g:'+gymNumberForLegacy(+m[1]):k]=v;}}
  if(p&&p.world&&p.world.gyms)p.world.gyms={}; // new numbering and puzzle layouts; earned badges are retained.
  if(typeof s.map==='string'&&s.map.startsWith(HARU_KEY+':b')){s.map=HARU_KEY;s.x=15;s.y=29;s.dir=0;s.surf=false;}
  if(s.heal&&s.heal.map&&s.heal.map.startsWith(HARU_KEY+':b'))s.heal={map:haruMapId(0),x:5,y:7};

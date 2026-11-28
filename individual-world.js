@@ -1,8 +1,15 @@
 'use strict';
+// Retain all previous profile IDs, but replace the authored village's outdated labels.
+// Register added profiles with their actual map IDs (no duplicate entries).
+for(const b of haruBuildings()){const d=SORANE_FIELD_DATA.find(x=>x[0]===haruMapId(b.slot));if(d){d[1]=b.label;d[3]=b.kind;d[4]='花と風の暮らし';d[7]=[];d[8]=[];d[9]=null;}}
+{const d=SORANE_FIELD_DATA.find(x=>x[0]===HARU_KEY);if(d){d[4]='花咲き広場';d[7]=[];d[8]=[];d[9]=null;}}
+function addHaruFieldProfile(id,name,pal,kind,theme){if(SORANE_FIELD_DATA.some(x=>x[0]===id))return;SORANE_FIELD_DATA.push([id,name,pal,kind,theme,0,SORANE_FIELD_DATA.length+1,[],[],null]);}
+for(const b of townBuildings(WORLD.gymTown[50])){const c=WORLD.gymTown[50];addHaruFieldProfile(c.key+':b'+b.slot,c.name+' '+b.kind,'indoor',b.kind,'巡環の記憶');}
+for(const c of [WORLD.gymTown[1],WORLD.gymTown[50]]){const areas=c.gym===1?['ridge','base']:['hub','trial-single','trial-double','trial-rental','trial-endurance'];for(const area of areas)addHaruFieldProfile(expId(area,c),c.name+'・'+area,c.pal,area,'花と風の旅');}
 const INDIVIDUAL_FIELDS=new Map(SORANE_FIELD_DATA.map(x=>[x[0],x]));
 const NPC_ZONES=['住居区','中央広場','仕事区','交流庭園'];
 const NPC_RESIDENTS=Array.from({length:51},()=>[]);
-for(const p of SORANE_NPC_DATA){if(p[0]>=10&&p[0]<=59)p[3]=gymNumberForLegacy(p[0]-9);if(HARU_NAMES[p[0]])p[1]=person(p[0]).name;}
+for(const p of SORANE_NPC_DATA){if(p[0]>=10&&p[0]<=59)p[3]=gymNumberForLegacy(p[0]-9);if(HARU_NAMES[p[0]])p[1]=person(p[0]).name;const local=HARU_PEOPLE.find(x=>x.id===p[0]);if(local){p[8]=local.schedule.map(([minute,slot],j)=>[minute,slot<0?1:slot===0||slot===1||slot===2||slot===3?2:0,slot<0?'ハルサキ村の 散歩・活動':local.role==='nurse'?'診療':local.role==='clerk'?'接客':local.role==='harutailor'?'仕立て':local.key==='mentor'?'冒険教室':'家で 休息']);}}
 for(const p of SORANE_NPC_DATA)NPC_RESIDENTS[p[3]].push(p[0]);
 function npcProfile(id){return SORANE_NPC_DATA[id-1]||SORANE_NPC_DATA[0];}
 function npcMinutes(){if(G.hour!=null)return((Math.floor(G.hour*60)%1440)+1440)%1440;const d=new Date();return d.getHours()*60+d.getMinutes();}
