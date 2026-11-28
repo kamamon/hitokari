@@ -12,7 +12,7 @@ const expSet=(m,x,y,v)=>{m.t[y*m.W+x]=v;};
 function expFloor(m,x,y,v=T.GRASS){if(x>=0&&y>=0&&x<m.W&&y<m.H)expSet(m,x,y,v);}
 function expHeight(m,x,y){return m.elevation&&x>=0&&y>=0&&x<m.W&&y<m.H?m.elevation[y*m.W+x]:0;}
 function gymPuzzleSpec(k){
- const r=RNG('gym-puzzle-v2:'+k),mode=(k-1)%10,type=GYM_TYPES[k],n=mode===3?6:4,order=r.shuffle(Array.from({length:n},(_,i)=>i)),spec={k,mode,type,n,name:GYM_TOWN[k]+'・'+EXP_GYM_MODES[mode],order,clue:'',target:null};
+ const r=RNG('gym-puzzle-v2:'+gymLegacyId(k)),mode=(gymLegacyId(k)-1)%10,type=GYM_TYPES[k],n=mode===3?6:4,order=r.shuffle(Array.from({length:n},(_,i)=>i)),spec={k,mode,type,n,name:GYM_TOWN[k]+'・'+EXP_GYM_MODES[mode],order,clue:'',target:null};
  if(mode===0||mode===6||mode===8){spec.target=order.slice(0,mode===8?3:4);spec.clue=(mode===8?'45歩以内に ':'')+spec.target.map(i=>EXP_SIGNS[i]).join(' → ');}
  if(mode===1){spec.target=1+r.int(14);spec.clue='点灯：'+order.filter(i=>spec.target&(1<<i)).map(i=>EXP_SIGNS[i]).join('・');}
  if(mode===2){let mask=0;for(const i of order.slice(0,2+r.int(2)))mask^=(1<<i)|(1<<((i+1)%4));spec.target=mask||3;spec.clue='連動する灯りを '+[0,1,2,3].filter(i=>spec.target&(1<<i)).map(i=>EXP_SIGNS[i]).join('・')+' に';}
@@ -72,14 +72,15 @@ function findPortal(m,x0,y0){const a=[];for(let y=3;y<m.H-3;y++)for(let x=3;x<m.
 function portalAt(m,kind,x,y,label){const p=findPortal(m,x,y);if(p)expPut(m,p[0],p[1],{kind:'portal',area:kind,label,returnX:p[0],returnY:p[1]});return p;}
 function decorateExpansionMap(m){
  if(m.advDecorated)return;m.advDecorated=true;
- if(m.advArea)return;
+ if(m.advArea||m.haru)return;
  if(m.bk==='gym'){decorateGym(m);return;}
  if(!m.indoor&&m.cell&&m.cell.kind==='town'){
-  const k=m.cell.gym||m.cell.dist||1;
+  const k=m.cell.gym?gymLegacyId(m.cell.gym):m.cell.dist||1;
   const area=k%3===0?'coast':k%3===1?'ridge':'river';
   portalAt(m,area,12,17,{ridge:'段丘の森',river:'水晶瀑布',coast:'潮の入江'}[area]);
   if(k%5===0||m.cell.main===0)portalAt(m,'contest',18,14,'彩華祭ホール');
-  if(k===50||m.blds.some(b=>b.kind==='league'))portalAt(m,'hub',18,17,'巡環修練場');
+  if(m.cell.gym===1&&area!=='ridge')portalAt(m,'ridge',17,19,'段丘の森');
+  if(k===50||m.cell.gym===50||m.blds.some(b=>b.kind==='league'))portalAt(m,'hub',18,17,'巡環修練場');
   const p=findPortal(m,13,15);if(p)expPut(m,p[0],p[1],{kind:'berry',plot:0});
   addLifePortal(m);
  }else if(!m.indoor&&m.cell&&!m.cell.gate&&m.cell.kind!=='sea'){
